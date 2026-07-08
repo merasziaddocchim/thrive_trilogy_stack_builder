@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { Pool } from '@neondatabase/serverless';
 import { env } from '../config/env.js';
-import * as schema from './schema/index.js';
+import * as schema from './schema.js';
 
 // Use Neon's pooled endpoint. Pooling + a lean request path mitigate the
 // Render + Neon double-cold-start risk documented in TECH_DOCS §5.
