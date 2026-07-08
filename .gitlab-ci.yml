@@ -1,0 +1,83 @@
+# Validation-only pipeline. No deployment: Render (backend) and Vercel (frontend)
+# own their own deploys. Jobs here just gate correctness on merge requests and the
+# default branch. Kept generic so removing GitLab does not break deployment.
+
+default:
+  image: node:20-alpine
+  # Cache each app's node_modules keyed by its lockfile-adjacent package.json.
+  cache:
+    key:
+      files:
+        - backend/package.json
+        - frontend/package.json
+    paths:
+      - backend/node_modules/
+      - frontend/node_modules/
+
+stages:
+  - install
+  - validate
+
+# --- Backend --------------------------------------------------------------
+
+backend:install:
+  stage: install
+  script:
+    - cd backend && npm install
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab-ci.yml
+
+backend:lint:
+  stage: validate
+  needs: ["backend:install"]
+  script:
+    # `npm run lint` runs eslint AND scripts/check-firewall.mjs
+    # (scoring-engine/ must not import affiliate code — TECH_DOCS §4 / COMPLIANCE §6).
+    - cd backend && npm install && npm run lint
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab-ci.yml
+
+backend:typecheck:
+  stage: validate
+  needs: ["backend:install"]
+  script:
+    - cd backend && npm install && npm run typecheck
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab-ci.yml
+
+# --- Frontend -------------------------------------------------------------
+
+frontend:install:
+  stage: install
+  script:
+    - cd frontend && npm install
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
+
+frontend:lint:
+  stage: validate
+  needs: ["frontend:install"]
+  script:
+    - cd frontend && npm install && npm run lint
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
+
+frontend:typecheck:
+  stage: validate
+  needs: ["frontend:install"]
+  script:
+    - cd frontend && npm install && npm run typecheck
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
