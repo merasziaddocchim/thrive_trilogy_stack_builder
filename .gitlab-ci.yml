@@ -1,0 +1,50 @@
+# Validation-only pipeline. No deployment: Render (backend) and Vercel (frontend)
+# own their own deploys. Jobs here just gate correctness on merge requests and the
+# default branch. Kept generic so removing GitLab does not break deployment.
+#
+# One job per app (install + lint + typecheck in a single job) so node_modules stays
+# local to the job — no redundant installs, no artifact passing.
+
+default:
+  image: node:20-alpine
+
+stages:
+  - validate
+
+backend:
+  stage: validate
+  cache:
+    key:
+      files:
+        - backend/package.json
+    paths:
+      - backend/node_modules/
+  script:
+    - cd backend
+    - npm install
+    # `npm run lint` runs eslint AND scripts/check-firewall.mjs
+    # (scoring-engine/ must not import affiliate code — TECH_DOCS §4 / COMPLIANCE §6).
+    - npm run lint
+    - npm run typecheck
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab-ci.yml
+
+frontend:
+  stage: validate
+  cache:
+    key:
+      files:
+        - frontend/package.json
+    paths:
+      - frontend/node_modules/
+  script:
+    - cd frontend
+    - npm install
+    - npm run lint
+    - npm run typecheck
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
