@@ -1,2 +1,0 @@
-# Generated SQL migrations are committed here (run `npm run db:generate`).
-# Kept auditable per TECH_DOCS §1 - review migration SQL before applying.
