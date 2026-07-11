@@ -36,6 +36,11 @@ COMPOUND
   (category maps to existing site pillars: nad_precursor | methylation |
    longevity_compound | delivery_modifier)
 - mechanism_summary  (mechanism-level only — never benefit-level; see CLAIMS_COMPLIANCE.md §5)
+- related_articles[]  (optional, each entry: {url, article_type: [educational | roundup]})
+  # placement rule owned by CLAIMS_COMPLIANCE.md §6 extension (this is a claims/
+  # endorsement rule, not a style choice); voice/placement application in
+  # BRAND_GUIDELINES.md §8. Roundup articles are affiliate-adjacent and follow
+  # the same disclosure rules as any other affiliate placement.
 
 DOSE_RECORD (many per compound)
 - dose_record_id, compound_id (FK), source_id (FK)
@@ -171,7 +176,7 @@ This pipeline **is** the claim in CLAIMS_COMPLIANCE.md §7 ("extracted by AI, ve
 | App frontend | Next.js (App Router) on Vercel | `app.thrivetrilogy.com` subdomain |
 | App backend | Node.js (Express) on Render | Scoring engine, extraction pipeline, API — **confirmed** |
 | Database | Neon (serverless Postgres) | Free tier: no expiration, 0.5GB/project, 100 CU-hrs/month, scale-to-zero. No credit card required. |
-| Version control | GitHub | Two repos recommended: `stackoptimizer-frontend`, `stackoptimizer-backend` (separate deploy targets, separate release cadence) |
+| Version control | GitHub | **Confirmed: monorepo**, two top-level folders (`backend/`, `frontend/`), each independently deployable (Render → `backend/`, Vercel → `frontend/`). Deviates from this doc's original two-repo suggestion — approved, easy to split later if needed. |
 
 **Known constraints to design around:**
 - Render free tier: 15-min inactivity spin-down, 30–60s cold start on next request, 750 shared instance-hours/month. **Do not let any SEO-critical or first-impression page depend on a live Render response** — static/marketing/methodology pages must be servable entirely from Vercel (SSG/ISR) with zero backend dependency. The free diagnosis preview (the "holy shit" moment) should either run its computation client-side/edge-side where possible, or the UI must show a designed loading state that gracefully absorbs a cold start rather than looking broken.
@@ -216,6 +221,7 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 - **Canonical tags:** required on any app page that overlaps in topic with an existing WordPress article (e.g., an NMN methodology page on the app vs. an NMN article on the blog) to avoid Google treating them as competing/duplicate content.
 - **Core Web Vitals:** directly threatened by the Render/Neon cold-start stacking risk in §5 — treat LCP/TTFB on any page that calls the live backend as a first-class design constraint, not an afterthought.
 - **Mobile-first:** Tailwind CSS with mobile breakpoints as the default design target (not desktop-first-then-adapt), touch-friendly assessment flow (large tap targets, minimal typing — favor selects/sliders over free text where the schema allows), test the cabinet-photo-scan flow specifically on mobile camera capture since that's likely the primary device for that interaction.
+- **Legal/utility pages required on `app.thrivetrilogy.com`:** About, Affiliate Disclosure, Contact, Cookie Policy, Disclaimer, DMCA Policy, Do Not Sell/Share My Info, FAQ, How We Review, Privacy Policy, Terms & Conditions, Reviews. Requirement and reasoning (why these must be adapted from the root site rather than copied verbatim) owned by `CLAIMS_COMPLIANCE.md` §5a — this line only covers implementation: route as SSG pages alongside `/` and `/methodology` (backend-independent, per this section's rendering strategy).
 
 ---
 
@@ -227,5 +233,7 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 | 2026-07-03 | Evidence-tier ceiling values (100/80/60/40) | Proposed — awaiting sign-off |
 | 2026-07-03 | Overdosing vs underdosing penalty asymmetry | Proposed — awaiting sign-off |
 | 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed |
-| — | Single-repo (monorepo) vs two-repo structure | Recommended: two repos (separate deploy targets) — open to change |
+| — | Single-repo (monorepo) vs two-repo structure | **Resolved — monorepo**, two top-level folders, confirmed |
 | — | Render graduation trigger (when to move off free tier) | Proposed: first week with meaningful live-scoring traffic — define threshold |
+| 2026-07-10 | Article cross-linking placement (educational vs. roundup content from thrivetrilogy.com) | **Resolved** — see `related_articles` field in §1 and full rule in `BRAND_GUIDELINES.md` §8 |
+| 2026-07-10 | Legal/utility pages: copy verbatim vs. adapt | **Resolved — adapt**, not verbatim copy; see §7 |
