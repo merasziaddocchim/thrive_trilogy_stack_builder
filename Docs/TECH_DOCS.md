@@ -78,7 +78,17 @@ SCORING_PARAMETER
 
 *(Exact n-thresholds for "adequate" are a policy decision — proposed defaults to be confirmed with Ziad before the first compound batch ships. Once confirmed, log the decision in §8.)*
 
-**User-side tables** (not detailed here — standard shape): `USER_PROFILE` (goals ranked, budget, risk tolerance), `USER_STACK_ITEM` (compound_id, dose taken, delivery format, price paid, source: photo-scan or manual), `USER_LAB_RESULT`, `USER_FEEDBACK` (outcome self-report, feeds personalization — see §3).
+**User-side tables** (not detailed here — standard shape): `USER_PROFILE` (goals ranked, budget, risk tolerance), `USER_STACK_ITEM` (compound_id, dose taken, delivery format, price paid, source: photo-scan, manual, or free-text LLM-extraction — see §1a), `USER_LAB_RESULT`, `USER_FEEDBACK` (outcome self-report, feeds personalization — see §3).
+
+---
+
+## 1a. Intake parsing (planned — not yet implemented)
+
+V1 uses a single free-text field (not structured product entry) for initial stack capture — founder decision, 2026-07-11, chosen over a simple fuzzy-match-only approach for better accuracy, and over a stubbed placeholder to avoid deferring the hardest part of the UX. An LLM call extracts candidate compound + dose + price matches against `compounds.canonical_name`/`aliases`, each carrying a confidence level. Below a reasonable threshold, matches are surfaced to the user for confirmation/correction rather than silently accepted — UI: a dedicated "Confirm What We Found" screen, inserted between stack capture and the context questions.
+
+**Architecture:** its own module, `backend/src/intake-parser/`, isolated from both `scoring-engine/` and `affiliate-engine/` — it feeds structured output *into* the scoring engine but must not live inside it, consistent with the firewall pattern in §4. **Not yet built** as of this writing — the frontend is being built first, against a mocked extraction response, so UI work isn't blocked on this module existing.
+
+**Compliance note:** this is a new AI capability in the product and must be disclosed per `CLAIMS_COMPLIANCE.md` §7 — never described as "AI-verified" or similar overclaim, only as a plain, factual description of what happens (extraction, then human confirmation).
 
 ---
 
@@ -237,3 +247,5 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 | — | Render graduation trigger (when to move off free tier) | Proposed: first week with meaningful live-scoring traffic — define threshold |
 | 2026-07-10 | Article cross-linking placement (educational vs. roundup content from thrivetrilogy.com) | **Resolved** — see `related_articles` field in §1 and full rule in `BRAND_GUIDELINES.md` §8 |
 | 2026-07-10 | Legal/utility pages: copy verbatim vs. adapt | **Resolved — adapt**, not verbatim copy; see §7 |
+| 2026-07-11 | Stack capture method: structured entry/photo-scan vs. free-text + LLM extraction | **Resolved — free-text + LLM extraction**, confidence-gated with user confirmation step; see §1a |
+| 2026-07-11 | Claude Code UI prompt corrected after independent audit (Gemini 3.1 Pro) surfaced 3 real gaps (scope bleed into backend work, incomplete legal page list, missing structured data requirement) + 1 self-caught gap (this architecture note was undocumented) | All 4 fixed; documentation-ownership pattern (rules belong in the owning doc, not a one-off prompt) reinforced again |
