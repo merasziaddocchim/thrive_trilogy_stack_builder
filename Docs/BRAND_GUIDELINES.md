@@ -26,7 +26,7 @@ The copy lets the data speak. Confidence comes from specificity (exact numbers, 
 | "Evidence tier: B — one human RCT." | "Backed by science" |
 | Numbers first, adjectives never | Exclamation points, hype language, "game-changing," "revolutionary" |
 
-**Banned register, independent of any specific claim:** marketing hype language ("V8 Engine," "cutting-edge," "revolutionary AI") has no place in this product's voice — it undermines the "clinical and authoritative" tone directly, and separately risks the AI-capability-claim issues covered in `CLAIMS_COMPLIANCE.md` §7. See §9 below — this isn't hypothetical, it's already present in the current live copy and needs to change.
+**Banned register, independent of any specific claim:** marketing hype language ("V8 Engine," "cutting-edge," "revolutionary AI") has no place in this product's voice — it undermines the "clinical and authoritative" tone directly, and separately risks the AI-capability-claim issues covered in `CLAIMS_COMPLIANCE.md` §7. See §10 below — this isn't hypothetical, it's already present in the current live copy and needs to change.
 
 **Tone test:** if a sentence would sound at home in a lab report or a brokerage statement, it's the right register. If it would sound at home in a supplement ad, rewrite it.
 
@@ -44,7 +44,7 @@ Use these terms consistently across UI, marketing copy, and code (component/vari
 | The free pre-email teaser | **Preview** (not "free trial," not "sample") | |
 | Evidence quality label | **Evidence Tier** (A/B/C/D) | Matches `TECH_DOCS.md` exactly — never invent a parallel label like "confidence score" |
 | Dollar estimate | **Estimated Annual Waste** | Always paired with a range (low–high), never a single false-precision number, per `TECH_DOCS.md` §2 |
-| The underlying database | Internal only — never named/exposed as a product feature name to users | Avoid inventing a cute internal-engine brand name (see §9 — "V8 Engine" is exactly what to avoid) |
+| The underlying database | Internal only — never named/exposed as a product feature name to users | Avoid inventing a cute internal-engine brand name (see §10 — "V8 Engine" is exactly what to avoid) |
 
 ---
 
@@ -102,13 +102,28 @@ Do not add hedging softeners like "we think" or confidence-inflating words like 
 
 ---
 
-## 8. Author/credential attribution
+## 8. Content cross-linking to thrivetrilogy.com articles
+
+The claim/endorsement rule governing this lives in `CLAIMS_COMPLIANCE.md` §6 (extension) — this section only applies it in voice/placement terms, it does not restate the reasoning.
+
+The blog has 46 existing articles across four pillars (NAD+ Precursors, Methylation, Longevity Compounds, Delivery Systems — matching the `compound.category` enum in `TECH_DOCS.md` §1 exactly). Practically:
+
+- **Educational/mechanism articles** (dosing protocols, bioavailability/delivery-system guides, mechanism explainers — e.g. NMN Dosing Protocol Guide, The Salvage Pathway) render as plain further-reading links, same tone as any other citation — no special treatment needed, they may appear anywhere in the Stack Report.
+- **"Best X Supplement" roundups and brand reviews** render only in the Start section or general marketing pages, with the same per-placement disclosure as any affiliate link (`CLAIMS_COMPLIANCE.md` §6's four-factor test) — never inside Stop/Keep or Evidence Tier content.
+
+Quick test: does the article rank or recommend specific purchasable products? Yes → Start-section-only, disclosed like any affiliate link. No → safe anywhere, plain link styling, no disclosure needed.
+
+**Schema dependency:** `compound.related_articles[]`, tagged `educational`/`roundup` — see `TECH_DOCS.md` §1.
+
+---
+
+## 9. Author/credential attribution
 
 Per `CLAIMS_COMPLIANCE.md` §2 (YMYL/E-E-A-T requirement): the Stack Report methodology and "How we review" pages must carry Ziad Meras's name and credentials visibly, in the same serif display treatment used for other headline content — not buried in a footer link. A "Last reviewed by [name], [date]" line belongs on the methodology page and ideally on the report itself.
 
 ---
 
-## 9. Existing copy — flagged for revision
+## 10. Existing copy — flagged for revision
 
 Reviewing the current live homepage copy against §2 (voice) and `CLAIMS_COMPLIANCE.md` (claims) surfaces several phrases that need to change, not just cosmetically:
 
@@ -125,7 +140,7 @@ This table is a flag list, not a rewrite task done here — full copy pass happe
 
 ---
 
-## 10. Open questions / decision log
+## 11. Open questions / decision log
 
 | Date | Decision needed | Status |
 |---|---|---|
