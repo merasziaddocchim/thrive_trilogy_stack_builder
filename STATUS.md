@@ -104,6 +104,8 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 | Scoring/affiliate separation | Structural firewall, `scoring-engine/` cannot import `affiliate-engine/` | Required by `CLAIMS_COMPLIANCE.md` §6, enforced via build-failing check script |
 | Article cross-linking | Educational articles link freely; affiliate roundups link only from Start/marketing | Rule owned by `CLAIMS_COMPLIANCE.md` §6 extension (endorsement/disclosure logic); applied in `BRAND_GUIDELINES.md` §8 |
 | Legal pages | Adapted from root site, not verbatim-copied | Rule owned by `CLAIMS_COMPLIANCE.md` §5a; app collects different data than the blog, verbatim copy risks inaccurate disclosure and drift |
+| Stack capture method | Free-text + LLM extraction, confidence-gated with a user confirmation step ("Confirm What We Found") | Chosen over simple fuzzy-match (less accurate) or a stubbed placeholder (defers the hardest UX problem); architecture logged in `TECH_DOCS.md` §1a |
+| Claude Code UI prompt — independent audit | Founder ran the finalized prompt through Gemini 3.1 Pro against all four governing docs; it surfaced 3 real gaps (backend scope bleed in intake-parsing instructions, incomplete legal page list in the footer section, missing E-E-A-T structured data requirement) plus 1 self-caught gap (intake-parser architecture existed only in the prompt, not in `TECH_DOCS.md`) | All 4 fixed in the prompt and propagated back into `TECH_DOCS.md` §1a/§8 — same doc-ownership discipline established earlier in this project, holding up under a second, independent review |
 | Doc-ownership correction | Moved article-linking and legal-pages *rules* out of `BRAND_GUIDELINES.md`/`TECH_DOCS.md` into `CLAIMS_COMPLIANCE.md` (§6 extension, new §5a) | Both were originally drafted as compliance-level judgments but placed in the wrong file — `BRAND_GUIDELINES.md` and `TECH_DOCS.md` should only *apply* claims/disclosure rules, never originate them |
 
 ## 8. What's actually built (as of last scaffold)
@@ -131,4 +133,4 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 
 ## 11. Next step right now
 
-Doc formalization (§9) is done — `CLAIMS_COMPLIANCE.md`, `TECH_DOCS.md`, and `BRAND_GUIDELINES.md` are now mutually consistent with correct rule ownership. Real next action: begin evidence data entry for the first batch of compounds (NMN, Resveratrol, Berberine, TMG), and/or hand off to Claude Code to implement the scoring formula logic against the confirmed ceiling model.
+The UI/UX Claude Code prompt is corrected, independently audited, and ready to paste in as-is — it builds all 12 screens against mock data, with the intake-parser module explicitly deferred (architecture documented in `TECH_DOCS.md` §1a for when it's actually built). The backend scoring-formula prompt is separate and still pending — the two don't block each other and can run in either order.
