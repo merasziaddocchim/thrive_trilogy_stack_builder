@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: ['/', '/methodology'],
-      disallow: ['/assessment', '/report'],
+      // Interactive/post-auth routes and the internal design-system proof are not indexed.
+      disallow: ['/assessment', '/report', '/design-system'],
     },
     sitemap: `${site}/sitemap.xml`,
   };

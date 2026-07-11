@@ -2,14 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+   DESIGN TOKENS — Thrive Trilogy Stack Optimizer
+   Deliverable #1 (prompt §10): tokens for type scale, color, spacing.
+   LIGHT MODE ONLY for V1 (prompt §7 — no dark mode). Status: "proposed — pending
+   final token approval"; reconstructed from BRAND_GUIDELINES §4, not live CSS.
+   Colors defined in OKLCH; every text/surface pairing targets WCAG AA.
+   ============================================================================= */
 :root {
   color-scheme: light;
+
+  /* --- Surfaces ------------------------------------------------------------ */
+  --surface: oklch(1 0 0);                    /* white card / page */
+  --surface-subtle: oklch(0.986 0.004 255);   /* faint blue-gray fill */
+  --surface-lavender: oklch(0.968 0.014 288); /* pale lavender footer band */
+  --border: oklch(0.916 0.012 250);           /* thin light gray-blue border */
+
+  /* --- Accent (royal blue, ~blue-600 / #2563EB — provisional) -------------- */
+  --accent: oklch(0.553 0.208 263);
+  --accent-hover: oklch(0.488 0.201 263);
+  --accent-soft: oklch(0.955 0.028 263);      /* icon-circle container fill */
+  --accent-contrast: oklch(1 0 0);            /* text on accent */
+
+  /* --- Text ---------------------------------------------------------------- */
+  --headline: oklch(0.235 0.035 264);         /* near-black dark navy, cool */
+  --body: oklch(0.474 0.035 259);             /* muted slate-blue-gray */
+  --muted: oklch(0.606 0.028 258);            /* labels, secondary meta */
+
+  /* --- Stop / Keep / Start wayfinding (structural only — prompt §7) --------
+     Colored left-accents permitted ONLY for these three report sections. */
+  --stop: oklch(0.55 0.19 22);                /* rose-red */
+  --stop-soft: oklch(0.955 0.03 22);
+  --keep: oklch(0.5 0.13 155);                /* green */
+  --keep-soft: oklch(0.955 0.04 155);
+  --start: oklch(0.553 0.208 263);            /* royal blue */
+  --start-soft: oklch(0.955 0.028 263);
+
+  /* --- Evidence Tier chips (A strong → D preliminary) ---------------------- */
+  --tier-a: oklch(0.46 0.13 155);             /* green */
+  --tier-a-soft: oklch(0.955 0.04 155);
+  --tier-b: oklch(0.48 0.16 250);             /* blue */
+  --tier-b-soft: oklch(0.955 0.03 250);
+  --tier-c: oklch(0.5 0.11 75);               /* amber */
+  --tier-c-soft: oklch(0.96 0.045 85);
+  --tier-d: oklch(0.46 0.02 260);             /* neutral slate */
+  --tier-d-soft: oklch(0.955 0.006 260);
+
+  /* --- Fluid type scale (clamp) — ~1.20 minor-third, mobile→desktop -------- */
+  --text-xs: clamp(0.75rem, 0.73rem + 0.10vw, 0.8125rem);
+  --text-sm: clamp(0.875rem, 0.855rem + 0.10vw, 0.9375rem);
+  --text-base: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1.08rem + 0.22vw, 1.25rem);
+  --text-xl: clamp(1.5rem, 1.30rem + 1.00vw, 2.25rem);   /* WEB-APP HEADING CAP: 24–36px */
+  --text-2xl: clamp(2rem, 1.60rem + 2.0vw, 3rem);        /* marketing only */
+  --text-3xl: clamp(2.5rem, 1.9rem + 3.0vw, 4rem);       /* marketing hero only */
+
+  /* --- Radius / elevation (generous radius, minimal shadow per BRAND §4) --- */
+  --radius-sm: 0.5rem;
+  --radius: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+  --shadow-soft: 0 1px 2px oklch(0.4 0.03 260 / 0.04), 0 4px 16px oklch(0.4 0.03 260 / 0.05);
 }
 
 body {
-  @apply bg-white text-body font-sans;
+  @apply bg-surface text-body font-sans antialiased;
+  font-size: var(--text-base);
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4 {
   @apply font-display text-headline;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+/* Tabular figures for dashboard number alignment (BRAND §5 fintech convention). */
+.nums-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Faint dotted-grid backdrop for the "audit ledger" hero — NOT a gradient mesh
+   (prompt §3A bans gradient-mesh/biotech imagery specifically in the hero). */
+.bg-ledger {
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Redaction treatment for the blurred output Preview on the landing page (§3D). */
+.redacted {
+  color: transparent;
+  background: linear-gradient(var(--muted), var(--muted));
+  background-size: 100% 62%;
+  background-position: 0 55%;
+  background-repeat: no-repeat;
+  border-radius: var(--radius-sm);
+  opacity: 0.32;
+  user-select: none;
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
