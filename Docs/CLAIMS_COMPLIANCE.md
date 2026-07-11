@@ -96,6 +96,18 @@ Placement rule borrowed from 21 CFR 101.93(d): the disclaimer should sit adjacen
 
 ---
 
+## 5a. Legal and utility pages — required on the app, and why they can't be copy-pasted
+
+The root site (thrivetrilogy.com) already has: About, Affiliate Disclosure, Contact, Cookie Policy, Disclaimer, DMCA Policy, Do Not Sell/Share My Info, FAQ, How We Review, Privacy Policy, Terms & Conditions, Reviews. The app subdomain (`app.thrivetrilogy.com`) needs equivalents — but **these must be adapted, not copied verbatim**, for a compliance reason, not just a style preference:
+
+- **The app collects materially different data than the blog does.** The assessment intake captures stack/health-adjacent inputs (goals, budget, current supplements, potentially lab data) that a content blog's Privacy Policy was never written to disclose. A verbatim copy would be **factually inaccurate about what the app actually collects and does with it** — which is itself a misrepresentation risk under the same FTC framework as any other unsubstantiated claim (§3), independent of anything scoring-related.
+- **Affiliate Disclosure needs to explicitly cover the Start section's product links**, using the same "clear and conspicuous" proximity/prominence/presentation/placement test as §6 — a root-site disclosure written for blog content doesn't automatically satisfy per-placement disclosure inside an interactive report.
+- **Terms & Conditions needs to reflect the tool's actual function** (a comparison/audit tool, not a content-only site) — including the same "not medical advice" framing established in §5's disclaimer language.
+
+**Rule:** use the root site's existing pages as the legal baseline and starting framework (they already reflect Thrive Trilogy's established positions on liability, disclosure, and disclaimer language), then update each one specifically for what the app collects and does. Treat verbatim duplication as a compliance risk (inaccurate disclosure) and a maintenance risk (drift between two copies), not a shortcut. (Implementation/routing: `TECH_DOCS.md` §7.)
+
+---
+
 ## 6. FTC endorsement / affiliate rules — the score/affiliate firewall
 
 Source: 16 CFR Part 255 (Guides Concerning Endorsements and Testimonials); FTC's own worked example is close to a direct blueprint for this product's core risk.
@@ -114,6 +126,12 @@ Additional operative rules:
 - Compliant wording example: "This is a paid link that supports this report." Non-compliant: "commissionable link."
 - Each individual ad/placement needs its own disclosure — one disclosure at the top of a long report does not cover every affiliate link further down the page.
 - A disclosure is required regardless of dollar value — even a small commission or a free product requires disclosure.
+
+**Extension: affiliate-adjacent third-party content.** The firewall isn't limited to direct affiliate links — it applies to any content that functions as a product endorsement, including linking out to the existing thrivetrilogy.com blog. That content splits into two categories with different rules:
+- **Educational/mechanism content** (dosing protocols, bioavailability guides, mechanism explainers) makes no product ranking or purchase recommendation — functionally equivalent to citing a source, not an endorsement. **No additional disclosure needed**; may be linked from anywhere in the Stack Report, including Evidence Tier and Stop/Keep content.
+- **"Best X Supplement" roundups and single-brand reviews** rank or recommend specific purchasable products and are themselves affiliate-monetized — these carry the *same* endorsement risk as a direct affiliate link, per the headphone-website precedent above. **Linking one from inside a Stop/Keep finding or Evidence Tier explanation would blur the independence claim in the same way a paid ranking would** — these must be treated as Start-section/marketing-only content, subject to the same disclosure rules as any other affiliate placement.
+
+Practical test before linking any article from inside the app: does it rank or recommend specific purchasable products? If yes, it's Start-section-only. If it only explains a mechanism, dose, or delivery format, it's safe anywhere. (Implementation: `TECH_DOCS.md` §1 `related_articles[]` field, tagged `educational`/`roundup`; voice/placement application in `BRAND_GUIDELINES.md` §8.)
 
 ---
 
@@ -194,6 +212,7 @@ When a new compound, claim, or user-facing sentence doesn't cleanly map to §4/�
 | Date | Change | Source |
 |---|---|---|
 | 2026-07-03 | Initial version drafted | Compiled from sources in this doc, verified live |
+| 2026-07-10 | Extended §6 to cover affiliate-adjacent third-party content (roundup articles vs. educational articles); added §5a (legal/utility pages requirement) | Founder-provided content inventory; both rules were previously mis-sourced into BRAND_GUIDELINES.md/TECH_DOCS.md and are now correctly owned here |
 
 *Re-verify §8 (state AI law) at minimum quarterly. Re-verify §3 and §6 (FTC guidance) upon any FTC guidance update or enforcement action involving a comparable health-app/comparison-site business model.*
 
