@@ -107,11 +107,11 @@ Dosing Accuracy (DA), 0–100:
   if range_low ≤ effective_dose ≤ range_high:  DA = 100
   if effective_dose < range_low:                DA = 100 × (effective_dose / range_low)
   if effective_dose > range_high:                DA = max(0, 100 − 50 × ((effective_dose − range_high) / range_high))
-    # overdosing is penalized more gently than underdosing by default — overdosing wastes
-    # money but underdosing wastes money AND fails to deliver the intended structure/function
-    # benefit at all. Revisit this asymmetry with Ziad; it's a judgment call, not a derived fact.
+    # overdosing is penalized more gently than underdosing — overdosing wastes money but
+    # underdosing wastes money AND fails to deliver the intended structure/function benefit
+    # at all. The 50× slope (asymmetric to underdosing) is CONFIRMED/locked as of 2026-07-12.
 
-Evidence Ceiling (EC), by tier (proposed defaults — confirm before launch):
+Evidence Ceiling (EC), by tier (CONFIRMED/locked 2026-07-12):
   Tier A → 100   Tier B → 80   Tier C → 60   Tier D → 40
 
 Compound Sub-Score = min(DA, EC)
@@ -150,10 +150,10 @@ Total Estimated Annual Waste = (Redundancy Waste + Underdosing Waste) × 12
 ```
 **Why this stays a separate number rather than being baked into the composite score:** the dollar figure is the single most persuasive, concrete thing in the whole product — collapsing it into an abstract 0–100 index would bury the exact number that makes someone feel "this paid for itself." Show both, never merge them.
 
-### Open parameters requiring Ziad's sign-off before launch
-- Evidence-tier ceiling values (100/80/60/40 proposed)
-- Overdosing penalty slope (currently 50× proposed, asymmetric to underdosing)
-- Minimum sample-size threshold for Tier A/B distinction
+### Parameter sign-off status
+- Evidence-tier ceiling values (100/80/60/40) — **CONFIRMED/locked 2026-07-12**
+- Overdosing penalty slope (50×, asymmetric to underdosing) — **CONFIRMED/locked 2026-07-12**
+- Minimum sample-size threshold for Tier A/B distinction — **still open**, needs sign-off before the first compound batch ships
 
 ---
 
@@ -240,9 +240,9 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 | Date | Decision needed | Status |
 |---|---|---|
 | 2026-07-03 | Backend language: Python/FastAPI vs Node/TypeScript | **Resolved — Node.js (Express)** |
-| 2026-07-03 | Evidence-tier ceiling values (100/80/60/40) | Proposed — awaiting sign-off |
-| 2026-07-03 | Overdosing vs underdosing penalty asymmetry | Proposed — awaiting sign-off |
-| 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed |
+| 2026-07-03 | Evidence-tier ceiling values (100/80/60/40) | **Resolved — CONFIRMED/locked 2026-07-12** |
+| 2026-07-03 | Overdosing vs underdosing penalty asymmetry (50× slope) | **Resolved — CONFIRMED/locked 2026-07-12** |
+| 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed — **still open** |
 | — | Single-repo (monorepo) vs two-repo structure | **Resolved — monorepo**, two top-level folders, confirmed |
 | — | Render graduation trigger (when to move off free tier) | Proposed: first week with meaningful live-scoring traffic — define threshold |
 | 2026-07-10 | Article cross-linking placement (educational vs. roundup content from thrivetrilogy.com) | **Resolved** — see `related_articles` field in §1 and full rule in `BRAND_GUIDELINES.md` §8 |

@@ -117,8 +117,8 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 
 ## 9. Open items — needs a decision or action
 
-- [ ] **Evidence-tier ceiling values** (100/80/60/40 proposed in `TECH_DOCS.md` §2) — need founder sign-off
-- [ ] **Overdosing vs. underdosing penalty asymmetry** in the scoring formula — proposed, not yet confirmed
+- [x] ~~**Evidence-tier ceiling values** (100/80/60/40 in `TECH_DOCS.md` §2)~~ — **CONFIRMED/locked 2026-07-12**
+- [x] ~~**Overdosing vs. underdosing penalty asymmetry** (50× slope) in the scoring formula~~ — **CONFIRMED/locked 2026-07-12**
 - [ ] **Brand design tokens** (`tailwind.config.ts`) are estimates from screenshots, not real CSS values — confirm against live site
 - [ ] **Begin evidence data entry** — start with NMN, Resveratrol, Berberine, TMG (highest existing editorial depth per §5)
 - [ ] **Build the scoring engine + `intake-parser/` module** — the two backend pieces the merged UI is currently mocked against; wiring them in is a drop-in swap of `lib/mock-api.ts` per Claude Code's own note on the PR
