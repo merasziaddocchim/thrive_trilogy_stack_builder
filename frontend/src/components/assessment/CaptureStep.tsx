@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { StepShell } from './StepShell';
 import { Button } from '@/components/ui/primitives';
-import { extractStack } from '@/lib/mock-api';
+import { extractStack } from '@/lib/data';
 import { FIXTURE_RAW_STACK_INPUT } from '@/lib/fixtures';
 import type { AuditState } from './audit-state';
 import type { ExtractedItem } from '@/lib/types';

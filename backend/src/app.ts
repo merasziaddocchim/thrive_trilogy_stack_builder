@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { healthRouter } from './api/routes/health.js';
 import { assessmentRouter } from './api/routes/assessment.js';
+import { intakeRouter } from './api/routes/intake.js';
 
 // Express app factory - separated from server bootstrap so it can be imported in tests.
 export function createApp() {
@@ -15,6 +16,7 @@ export function createApp() {
 
   app.use('/health', healthRouter);
   app.use('/assessment', assessmentRouter);
+  app.use('/intake', intakeRouter);
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'not_found' });

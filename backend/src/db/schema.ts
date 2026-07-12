@@ -106,6 +106,11 @@ export const evidenceTierEnum = pgEnum('evidence_tier', [
   'D_preliminary',
 ]);
 
+// Enum-derived TS types so the DB stays the single source of truth for these unions.
+export type EvidenceTier = (typeof evidenceTierEnum.enumValues)[number];
+export type DeliveryFormat = (typeof deliveryFormatEnum.enumValues)[number];
+export type InteractionSeverity = (typeof interactionSeverityEnum.enumValues)[number];
+
 // =============================================================================
 // LAYER 1 — Source registry: one record per paper, before any extraction.
 // =============================================================================

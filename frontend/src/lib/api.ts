@@ -1,26 +1,55 @@
-// Thin typed client for the backend API (TECH_DOCS §6). No business logic.
-// Only the interactive flow uses this - marketing/methodology pages must not depend
-// on the backend being warm (TECH_DOCS §5/§7).
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+// Live typed client for the backend API (TECH_DOCS §6 + the /intake endpoint from §1a).
+// Throws on any non-2xx or when no backend URL is configured, so the data layer
+// (lib/mock-api.ts) can catch and fall back to fixtures. Only the interactive flow uses
+// this — marketing/methodology pages must not depend on the backend being warm (§5/§7).
+import type {
+  AssessmentPayload,
+  ExtractedItem,
+  PreviewResponse,
+  ReportResponse,
+} from './types';
 
-export async function createAssessment(payload: unknown): Promise<{ assessment_id: string }> {
-  const res = await fetch(`${BASE}/assessment`, {
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+
+function requireBase(): string {
+  if (!BASE) throw new Error('no_backend_configured');
+  return BASE;
+}
+
+async function json<T>(res: Response, label: string): Promise<T> {
+  if (!res.ok) throw new Error(`${label} failed: ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+/** POST /intake → confirmable, mixed-confidence extracted items (§1a). */
+export async function parseIntake(text: string): Promise<ExtractedItem[]> {
+  const res = await fetch(`${requireBase()}/intake`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  const data = await json<{ items: ExtractedItem[] }>(res, 'parseIntake');
+  return data.items;
+}
+
+/** POST /assessment → { assessment_id }. */
+export async function createAssessment(payload: AssessmentPayload): Promise<{ assessment_id: string }> {
+  const res = await fetch(`${requireBase()}/assessment`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`createAssessment failed: ${res.status}`);
-  return res.json();
+  return json(res, 'createAssessment');
 }
 
-export async function getPreview(id: string) {
-  const res = await fetch(`${BASE}/assessment/${id}/preview`);
-  if (!res.ok) throw new Error(`getPreview failed: ${res.status}`);
-  return res.json();
+/** GET /assessment/:id/preview (free tier). */
+export async function getPreview(id: string): Promise<PreviewResponse> {
+  const res = await fetch(`${requireBase()}/assessment/${id}/preview`);
+  return json<PreviewResponse>(res, 'getPreview');
 }
 
-export async function getReport(id: string) {
-  const res = await fetch(`${BASE}/assessment/${id}/report`);
-  if (!res.ok) throw new Error(`getReport failed: ${res.status}`);
-  return res.json();
+/** GET /assessment/:id/report (post email-capture). */
+export async function getReport(id: string): Promise<ReportResponse> {
+  const res = await fetch(`${requireBase()}/assessment/${id}/report`);
+  return json<ReportResponse>(res, 'getReport');
 }
