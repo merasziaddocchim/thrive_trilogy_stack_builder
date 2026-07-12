@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { LEGAL_PAGES, REVIEWER } from '@/lib/constants';
+import { LEGAL_CONTENT, type LegalBlock } from '@/lib/legal-content';
 
-// The 12 legal/utility routes required by CLAIMS_COMPLIANCE §5a. Routing + footer links
-// must EXIST now; the actual legal copy is written later, adapted from the root site (NOT
-// copied verbatim — the app collects different data than the blog). SSG, backend-independent
-// (TECH_DOCS §7). dynamicParams=false → only these 12 slugs render; anything else 404s.
+// The 12 legal/utility routes required by CLAIMS_COMPLIANCE §5a. Copy is adapted (not
+// copied verbatim) from the root site for what THIS app collects — see lib/legal-content.ts.
+// SSG, backend-independent (TECH_DOCS §7). dynamicParams=false → only these 12 slugs render.
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 
@@ -23,22 +23,37 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   return { title: page?.title ?? 'Not found', alternates: { canonical: `/${params.slug}` } };
 }
 
-// A few pages carry an app-specific compliance note now (CLAIMS_COMPLIANCE §5a) so the
-// placeholder already signals what the finished copy must cover.
-const NOTES: Record<string, string> = {
-  'affiliate-disclosure':
-    'This page will cover the per-link disclosures used inside the Stack Report’s Start section, and the firewall between your Spend Efficiency Index and any affiliate relationship.',
-  'privacy-policy':
-    'This page will disclose the stack and health-adjacent inputs the assessment collects (goals, budget, current supplements) — materially different from the blog, so it is adapted, not copied.',
-  terms:
-    'This page will reflect the tool’s actual function — an informational comparison/audit tool, not medical advice.',
-  disclaimer:
-    'This report compares your stack against published research and is for informational purposes only. It is not medical advice, has not been evaluated by the FDA, and is not intended to diagnose, treat, cure, or prevent any disease.',
-};
+function Block({ block }: { block: LegalBlock }) {
+  return (
+    <div className="mt-8">
+      {block.heading && <h2 className="text-lg font-700 text-headline">{block.heading}</h2>}
+      {block.paragraphs?.map((p, i) => (
+        <p key={i} className="mt-3 text-body">
+          {p}
+        </p>
+      ))}
+      {block.bullets && (
+        <ul className="mt-3 list-disc space-y-1.5 pl-5 text-body">
+          {block.bullets.map((b, i) => (
+            <li key={i}>{b}</li>
+          ))}
+        </ul>
+      )}
+      {block.note && (
+        // Founder-review flag — visibly marked so it is never mistaken for final copy.
+        <p className="mt-4 rounded-lg border border-tier-c bg-tier-c-soft p-3 text-sm text-tier-c">
+          <span className="font-700">Flagged for review: </span>
+          {block.note}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function LegalPage({ params }: { params: { slug: string } }) {
   const page = pageFor(params.slug);
   if (!page) notFound();
+  const doc = LEGAL_CONTENT[params.slug];
 
   return (
     <main className="mx-auto max-w-prose px-4 py-16">
@@ -50,15 +65,35 @@ export default function LegalPage({ params }: { params: { slug: string } }) {
       </p>
       <h1 className="mt-4 text-2xl font-700 text-headline">{page.title}</h1>
 
-      <p className="mt-6 text-body">
-        {NOTES[params.slug] ??
-          `This is the ${page.title} page for the Thrive Trilogy Stack Optimizer. The full text is being adapted from thrivetrilogy.com for the app’s specific data and function.`}
-      </p>
-
-      <div className="mt-8 rounded-lg border border-border bg-surface-subtle p-4 text-sm text-muted">
-        Placeholder page — routing and footer links are in place; final copy is pending review
-        (CLAIMS_COMPLIANCE §5a). Last reviewed {REVIEWER.lastReviewed} by {REVIEWER.name}.
+      {/* Draft banner — this is engineering draft copy, not final legal text. */}
+      <div className="mt-4 rounded-lg border border-border bg-surface-subtle p-4 text-sm text-body">
+        <span className="font-700 text-headline">Draft for founder review.</span> This copy was
+        adapted from thrivetrilogy.com for what this app actually collects and does
+        (CLAIMS_COMPLIANCE §5a). It is not final legal text and has not been reviewed by an
+        attorney. Sections flagged in amber need specific facts confirmed before launch.
       </div>
+
+      {doc ? (
+        <>
+          <p className="mt-8 text-lg text-body">{doc.intro}</p>
+          {doc.blocks.map((block, i) => (
+            <Block key={i} block={block} />
+          ))}
+        </>
+      ) : (
+        <p className="mt-8 text-body">
+          Content for this page is being adapted from thrivetrilogy.com.
+        </p>
+      )}
+
+      <p className="mt-10 border-t border-border pt-4 text-xs text-muted">
+        Last reviewed {REVIEWER.lastReviewed} by {REVIEWER.name}, {REVIEWER.credential}. Questions?
+        See our{' '}
+        <Link href="/contact" className="text-accent underline underline-offset-4">
+          Contact
+        </Link>{' '}
+        page.
+      </p>
     </main>
   );
 }

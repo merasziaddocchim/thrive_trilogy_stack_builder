@@ -11,6 +11,7 @@ import { getPreview } from '@/lib/mock-api';
 import { hasSufficientSpend, type AuditState } from './audit-state';
 import type { PreviewResponse, EvidenceTier } from '@/lib/types';
 import { Button, Card, Eyebrow, FixtureTag } from '@/components/ui/primitives';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 import { TierBadge } from '@/components/ui/EvidenceTier';
 import { IconLayers, IconAlert, IconArrowRight } from '@/components/ui/Icon';
 import { TERMS } from '@/lib/constants';
@@ -105,6 +106,8 @@ export function PreviewStep({
         <FixtureTag label="Preview · sample data" />
       </div>
       <h1 className="text-xl font-700 text-headline">Here&apos;s what we found in your stack</h1>
+
+      <SampleDataBanner className="mt-4" />
 
       {/* ---------- STATE A: sufficient — real-looking SEI + waste range ---------- */}
       {stateA && data.spend_efficiency_index !== null && data.estimated_annual_waste && (

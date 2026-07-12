@@ -12,6 +12,7 @@ import { StopKeepStart } from '@/components/report/StopKeepStart';
 import { SafetyFlag } from '@/components/report/SafetyFlag';
 import { Disclaimer } from '@/components/compliance/Disclaimer';
 import { Button, FixtureTag } from '@/components/ui/primitives';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 import { TERMS, REVIEWER } from '@/lib/constants';
 
 export default function ReportPage({ params }: { params: { id: string } }) {
@@ -56,6 +57,11 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-700 text-headline">Your {TERMS.report}</h1>
         <FixtureTag label="Sample report · fixture data" />
+      </div>
+
+      {/* Sample-data notice — this build renders fixtures, not a scored result. */}
+      <div className="mt-4">
+        <SampleDataBanner />
       </div>
 
       {/* Disclaimer: body text size, top of the report — NOT footer-only (§5). */}
