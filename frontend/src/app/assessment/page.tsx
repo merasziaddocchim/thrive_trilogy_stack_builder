@@ -31,6 +31,8 @@ export default function AssessmentPage() {
   const [state, patch] = useReducer(reducer, INITIAL_STATE);
   const [stepIndex, setStepIndex] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  // Real assessment id from POST /assessment (or 'demo' on fallback), threaded to preview/report.
+  const [assessmentId, setAssessmentId] = useState('demo');
 
   // Rehydrate saved progress once on mount (matches the ResultsLayout pattern noted in §8).
   useEffect(() => {
@@ -77,11 +79,26 @@ export default function AssessmentPage() {
     case 'safety':
       return <SafetyStep state={state} patch={patch} onBack={back} onContinue={next} />;
     case 'analysis':
-      return <AnalysisStep onDone={() => goto('preview')} />;
+      return (
+        <AnalysisStep
+          state={state}
+          onDone={(id) => {
+            setAssessmentId(id);
+            goto('preview');
+          }}
+        />
+      );
     case 'preview':
-      return <PreviewStep state={state} onBack={() => goto('spend')} onContinue={next} />;
+      return (
+        <PreviewStep
+          state={state}
+          assessmentId={assessmentId}
+          onBack={() => goto('spend')}
+          onContinue={next}
+        />
+      );
     case 'email':
-      return <EmailGateStep onBack={() => goto('preview')} />;
+      return <EmailGateStep assessmentId={assessmentId} onBack={() => goto('preview')} />;
     default:
       return null;
   }

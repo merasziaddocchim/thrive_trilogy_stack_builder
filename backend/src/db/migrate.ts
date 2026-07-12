@@ -9,12 +9,10 @@ async function main() {
   const db = drizzle(pool);
   await migrate(db, { migrationsFolder: './drizzle' });
   await pool.end();
-  // eslint-disable-next-line no-console
   console.log('Migrations applied.');
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });

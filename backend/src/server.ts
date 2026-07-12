@@ -5,6 +5,5 @@ import { env } from './config/env.js';
 const app = createApp();
 
 app.listen(env.PORT, () => {
-  // eslint-disable-next-line no-console
   console.log(`stackoptimizer-backend listening on :${env.PORT} (${env.NODE_ENV})`);
 });

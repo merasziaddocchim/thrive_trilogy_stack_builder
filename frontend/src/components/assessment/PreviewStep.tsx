@@ -7,7 +7,7 @@
 // Which state renders is decided by whether spend was captured (audit-state predicate),
 // mirroring how the real backend would decide server-side. Includes loading/error/empty.
 import { useEffect, useState } from 'react';
-import { getPreview } from '@/lib/mock-api';
+import { getPreview } from '@/lib/data';
 import { hasSufficientSpend, type AuditState } from './audit-state';
 import type { PreviewResponse, EvidenceTier } from '@/lib/types';
 import { Button, Card, Eyebrow, FixtureTag } from '@/components/ui/primitives';
@@ -36,25 +36,31 @@ function TierSummary({ summary }: { summary: Record<EvidenceTier, number> }) {
 
 export function PreviewStep({
   state,
+  assessmentId,
   onBack,
   onContinue,
 }: {
   state: AuditState;
+  assessmentId: string;
   onBack: () => void;
   onContinue: () => void;
 }) {
   const [data, setData] = useState<PreviewResponse | null>(null);
+  const [isSample, setIsSample] = useState(false);
   const [error, setError] = useState(false);
 
   const load = () => {
     setError(false);
     setData(null);
-    getPreview('demo', { hasSpend: hasSufficientSpend(state) })
-      .then(setData)
+    getPreview(assessmentId, { hasSpend: hasSufficientSpend(state) })
+      .then((res) => {
+        setData(res.data);
+        setIsSample(res.isSample);
+      })
       .catch(() => setError(true));
   };
 
-  useEffect(load, [state]);
+  useEffect(load, [state, assessmentId]);
 
   if (error) {
     return (
@@ -103,11 +109,12 @@ export function PreviewStep({
     <main className="mx-auto max-w-xl px-4 py-8 sm:py-12">
       <div className="flex items-center justify-between">
         <Eyebrow>Your {TERMS.preview}</Eyebrow>
-        <FixtureTag label="Preview · sample data" />
+        {isSample && <FixtureTag label="Preview · sample data" />}
       </div>
       <h1 className="text-xl font-700 text-headline">Here&apos;s what we found in your stack</h1>
 
-      <SampleDataBanner className="mt-4" />
+      {/* Banner ONLY when these numbers are fixtures, not a live scored result. */}
+      {isSample && <SampleDataBanner className="mt-4" />}
 
       {/* ---------- STATE A: sufficient — real-looking SEI + waste range ---------- */}
       {stateA && data.spend_efficiency_index !== null && data.estimated_annual_waste && (

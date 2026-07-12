@@ -1,8 +1,8 @@
 // =============================================================================
-// FIXTURES — mock data ONLY. Shaped exactly to the TECH_DOCS §6 API contract and
-// the §1a intake-parser plan. When the real backend exists, delete this file and
-// point mock-api.ts at the live endpoints — nothing else should need to change
-// (prompt §10.7). Every export here is prefixed `FIXTURE_` so its provenance is
+// FIXTURES — sample data ONLY. Shaped exactly to the TECH_DOCS §6 API contract and
+// the §1a intake-parser plan. These now back the FALLBACK path in lib/data.ts (used when
+// the live backend is unreachable/unseeded) and are handy for tests/demos; the live app
+// prefers real backend data. Every export here is prefixed `FIXTURE_` so its provenance is
 // obvious at every call site. NONE of this is a real user's data or a real result.
 // =============================================================================
 import type {

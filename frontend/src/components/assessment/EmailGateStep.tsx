@@ -11,7 +11,13 @@ import { TERMS } from '@/lib/constants';
 
 const schema = z.object({ email: z.string().trim().email('Enter a valid email address.') });
 
-export function EmailGateStep({ onBack }: { onBack: () => void }) {
+export function EmailGateStep({
+  assessmentId,
+  onBack,
+}: {
+  assessmentId: string;
+  onBack: () => void;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +31,8 @@ export function EmailGateStep({ onBack }: { onBack: () => void }) {
     }
     setError(null);
     setSubmitting(true);
-    // Mock: no real capture. Real flow would POST then route to the returned report id.
-    router.push('/report/demo');
+    // Real flow would POST the email capture; here we route to the report for this assessment.
+    router.push(`/report/${assessmentId}`);
   }
 
   return (

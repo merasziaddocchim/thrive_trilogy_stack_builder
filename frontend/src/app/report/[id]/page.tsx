@@ -2,10 +2,10 @@
 // Screen 12 — full Stack Report in dashboard mode (CSR, post email-capture, not indexed —
 // TECH_DOCS §7). Financial-dashboard density within the brand palette (BRAND §5). The
 // disclaimer renders in BODY text at the TOP (CLAIMS_COMPLIANCE §5, BRAND §7). Data comes
-// from the mock API/fixtures (prompt scope: no scoring logic here). Loading/error/empty
-// states included (deliverable §10.6).
+// live-first from the backend, falling back to fixtures; the sample-data banner shows ONLY
+// when the numbers are fixtures. Loading/error/empty states included (deliverable §10.6).
 import { useEffect, useState } from 'react';
-import { getReport } from '@/lib/mock-api';
+import { getReport } from '@/lib/data';
 import type { ReportResponse } from '@/lib/types';
 import { SpendEfficiencyIndex } from '@/components/report/SpendEfficiencyIndex';
 import { StopKeepStart } from '@/components/report/StopKeepStart';
@@ -17,12 +17,18 @@ import { TERMS, REVIEWER } from '@/lib/constants';
 
 export default function ReportPage({ params }: { params: { id: string } }) {
   const [report, setReport] = useState<ReportResponse | null>(null);
+  const [isSample, setIsSample] = useState(false);
   const [error, setError] = useState(false);
 
   const load = () => {
     setError(false);
     setReport(null);
-    getReport(params.id).then(setReport).catch(() => setError(true));
+    getReport(params.id)
+      .then((res) => {
+        setReport(res.data);
+        setIsSample(res.isSample);
+      })
+      .catch(() => setError(true));
   };
 
   useEffect(load, [params.id]);
@@ -56,13 +62,15 @@ export default function ReportPage({ params }: { params: { id: string } }) {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-700 text-headline">Your {TERMS.report}</h1>
-        <FixtureTag label="Sample report · fixture data" />
+        {isSample && <FixtureTag label="Sample report · fixture data" />}
       </div>
 
-      {/* Sample-data notice — this build renders fixtures, not a scored result. */}
-      <div className="mt-4">
-        <SampleDataBanner />
-      </div>
+      {/* Sample-data notice — shown ONLY when these numbers are fixtures, not a live result. */}
+      {isSample && (
+        <div className="mt-4">
+          <SampleDataBanner />
+        </div>
+      )}
 
       {/* Disclaimer: body text size, top of the report — NOT footer-only (§5). */}
       <div className="mt-4">

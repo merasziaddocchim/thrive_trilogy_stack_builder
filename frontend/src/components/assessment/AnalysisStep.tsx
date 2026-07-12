@@ -5,11 +5,19 @@
 // with retry (deliverable §10.6). No backend dependency for marketing — this is the one
 // assessment screen that stands in for the live call.
 import { useEffect, useRef, useState } from 'react';
-import { ANALYSIS_STAGES, runAnalysis } from '@/lib/mock-api';
+import { ANALYSIS_STAGES, runAnalysis, createAssessment } from '@/lib/data';
+import { buildAssessmentPayload } from './build-payload';
+import type { AuditState } from './audit-state';
 import { IconCheck, IconAlert } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/primitives';
 
-export function AnalysisStep({ onDone }: { onDone: () => void }) {
+export function AnalysisStep({
+  state,
+  onDone,
+}: {
+  state: AuditState;
+  onDone: (assessmentId: string) => void;
+}) {
   const [stage, setStage] = useState(0);
   const [error, setError] = useState(false);
   const [slow, setSlow] = useState(false);
@@ -20,10 +28,15 @@ export function AnalysisStep({ onDone }: { onDone: () => void }) {
     setStage(0);
     // Cold-start reassurance: if it's taking long, acknowledge it rather than hang.
     const slowTimer = setTimeout(() => setSlow(true), 6000);
-    runAnalysis((i) => setStage(i))
-      .then(() => {
+    // Run the staged animation and create the assessment in parallel; advance when both
+    // finish. createAssessment falls back to a demo id if the backend is unreachable.
+    Promise.all([
+      runAnalysis((i) => setStage(i)),
+      createAssessment(buildAssessmentPayload(state)),
+    ])
+      .then(([, created]) => {
         clearTimeout(slowTimer);
-        onDone();
+        onDone(created.assessment_id);
       })
       .catch(() => {
         clearTimeout(slowTimer);

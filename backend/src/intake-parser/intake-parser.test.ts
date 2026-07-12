@@ -1,0 +1,125 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { parseIntake, describeParser, matchCompound } from './index.js';
+import { HeuristicExtractor, LlmExtractor } from './extractor.js';
+import type { CompoundRef, ParsedItem } from './types.js';
+
+const COMPOUNDS: CompoundRef[] = [
+  { compoundId: 'cmp_nmn', canonicalName: 'NMN (Nicotinamide Mononucleotide)', aliases: ['NMN', 'Nicotinamide Mononucleotide'] },
+  { compoundId: 'cmp_nr', canonicalName: 'NR (Nicotinamide Riboside)', aliases: ['NR', 'Nicotinamide Riboside', 'Tru Niagen', 'Niagen'] },
+  { compoundId: 'cmp_resveratrol', canonicalName: 'Resveratrol', aliases: ['trans-resveratrol'] },
+  { compoundId: 'cmp_tmg', canonicalName: 'TMG (Trimethylglycine)', aliases: ['TMG', 'Trimethylglycine', 'Betaine'] },
+  { compoundId: 'cmp_berberine', canonicalName: 'Berberine', aliases: ['berberine HCl'] },
+  { compoundId: 'cmp_spermidine', canonicalName: 'Spermidine', aliases: [] },
+];
+
+const SAMPLE = `NMN 250mg (Renue by Science, sublingual) - about $45/mo
+Tru Niagen 300mg
+liposomal resveratrol, 1 scoop
+TMG 1000
+berberine 500mg 2x day
+some kind of spermidine, not sure of the dose
+magnesium glycinate at night`;
+
+function byRaw(items: ParsedItem[], substr: string): ParsedItem {
+  const found = items.find((i) => i.rawText.includes(substr));
+  assert.ok(found, `expected an item for "${substr}"`);
+  return found;
+}
+
+test('parses the sample stack into one item per line', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  assert.equal(items.length, 7);
+});
+
+test('high-confidence match: NMN with dose, format, and price', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const nmn = byRaw(items, 'NMN 250mg');
+  assert.equal(nmn.compoundId, 'cmp_nmn');
+  assert.equal(nmn.confidence, 'high');
+  assert.deepEqual(nmn.dose, { amount: 250, unit: 'mg' });
+  assert.equal(nmn.deliveryFormat, 'sublingual');
+  assert.equal(nmn.monthlyPrice, 45);
+});
+
+test('brand alias resolves: "Tru Niagen" → NR', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const nr = byRaw(items, 'Tru Niagen');
+  assert.equal(nr.compoundId, 'cmp_nr');
+  assert.equal(nr.confidence, 'high');
+  assert.deepEqual(nr.dose, { amount: 300, unit: 'mg' });
+});
+
+test('twice-a-day multiplier resolves the daily dose (500mg 2x → 1000mg)', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const berb = byRaw(items, 'berberine');
+  assert.equal(berb.compoundId, 'cmp_berberine');
+  assert.deepEqual(berb.dose, { amount: 1000, unit: 'mg' });
+});
+
+test('recognized compound but uninterpretable dose is downgraded to low confidence', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const resv = byRaw(items, 'resveratrol');
+  assert.equal(resv.compoundId, 'cmp_resveratrol'); // name matched
+  assert.equal(resv.dose, null); // "1 scoop" is not an interpretable dose
+  assert.equal(resv.confidence, 'low'); // so the user is asked to confirm
+  assert.equal(resv.deliveryFormat, 'liposomal');
+
+  const sperm = byRaw(items, 'spermidine');
+  assert.equal(sperm.compoundId, 'cmp_spermidine');
+  assert.equal(sperm.confidence, 'low');
+});
+
+test('a compound not in the database is surfaced as unmatched, not silently guessed', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const mag = byRaw(items, 'magnesium glycinate');
+  assert.equal(mag.compoundId, null);
+  assert.equal(mag.canonicalName, null);
+  assert.equal(mag.confidence, 'unmatched');
+});
+
+test('the parsed set contains a realistic mix of high, low, and unmatched', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const counts = items.reduce(
+    (acc, i) => ({ ...acc, [i.confidence]: (acc[i.confidence] ?? 0) + 1 }),
+    {} as Record<string, number>,
+  );
+  assert.ok(counts.high >= 1, 'expected at least one high-confidence match');
+  assert.ok(counts.low >= 1, 'expected at least one low-confidence match');
+  assert.ok(counts.unmatched >= 1, 'expected at least one unmatched item');
+});
+
+test('typo tolerance: "berberin" still matches Berberine', () => {
+  const m = matchCompound('berberin', COMPOUNDS);
+  assert.equal(m.compound?.compoundId, 'cmp_berberine');
+  assert.notEqual(m.confidence, 'unmatched');
+});
+
+test('LlmExtractor uses model output when it returns valid JSON', async () => {
+  const complete = async () =>
+    JSON.stringify([
+      { rawText: 'Fisetin 100mg', nameGuess: 'Fisetin', dose: { amount: 100, unit: 'mg' }, deliveryFormat: null, monthlyPrice: null },
+    ]);
+  const items = await parseIntake('Fisetin 100mg', [{ compoundId: 'cmp_fisetin', canonicalName: 'Fisetin', aliases: [] }], {
+    extractor: new LlmExtractor(complete),
+  });
+  assert.equal(items[0].compoundId, 'cmp_fisetin');
+  assert.deepEqual(items[0].dose, { amount: 100, unit: 'mg' });
+});
+
+test('LlmExtractor falls back to deterministic parsing when the model call fails', async () => {
+  const failing = async () => {
+    throw new Error('model unavailable');
+  };
+  const items = await parseIntake('NMN 250mg', COMPOUNDS, {
+    extractor: new LlmExtractor(failing, new HeuristicExtractor()),
+  });
+  assert.equal(items[0].compoundId, 'cmp_nmn');
+  assert.deepEqual(items[0].dose, { amount: 250, unit: 'mg' });
+});
+
+test('describeParser contains no banned capability-overclaim terms (CLAIMS §10)', () => {
+  const desc = describeParser().toLowerCase();
+  const banned = ['ai-verified', 'ai-powered', 'clinically proven', 'ai-reviewed', 'medically validated', 'clinically trained'];
+  for (const term of banned) assert.ok(!desc.includes(term), `description must not contain "${term}"`);
+});
