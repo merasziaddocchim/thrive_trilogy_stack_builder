@@ -122,7 +122,15 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 - [ ] **Brand design tokens** (`tailwind.config.ts`) are estimates from screenshots, not real CSS values — confirm against live site
 - [ ] **Begin evidence data entry** — start with NMN, Resveratrol, Berberine, TMG (highest existing editorial depth per §5)
 - [ ] **Build the scoring engine + `intake-parser/` module** — the two backend pieces the merged UI is currently mocked against; wiring them in is a drop-in swap of `lib/mock-api.ts` per Claude Code's own note on the PR
-- [ ] **Write real legal copy** for the 12 already-routed pages, adapted from the root site per `CLAIMS_COMPLIANCE.md` §5a — routes/scaffolding done, content is still placeholder
+- [ ] **Finalize legal copy** for the 12 routed pages — *draft* copy now exists (adapted from the root site per `CLAIMS_COMPLIANCE.md` §5a; content in `frontend/src/lib/legal-content.ts`, each page shows a "Draft for founder review" banner). Still needs founder facts + attorney review before launch. Specific flags surfaced in-page and to resolve:
+  - [ ] **Privacy Policy (highest priority):** (a) which AI/LLM provider processes the free-text stack entry, and whether that provider retains entries or trains on them; (b) whether any assessment data is stored server-side once an email is captured, and for how long (backend not wired, so retention is currently undefined); (c) whether `USER_LAB_RESULT` / `USER_FEEDBACK` (schema-supported per `TECH_DOCS.md` §1 but not collected in V1) will be collected later; (d) the email provider and analytics vendor; (e) legal basis / disclosures for target regions (GDPR/UK if applicable)
+  - [ ] **Contact:** confirm the real public contact email (`hello@thrivetrilogy.com` is a placeholder) and whether a mailing address is needed
+  - [ ] **Cookie Policy:** confirm the actual analytics provider and any affiliate/attribution cookies actually set — don't claim analytics we don't run
+  - [ ] **DMCA Policy:** provide the designated agent's name, email, and mailing address; confirm Copyright Office registration
+  - [ ] **Do Not Sell/Share:** confirm whether any current vendor triggers a CCPA/CPRA "sharing" obligation, whether a dedicated opt-out form is needed, and whether GPC is honored yet
+  - [ ] **Affiliate Disclosure:** name the specific affiliate programs in use and confirm each program's required disclosure language
+  - [ ] **Terms & Conditions:** set governing-law jurisdiction + dispute resolution; attorney to confirm warranty/liability language
+  - [ ] **Reviews:** decide what this page hosts on the app subdomain — carried-over brand/product reviews, customer testimonials, or both (testimonials must be genuine and FTC-Endorsement-Guides compliant)
 - [x] ~~Formalize article cross-linking rule from §5 into `BRAND_GUIDELINES.md` proper~~ — done; correctly owned by `CLAIMS_COMPLIANCE.md` §6 extension, applied in `BRAND_GUIDELINES.md` §8
 - [x] ~~Update `TECH_DOCS.md` frontend page list and `BRAND_GUIDELINES.md` content rules to reflect §5/§6~~ — done, including a doc-ownership correction (see §7 decision log)
 - [x] ~~Build and merge V1 UI/UX~~ — done, merged to `main` July 12, 2026 (PR #1)
