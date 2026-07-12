@@ -1,7 +1,7 @@
 # STATUS.md — Thrive Trilogy Stack Optimizer
 **Master memory file.** Read this first, in any new session, before doing anything else. This is the single source of truth for *where things stand* — not what the product does (that's the three governance docs below) but what's actually built, deployed, and decided so far.
 
-**Owner:** Ziad Meras. **Last updated:** July 10, 2026.
+**Owner:** Ziad Meras. **Last updated:** July 12, 2026.
 
 > Keep this file current. Every time a real decision gets made or infrastructure changes, add a line here before moving on — that's the entire point of this file existing.
 
@@ -40,8 +40,8 @@ These are the actual source of truth for *what the product does and how*. This f
 
 **GitHub (source of truth repo):**
 - `github.com/merasziaddocchim/thrive_trilogy_stack_builder` — Private
-- Contains: `Docs/` (all three governing docs), `backend/`, `frontend/`, `README.md`
-- Latest merged commit: `a4192eb` — scaffold (backend + frontend + schema + migration)
+- Contains: `Docs/` (all three governing docs + this file), `backend/`, `frontend/`, `README.md`
+- **PR #1 merged to `main`, July 12, 2026** — "Build complete marketing & assessment UI with fixtures and design system," commit `6232a9c`, CI green (2/2 checks passed), no conflicts. Full V1 UI/UX build (all 12 screens) is now on `main`, not just committed to a branch.
 
 **Neon (database):**
 - Project live under "Thrive Trilogy" org
@@ -107,13 +107,13 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 | Stack capture method | Free-text + LLM extraction, confidence-gated with a user confirmation step ("Confirm What We Found") | Chosen over simple fuzzy-match (less accurate) or a stubbed placeholder (defers the hardest UX problem); architecture logged in `TECH_DOCS.md` §1a |
 | Claude Code UI prompt — independent audit | Founder ran the finalized prompt through Gemini 3.1 Pro against all four governing docs; it surfaced 3 real gaps (backend scope bleed in intake-parsing instructions, incomplete legal page list in the footer section, missing E-E-A-T structured data requirement) plus 1 self-caught gap (intake-parser architecture existed only in the prompt, not in `TECH_DOCS.md`) | All 4 fixed in the prompt and propagated back into `TECH_DOCS.md` §1a/§8 — same doc-ownership discipline established earlier in this project, holding up under a second, independent review |
 | Doc-ownership correction | Moved article-linking and legal-pages *rules* out of `BRAND_GUIDELINES.md`/`TECH_DOCS.md` into `CLAIMS_COMPLIANCE.md` (§6 extension, new §5a) | Both were originally drafted as compliance-level judgments but placed in the wrong file — `BRAND_GUIDELINES.md` and `TECH_DOCS.md` should only *apply* claims/disclosure rules, never originate them |
+| V1 UI/UX build | Merged to `main`, July 12, 2026 (PR #1, commit `6232a9c`) | Built by Claude Code against the corrected, audited prompt; matches spec closely including the added Confirm-What-We-Found step and the JSON-LD fix from the Gemini audit |
 
-## 8. What's actually built (as of last scaffold)
+## 8. What's actually built (as of the July 12 merge)
 
-- **Backend:** Express + Drizzle, full three-layer schema (`sources` → `compounds`/`dose_records`/`bioavailability_records`/`interaction_records` → `scoring_parameters`), all enums from `TECH_DOCS.md` §1 implemented verbatim, API route stubs matching `TECH_DOCS.md` §6 (currently return `501`), compliance NOT NULL constraints enforced at DB level, firewall + claim guard scripts in place
-- **Frontend:** Next.js App Router + Tailwind, SSG/ISR for `/` and `/methodology`, CSR for `/assessment` and `/report/[id]`, own `robots.ts`/`sitemap.ts`, `Person` schema for author attribution, disclaimer component at top of every report — **live at app.thrivetrilogy.com**
-- **Frontend UI/UX build (2026-07-11):** full V1 interface built against mock data/fixtures shaped to `TECH_DOCS.md` §6 — design-token system (OKLCH color, fluid `clamp()` type, 4px grid, light-mode only) in `globals.css` + `tailwind.config.ts`; editorial serif (Fraunces) + rounded sans (Nunito) via `next/font`; landing page (all 8 sections, §3 A–H); the 12-screen audit journey (Fast Stack Capture → **Confirm What We Found** → Priority → Routine → Spend → Safety → multi-stage Analysis/cold-start → two-state Preview → email gate → Stack Report dashboard); Stop/Keep/Start with per-link affiliate disclosure and expandable Evidence Tier rows; all 12 legal/utility routes scaffolded (placeholder copy) + `Organization`/`Person`/`Article` JSON-LD; internal `/design-system` proof page. Evidence-tier ceilings live in ONE constant (`frontend/src/lib/constants.ts` → `EVIDENCE_TIER_CEILINGS`), marked provisional. Mock API in `lib/mock-api.ts` + `lib/fixtures.ts` — swap for the real backend is a drop-in. Build + typecheck green.
-- **Not yet built:** scoring formula logic, ceiling values finalized, claim template rendering, actual evidence database content (no real compounds/sources entered yet), auth, real legal/utility page copy (routes now scaffolded, text still pending per `CLAIMS_COMPLIANCE.md` §5a), article cross-linking UI, `backend/src/intake-parser/` module (frontend currently wired to a mocked extraction response per `TECH_DOCS.md` §1a)
+- **Backend:** Express + Drizzle, full three-layer schema (`sources` → `compounds`/`dose_records`/`bioavailability_records`/`interaction_records` → `scoring_parameters`), all enums from `TECH_DOCS.md` §1 implemented verbatim, API route stubs matching `TECH_DOCS.md` §6 (currently return `501`), compliance NOT NULL constraints enforced at DB level, firewall + claim guard scripts in place. **No scoring logic and no `intake-parser/` module yet — both explicitly out of scope for the UI build, still pending.**
+- **Frontend — full V1 UI/UX, merged and live at app.thrivetrilogy.com:** design-token system (light mode only), the full 8-section landing page, all 12 journey screens including the added "Confirm What We Found" step, both Preview states (sufficient/insufficient data), the Stack Report dashboard with per-link affiliate disclosure, all 12 legal/utility page routes, `Person`/`Organization`/`Article` JSON-LD, and a mock API (`lib/mock-api.ts` + `lib/fixtures.ts`) shaped exactly to `TECH_DOCS.md` §6 for a clean backend swap later. `npm run build` + `tsc` green; flow verified in-browser at desktop and 375px mobile. Health/stack form data deliberately uses `sessionStorage`, not `localStorage` — Claude Code's own initiative, a genuinely good privacy-conscious call beyond what was explicitly specified.
+- **Not yet built:** scoring formula logic, ceiling values finalized, claim template rendering, actual evidence database content (no real compounds/sources entered yet), auth, the `intake-parser/` module (architecture documented in `TECH_DOCS.md` §1a, not implemented), real legal copy for the 12 page routes (routes exist, content is placeholder), backend wiring (frontend currently runs entirely on mock fixtures)
 
 ## 9. Open items — needs a decision or action
 
@@ -121,9 +121,11 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 - [ ] **Overdosing vs. underdosing penalty asymmetry** in the scoring formula — proposed, not yet confirmed
 - [ ] **Brand design tokens** (`tailwind.config.ts`) are estimates from screenshots, not real CSS values — confirm against live site
 - [ ] **Begin evidence data entry** — start with NMN, Resveratrol, Berberine, TMG (highest existing editorial depth per §5)
-- [ ] **Build legal/utility pages** on app subdomain per §6 — requirement now fully specified in `CLAIMS_COMPLIANCE.md` §5a, ready to build
+- [ ] **Build the scoring engine + `intake-parser/` module** — the two backend pieces the merged UI is currently mocked against; wiring them in is a drop-in swap of `lib/mock-api.ts` per Claude Code's own note on the PR
+- [ ] **Write real legal copy** for the 12 already-routed pages, adapted from the root site per `CLAIMS_COMPLIANCE.md` §5a — routes/scaffolding done, content is still placeholder
 - [x] ~~Formalize article cross-linking rule from §5 into `BRAND_GUIDELINES.md` proper~~ — done; correctly owned by `CLAIMS_COMPLIANCE.md` §6 extension, applied in `BRAND_GUIDELINES.md` §8
 - [x] ~~Update `TECH_DOCS.md` frontend page list and `BRAND_GUIDELINES.md` content rules to reflect §5/§6~~ — done, including a doc-ownership correction (see §7 decision log)
+- [x] ~~Build and merge V1 UI/UX~~ — done, merged to `main` July 12, 2026 (PR #1)
 
 ## 10. Hard-won lessons (don't repeat these)
 
@@ -131,7 +133,9 @@ Existing pages on the root site to bring onto the app subdomain: About, Affiliat
 - Vercel auto-detects every deployable folder in a monorepo — must manually exclude any service (like the backend) that shouldn't deploy there.
 - Closing a merge/pull request does not delete the branch or its commits — only an explicit delete does.
 - A merge can succeed even while CI is failing — these are independent checks on a personal project, not a gate by default.
+- Anthropic has multiple, similarly-named GitHub Apps (e.g. "Claude" vs. "Claude Design Import") — they're easy to confuse, but only "Claude" (the Claude Code app) can be granted write access; "Design Import" is permanently read-only by design. Check the app name carefully before troubleshooting permissions.
+- `claude.ai/admin-settings/...` pages are organization-admin-only and won't work on a Pro plan — GitHub App repository access is actually managed on GitHub's side (`github.com/settings/installations`), not through claude.ai.
 
 ## 11. Next step right now
 
-The UI/UX Claude Code prompt is corrected, independently audited, and ready to paste in as-is — it builds all 12 screens against mock data, with the intake-parser module explicitly deferred (architecture documented in `TECH_DOCS.md` §1a for when it's actually built). The backend scoring-formula prompt is separate and still pending — the two don't block each other and can run in either order.
+**Milestone: the full V1 UI/UX is live on `main` and deployed at app.thrivetrilogy.com** — a real, clickable product, not just docs and scaffolding. The natural next step is the backend: implement the scoring formula (`TECH_DOCS.md` §2, pending the ceiling-value sign-off in §9) and the `intake-parser/` module (`TECH_DOCS.md` §1a), then swap `lib/mock-api.ts` for the real API — Claude Code already confirmed this is a clean, drop-in change. Evidence data entry (NMN/Resveratrol/Berberine/TMG) can happen in parallel, since it doesn't block or get blocked by backend work.
