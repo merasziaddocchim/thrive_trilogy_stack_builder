@@ -19,6 +19,17 @@ import type { AssessmentPayload, ExtractedItem, PreviewResponse, ReportResponse 
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Surface WHY a live call failed instead of silently showing sample data. Visible in the
+// browser console / Network tab, so the next diagnosis doesn't require code-reading:
+//   'no_backend_configured'  → the API base URL env var isn't set on the deploy (Vercel)
+//   'Failed to fetch' / TypeError → network, CORS, or a Render cold start that never answered
+//   '... failed: 500' (or 503) → the backend responded with an error (e.g. DB unreachable)
+function logFallback(fn: string, err: unknown): void {
+  const reason = err instanceof Error ? err.message : String(err);
+  // eslint-disable-next-line no-console
+  console.warn(`[data] live ${fn} failed → falling back to sample data. Reason: ${reason}`, err);
+}
+
 /** Wraps a payload result with whether it came from fixtures (sample) or the live backend. */
 export interface Sourced<T> {
   data: T;
@@ -29,7 +40,8 @@ export interface Sourced<T> {
 export async function extractStack(rawText: string): Promise<ExtractedItem[]> {
   try {
     return await live.parseIntake(rawText);
-  } catch {
+  } catch (err) {
+    logFallback('parseIntake', err);
     await delay(700); // keep the "reading your entries" beat when falling back
     return FIXTURE_EXTRACTION.map((i) => ({ ...i, dose: i.dose ? { ...i.dose } : null }));
   }
@@ -39,7 +51,8 @@ export async function extractStack(rawText: string): Promise<ExtractedItem[]> {
 export async function createAssessment(payload: AssessmentPayload): Promise<{ assessment_id: string }> {
   try {
     return await live.createAssessment(payload);
-  } catch {
+  } catch (err) {
+    logFallback('createAssessment', err);
     return { assessment_id: 'demo' };
   }
 }
@@ -51,7 +64,8 @@ export async function getPreview(
 ): Promise<Sourced<PreviewResponse>> {
   try {
     return { data: await live.getPreview(id), isSample: false };
-  } catch {
+  } catch (err) {
+    logFallback('getPreview', err);
     await delay(400);
     return { data: opts.hasSpend ? FIXTURE_PREVIEW_STATE_A : FIXTURE_PREVIEW_STATE_B, isSample: true };
   }
@@ -61,7 +75,8 @@ export async function getPreview(
 export async function getReport(id: string): Promise<Sourced<ReportResponse>> {
   try {
     return { data: await live.getReport(id), isSample: false };
-  } catch {
+  } catch (err) {
+    logFallback('getReport', err);
     await delay(500);
     return { data: FIXTURE_REPORT, isSample: true };
   }

@@ -2,7 +2,7 @@
 // Screen 6 — Routine. One question per sub-step (diet, activity, sleep), each SKIPPABLE
 // with a visible "Skip for now" (prompt §9). Intentionally short and separate to keep
 // completion rate high (prompt §2).
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StepShell } from './StepShell';
 import { ChoiceButton, SkipLink } from './Choice';
 import type { AuditState } from './audit-state';
@@ -38,6 +38,11 @@ export function RoutineStep({
 }) {
   const [sub, setSub] = useState(0);
   const current = SUBSTEPS[sub];
+
+  // Each routine sub-question is its own screen to the user — scroll to top on change too.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [sub]);
 
   const advance = () => {
     if (sub < SUBSTEPS.length - 1) setSub(sub + 1);

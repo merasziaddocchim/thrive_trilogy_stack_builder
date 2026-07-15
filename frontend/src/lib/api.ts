@@ -9,7 +9,17 @@ import type {
   ReportResponse,
 } from './types';
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+// Accept EITHER env-var name. The code was written against NEXT_PUBLIC_API_BASE_URL, but
+// the deployment (Vercel) was documented with NEXT_PUBLIC_API_URL (STATUS §4) — a name
+// mismatch means BASE is empty at build time, so every live call throws
+// 'no_backend_configured' and the UI silently falls back to fixtures forever. Reading both
+// names makes the client work whichever one is set. (NEXT_PUBLIC_* is inlined at BUILD time,
+// so a Vercel redeploy is required after changing/adding the variable.)
+const BASE = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  ''
+).replace(/\/+$/, ''); // tolerate a trailing slash on the configured URL
 
 function requireBase(): string {
   if (!BASE) throw new Error('no_backend_configured');

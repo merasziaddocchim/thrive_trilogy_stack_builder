@@ -13,7 +13,7 @@ const SPEND_BANDS: Array<{ label: string; low: number; high: number }> = [
   { label: '$25–$60 / month', low: 25, high: 60 },
   { label: '$60–$120 / month', low: 60, high: 120 },
   { label: '$120–$250 / month', low: 120, high: 250 },
-  { label: 'Over $250 / month', low: 250, high: 400 },
+  { label: '$250+ / Unlimited', low: 250, high: 400 },
 ];
 
 const FOCUS = ['Reduce waste', 'Simplify my stack', 'Strengthen evidence', 'Understand dosage'];

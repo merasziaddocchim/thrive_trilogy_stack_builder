@@ -46,6 +46,12 @@ export default function AssessmentPage() {
     if (hydrated) saveState(state);
   }, [state, hydrated]);
 
+  // Start every step at the top of its content — otherwise the user keeps the scroll
+  // position from the previous (often longer) step and lands mid-screen on the next one.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [stepIndex]);
+
   const step: StepKey = STEP_ORDER[stepIndex];
   const goto = (key: StepKey) => setStepIndex(STEP_ORDER.indexOf(key));
   const next = () => setStepIndex((i) => Math.min(i + 1, STEP_ORDER.length - 1));
