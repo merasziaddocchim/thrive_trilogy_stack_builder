@@ -11,6 +11,8 @@ export function createApp() {
   const app = express();
 
   app.use(helmet());
+  // env.FRONTEND_ORIGIN is a string[] of allowed origins; cors() reflects the request's
+  // Origin when it matches one of them (and allows non-browser requests with no Origin).
   app.use(cors({ origin: env.FRONTEND_ORIGIN }));
   app.use(express.json({ limit: '1mb' }));
 
