@@ -25,6 +25,11 @@ const EVIDENCE: Record<string, ResolvedEvidence> = {
     evidenceTier: 'C_limited', contributingSourceIds: ['src_resv'], tierRationale: 'Observational only.',
     lastReviewed: '2026-07-10', reviewerName: 'Ziad Meras', sourceShortName: 'cohort',
   },
+  cmp_tmg: {
+    canonicalName: 'TMG (Trimethylglycine)', rangeLowMg: 1500, rangeHighMg: 6000, bioavailabilityAdjustmentFactor: 1,
+    evidenceTier: 'B_moderate', contributingSourceIds: ['src_tmg'], tierRationale: 'Meta-analysis of homocysteine RCTs.',
+    lastReviewed: '2026-07-10', reviewerName: 'Ziad Meras', sourceShortName: 'McRae 2013',
+  },
 };
 
 const provider: EvidenceProvider = {
@@ -44,6 +49,24 @@ const withSpend: StoredIntake = {
     { compoundId: 'cmp_resveratrol', labelDoseMg: 500, deliveryFormat: 'liposomal', pricePaid: 18 },
   ],
 };
+
+test('a recognized compound with NO dose still appears in the Preview (not the empty state)', async () => {
+  // Regression for "TMG 500" (no unit → dose not parsed): the compound matched the DB, so the
+  // Preview must list it as recognized rather than wrongly report "couldn't recognize any".
+  const tmgNoDose: StoredIntake = {
+    goalTag: 'healthy_aging',
+    stackItems: [{ compoundId: 'cmp_tmg', labelDoseMg: null, deliveryFormat: null, pricePaid: null }],
+  };
+  const { preview } = await assembleAssessment(tmgNoDose, provider);
+  assert.equal(preview.recognized_compounds.length, 1);
+  assert.equal(preview.recognized_compounds[0].canonical_name, 'TMG (Trimethylglycine)');
+  assert.equal(preview.recognized_compounds[0].evidence_tier, 'B');
+  assert.deepEqual(preview.evidence_tier_summary, { A: 0, B: 1, C: 0, D: 0 });
+  // Not scorable (no dose, no spend) → State B, no fabricated numbers.
+  assert.equal(preview.sufficient_for_scoring, false);
+  assert.equal(preview.spend_efficiency_index, null);
+  assert.equal(preview.estimated_annual_waste, null);
+});
 
 test('State A (spend present): preview has an SEI and a waste range', async () => {
   const { preview } = await assembleAssessment(withSpend, provider);

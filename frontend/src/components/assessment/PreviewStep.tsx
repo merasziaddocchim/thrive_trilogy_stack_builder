@@ -219,7 +219,8 @@ export function PreviewStep({
           </p>
           <p className="mt-2 text-sm text-body">
             We recognized your compounds and their evidence tiers above. To turn that into a score
-            and a dollar figure, we just need a rough sense of what you spend each month.
+            and a dollar figure, add a dose for anything we flagged (with a unit, e.g. 500&nbsp;mg)
+            plus a rough sense of what you spend each month.
           </p>
           <Button onClick={onBack} variant="secondary" className="mt-4">
             Add monthly spend
