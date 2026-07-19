@@ -4,10 +4,12 @@
 // Adapted (NOT copied verbatim) from the equivalents on thrivetrilogy.com, per
 // CLAIMS_COMPLIANCE §5a: the app collects materially different data than the blog
 // (stack + health-assessment inputs — see TECH_DOCS §1 user-side tables), so each
-// page is rewritten for what THIS app actually collects and does. Anywhere the source
-// facts are genuinely unknown (contact address, DMCA agent, analytics vendor, data
-// retention, governing-law jurisdiction, the LLM processor) is flagged with a `note`
-// so the founder / a qualified attorney can fill it in before launch.
+// page is rewritten for what THIS app actually collects and does.
+//
+// Operational facts stated below (retention, intake processor, analytics vendor,
+// email, DMCA agent, governing law, Reviews scope) are owned by CLAIMS_COMPLIANCE
+// §5b — this file states them, it never originates them. Anything still unconfirmed
+// (see each `note`) keeps its founder-review flag until closed there first.
 //
 // This is engineering draft content, not legal advice.
 // =============================================================================
@@ -46,6 +48,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'Thrive Trilogy was founded by Ziad Meras, M.Sc. Organic Chemistry. Ziad personally reviews the evidence records that feed the tool against their primary sources before they are used. Author and review credentials are shown on our methodology page.',
         ],
+        note: 'Founder review — same accuracy gap flagged on How We Review Supplements: the live batch-1 records are still ai_extracted, pending your review. Complete that review before launch or soften this sentence (CLAIMS_COMPLIANCE §7).',
       },
       {
         heading: 'Our relationship to the research',
@@ -116,18 +119,18 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         heading: 'Types of cookies',
         bullets: [
           'Essential: needed for the site to function and to remember basic preferences.',
-          'Analytics: help us understand which pages are used, in aggregate.',
+          'Analytics: we use Google Analytics to understand which pages are used, in aggregate.',
           'Affiliate/attribution: set by partners when you follow a paid link, so a referral can be credited.',
         ],
       },
       {
         heading: 'Managing cookies',
         paragraphs: [
-          'You can control or delete cookies through your browser settings. Blocking some cookies may affect how parts of the site work. See also our Do Not Sell or Share My Info page for advertising-related choices.',
+          'You can control or delete cookies through your browser settings. Blocking some cookies may affect how parts of the site work. See also our Do Not Sell or Share My Info page for advertising-related choices, including how we treat Google Analytics.',
         ],
       },
       {
-        note: 'Founder review: confirm the actual analytics provider (e.g. Google Analytics, Plausible, none) and any affiliate/attribution cookies actually set, then list them specifically with their purposes and retention. Do not claim analytics we do not run.',
+        note: 'Founder review — still open (the analytics vendor, Google Analytics, is confirmed per CLAIMS_COMPLIANCE §5b): (1) whether GA advertising features (Google Signals / ads personalization) are enabled or disabled — this determines the "sharing" posture on the Do Not Sell page; (2) the specific GA cookie names and retention settings, to list here; (3) which affiliate/attribution cookies are actually set, if any. Do not claim cookies we do not set.',
       },
     ],
   },
@@ -149,9 +152,9 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        heading: 'AI involvement',
+        heading: 'How AI is and is not involved',
         paragraphs: [
-          'This report was generated using AI, based on our human-reviewed research database, and is not a substitute for professional medical advice. AI is also used to read your free-text entry and match it to known compounds; you confirm those matches before anything is scored.',
+          'Our research database is built with AI assistance: study data is extracted from published sources by AI and then checked against the primary source by a credentialed reviewer (see How We Review Supplements). Your report itself is computed by deterministic scoring software against that database — it is not written by an AI language model. Your free-text stack entry is currently matched to known compounds by deterministic text-matching on our own servers, not sent to an AI provider, and you confirm those matches before anything is scored. None of this is a substitute for professional medical advice.',
         ],
       },
     ],
@@ -174,7 +177,11 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review: provide the DMCA designated agent’s name, email, and mailing address (a physical address is generally required), and confirm whether the agent is registered with the U.S. Copyright Office.',
+        heading: 'Designated agent',
+        bullets: ['Name: Ziad Meras', 'Email: support@thrivetrilogy.com'],
+      },
+      {
+        note: 'Founder review — still open (agent name and email are confirmed per CLAIMS_COMPLIANCE §5b): add the agent’s mailing address (a physical address is generally required), and confirm registration with the U.S. Copyright Office’s DMCA agent directory.',
       },
     ],
   },
@@ -186,13 +193,13 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'We do not sell your personal information',
         paragraphs: [
-          'We do not sell your personal information for money. Some analytics or affiliate technologies can, under these laws, count as "sharing" personal information for cross-context behavioral advertising. This page lets you opt out of any such sharing.',
+          'We do not sell your personal information for money. We do use Google Analytics, and under these laws analytics configured with advertising features can count as "sharing" personal information for cross-context behavioral advertising. Until we have confirmed that Google Analytics’ advertising features are disabled for this site, we treat our use of it as "sharing" and offer the opt-out below.',
         ],
       },
       {
         heading: 'How to opt out',
         paragraphs: [
-          'To opt out, email us (see the Contact page) with the subject "Do Not Sell or Share," or use your browser’s Global Privacy Control signal, which we honor where required. We will not discriminate against you for exercising these rights.',
+          'To opt out, email us (see the Contact page) with the subject "Do Not Sell or Share." We will not discriminate against you for exercising these rights. We are working to honor the browser Global Privacy Control signal and to add an on-page control that switches off the analytics data flow directly; until those ship, the email channel above is the reliable way to opt out.',
         ],
       },
       {
@@ -202,7 +209,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review: confirm whether any current vendor (analytics/affiliate) triggers a "sharing" obligation, whether a dedicated opt-out request form is needed, and whether GPC is technically honored yet.',
+        note: 'Founder review — posture is set (Google Analytics treated as "sharing" per CLAIMS_COMPLIANCE §5b) but two things remain: (1) DECISION — confirm whether GA’s advertising features (Google Signals / ads personalization) are disabled; if they are, the "sharing" posture on this page can be revised. (2) ENGINEERING FOLLOW-UP — a functional on-page opt-out that actually stops the GA data flow (plus verified GPC honoring) is out of scope for this copy pass: GA has no integration point in this app’s codebase yet, so there is nothing to switch off here. Per §5b, GA must not be tagged into the app without that control shipping in the same change. Also confirm whether a dedicated opt-out request form is needed.',
       },
     ],
   },
@@ -232,7 +239,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'What data do you collect, and do you keep my supplement list?',
         paragraphs: [
-          'You enter the supplements you take, a goal, optional lifestyle context, an approximate spend range, and a yes/no answer about medication or conditions (never the specific medication or diagnosis). Your in-progress answers stay in your browser during the session. See our Privacy Policy for detail.',
+          'You enter the supplements you take, a goal, optional lifestyle context, an approximate spend range, and a yes/no answer about medication or conditions (never the specific medication or diagnosis). In-progress answers stay in your browser; once submitted, your intake is stored on our servers under a random, identity-free token — no account or email attached — and automatically deleted after 48 hours. See our Privacy Policy for detail.',
         ],
       },
       {
@@ -269,6 +276,9 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
           'Our methodology page covers the same pipeline in more depth, including how evidence bounds the Spend Efficiency Index and why the score is independent of affiliate relationships.',
         ],
       },
+      {
+        note: 'Founder review — accuracy gap, not a copy question: the batch-1 evidence records currently live in production are still marked ai_extracted, pending founder review (STATUS.md §9 top open item). Until that review completes and records are flipped to human_reviewed, this page’s statement that only reviewed records feed the score is ahead of reality. Close the gap by completing the batch-1 review before launch (preferred), or this copy must be softened — per CLAIMS_COMPLIANCE §7, the gap between a claimed review step and actual practice is itself the liability.',
+      },
     ],
   },
 
@@ -284,25 +294,33 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
           'Optional lifestyle context: diet pattern, activity level, and sleep consistency.',
           'An approximate monthly supplement spend, given as a range.',
           'A single yes / no / prefer-not-to-say answer about whether you take a medication or have a condition that could affect supplement safety. We do NOT collect the name of any medication or any diagnosis.',
-          'Your email address, only if you choose to unlock the full Stack Report.',
         ],
       },
       {
         heading: 'How your information is processed',
         paragraphs: [
-          'We use AI to read your free-text entry and match it to compounds in our reviewed database. You confirm those matches before anything is scored. Your entries are compared against research parameters to generate your report; they are not used to build an advertising profile.',
+          'Your free-text entry is matched to compounds in our reviewed database by deterministic text-matching software running on our own infrastructure. As of the last-reviewed date below, no artificial-intelligence or large-language-model provider is used for this step, and no third party receives your entry. If we later add an AI-based extraction step, we will update this policy before it takes effect. You confirm the matches before anything is scored.',
+          'Your entries are compared against research parameters to generate your report; they are not used to build an advertising profile.',
         ],
       },
       {
-        heading: 'Where your information is stored',
+        heading: 'Where your information is stored, and for how long',
         paragraphs: [
           'While you complete the assessment, your in-progress answers are stored in your browser’s sessionStorage and are cleared when your browser session ends. We intentionally avoid persistent local storage for health-adjacent detail.',
+          'When you submit the assessment, your intake (your stack items and profile answers) is saved on our servers under a random, identity-free token so you can open your Preview and report. No account, name, or email address is attached to it. It is automatically deleted after 48 hours — this cap is enforced by the system, and your report is recomputed from the stored intake rather than stored itself.',
         ],
       },
       {
-        heading: 'Sharing',
+        heading: 'Email',
         paragraphs: [
-          'We do not sell your personal information. We rely on service providers (for example, hosting and email delivery) to operate the app; they may process information on our behalf under appropriate terms. See our Cookie Policy and Do Not Sell or Share My Info page for advertising-related choices.',
+          'The full Stack Report screen asks for an email address. As of the last-reviewed date below, that address is not transmitted to or stored on our servers — it currently stays in your browser. We plan to collect email in the near future for a report-delivery feature; this policy will be updated before any actual collection begins.',
+        ],
+      },
+      {
+        heading: 'Analytics and sharing',
+        paragraphs: [
+          'We use Google Analytics to understand, in aggregate, how the site is used. Under some state privacy laws, analytics configured with advertising features can count as "sharing" personal information for cross-context behavioral advertising; until we have confirmed those features are disabled, we treat our use of Google Analytics as "sharing" and offer an opt-out — see our Do Not Sell or Share My Info page.',
+          'We do not sell your personal information. We rely on service providers (for example, hosting) to operate the app; they may process information on our behalf under appropriate terms. See also our Cookie Policy.',
         ],
       },
       {
@@ -312,7 +330,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — this page most needs your input. Confirm, before launch: (1) which AI/LLM provider processes the free-text entry, and whether entries are retained or used for model training by that provider; (2) whether any assessment data is stored server-side once an email is captured, and for how long (the backend is not yet wired, so retention is currently undefined); (3) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (4) the email provider and analytics vendor; (5) legal basis / disclosures required for your target regions (GDPR/UK if applicable). Have a qualified privacy attorney review before launch.',
+        note: 'Founder review — still open on this page (retention, the intake processor, analytics vendor, and email facts above are now confirmed per CLAIMS_COMPLIANCE §5b): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) whether Google Analytics advertising features (Google Signals / ads personalization) are disabled — until confirmed, this policy treats GA as "sharing." Have a qualified privacy attorney review before launch.',
       },
     ],
   },
@@ -346,7 +364,13 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review: set the governing-law jurisdiction and dispute-resolution terms, any account/subscription terms if a paywall returns, and have an attorney confirm the liability and warranty language for your jurisdiction.',
+        heading: 'Governing law',
+        paragraphs: [
+          'These Terms are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws principles.',
+        ],
+      },
+      {
+        note: 'Founder review — still open (governing law is confirmed as Delaware per CLAIMS_COMPLIANCE §5b): set the dispute-resolution terms (courts vs. arbitration, venue), any account/subscription terms if a paywall returns, and have an attorney confirm the liability and warranty language.',
       },
     ],
   },
@@ -355,6 +379,12 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
   reviews: {
     intro: `How Thrive Trilogy approaches product and brand reviews, and how that connects to your Stack Report.`,
     blocks: [
+      {
+        heading: 'What this page covers',
+        paragraphs: [
+          'This page hosts our reviews of specific supplements, compounds, and brands only. We do not publish customer testimonials about the app or its service.',
+        ],
+      },
       {
         heading: 'Reviews are evidence-first',
         paragraphs: [
@@ -366,9 +396,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'A brand cannot pay to change its position or to influence your Spend Efficiency Index. Commissions never affect the score or the evidence ratings — the same firewall described in our Affiliate Disclosure applies here.',
         ],
-      },
-      {
-        note: 'Founder review: confirm what the "Reviews" page should contain on the app subdomain — an index of brand/product reviews carried over from thrivetrilogy.com, customer testimonials, or both. If it hosts testimonials, they must be genuine and comply with the FTC Endorsement Guides. Adapt this page once that is decided.',
       },
     ],
   },

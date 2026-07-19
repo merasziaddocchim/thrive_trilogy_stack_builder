@@ -108,6 +108,20 @@ The root site (thrivetrilogy.com) already has: About, Affiliate Disclosure, Cont
 
 ---
 
+## 5b. Confirmed data-practice facts — the source of truth for legal-page disclosures
+
+**Purpose:** the single place where operational facts stated on the legal pages are confirmed and owned. Legal-page copy (`frontend/src/lib/legal-content.ts`) must *state* these facts and reference this section — it must never originate or contradict them. Anything not listed here is still unconfirmed and keeps its founder-review flag on the page. Founder-confirmed 2026-07-19 unless noted.
+
+1. **Assessment data retention (implemented, verified in production).** Assessment data is anonymous — no accounts, no login, no identity attached. It is stored server-side under a random, identity-free token and hard-deleted after 48 hours (enforced by delete-on-read plus sweep-on-create, not merely advisory); the report is derived on read, never stored. Implementation is owned by `TECH_DOCS.md` §1b — this section owns the *disclosure*: legal pages must state the anonymity and the 48-hour cap.
+2. **Intake parsing processor (current fact, dated — not a permanent guarantee).** As of 2026-07-19, free-text stack entries are processed by deterministic text-matching software on our own infrastructure. **No LLM/AI provider is used for intake parsing, and no third party receives the user's entry.** Disclosure rule: word this as a statement of current practice, dated, so it does not become false-by-omission if an LLM extractor ships later. **Gate:** enabling any LLM extractor requires updating the Privacy Policy and this section *before* it takes effect. Corollary of §7 (AI-washing cuts both ways): while intake is heuristic, user-facing copy must not describe it as "AI."
+3. **Analytics — Google Analytics is in use** (founder-confirmed; note: as of 2026-07-19 no GA tag/integration exists in the app's own codebase, so its configuration could not be verified from code). **CCPA/CPRA posture (per the §11 conservative default): treat GA as "sharing" personal information for cross-context behavioral advertising unless and until GA's advertising features (Google Signals / ads personalization) are confirmed disabled — that confirmation is an OPEN founder decision.** Requirement: the Do Not Sell or Share My Info page must offer a *functional* opt-out that actually stops the GA data flow when triggered — a static disclosure link is not sufficient. Status: the functional control cannot be wired yet because GA has no integration point in this repo; this is a flagged engineering follow-up (`TECH_DOCS.md` §8). **Rule: GA must not be tagged into the app frontend without the functional opt-out (and a GPC-honoring decision) shipping in the same change.**
+4. **Email.** No email address is currently collected: the report-unlock screen requests one, but it is not transmitted to or stored on our servers today (client-side only; the capture endpoint is not wired). Collection is **planned near-future** (e.g. emailed report delivery). Disclosure rule: state both honestly — current non-collection as a dated fact, plus the planned use — and update the Privacy Policy *before* actual collection begins.
+5. **DMCA designated agent (confirmed):** Ziad Meras, `support@thrivetrilogy.com`. Still open: mailing address and U.S. Copyright Office agent registration.
+6. **Terms & Conditions governing law (confirmed): State of Delaware, USA.** Still open: dispute-resolution mechanism; attorney confirmation of warranty/liability language.
+7. **Reviews page scope (confirmed): product/compound/brand reviews only — no app/service customer testimonials.** If testimonials are ever introduced, this item re-opens and they must first be reviewed against the FTC Endorsement Guides (§6).
+
+---
+
 ## 6. FTC endorsement / affiliate rules — the score/affiliate firewall
 
 Source: 16 CFR Part 255 (Guides Concerning Endorsements and Testimonials); FTC's own worked example is close to a direct blueprint for this product's core risk.
@@ -213,6 +227,7 @@ When a new compound, claim, or user-facing sentence doesn't cleanly map to §4/�
 |---|---|---|
 | 2026-07-03 | Initial version drafted | Compiled from sources in this doc, verified live |
 | 2026-07-10 | Extended §6 to cover affiliate-adjacent third-party content (roundup articles vs. educational articles); added §5a (legal/utility pages requirement) | Founder-provided content inventory; both rules were previously mis-sourced into BRAND_GUIDELINES.md/TECH_DOCS.md and are now correctly owned here |
+| 2026-07-19 | Added §5b: confirmed data-practice facts for legal-page disclosures (48h anonymous retention, heuristic-only intake with LLM-enablement gate, GA treated as CCPA/CPRA "sharing" pending ad-features confirmation + functional-opt-out rule, email non-collection + planned use, DMCA agent, Delaware governing law, Reviews scope) | Founder confirmations, 2026-07-19; retention facts from `TECH_DOCS.md` §1b (PR #7) |
 
 *Re-verify §8 (state AI law) at minimum quarterly. Re-verify §3 and §6 (FTC guidance) upon any FTC guidance update or enforcement action involving a comparable health-app/comparison-site business model.*
 
