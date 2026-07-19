@@ -40,9 +40,18 @@ export interface OverlapGroup {
 }
 
 // ---- Preview (GET /assessment/:id/preview) ----------------------------------
+// A compound the parser matched to the database, whether or not the user gave a dose.
+// Recognition is separate from scorability: we recognize a compound as soon as it matches
+// (so it shows in the Preview), but we can only SCORE it once a dose is also present.
+export interface RecognizedCompound {
+  compound_id: string;
+  canonical_name: string;
+  evidence_tier: TierLetter;
+}
+
 export interface PreviewResponse {
   sufficient_for_scoring: boolean;
-  recognized_compounds: Array<{ compound_id: string; canonical_name: string; evidence_tier: TierLetter }>;
+  recognized_compounds: RecognizedCompound[];
   evidence_tier_summary: Record<TierLetter, number>;
   overlap_flags: Array<{ shared_ingredient: string; product_count: number; approx_monthly_cost: number | null }>;
   spend_efficiency_index: number | null;
@@ -58,9 +67,9 @@ export interface PreviewResponse {
   }>;
 }
 
-function tierSummary(contexts: CompoundContext[]): Record<TierLetter, number> {
+function tierSummary(recognized: RecognizedCompound[]): Record<TierLetter, number> {
   const summary: Record<TierLetter, number> = { A: 0, B: 0, C: 0, D: 0 };
-  for (const c of contexts) summary[tierLetter(c.input.evidenceTier)] += 1;
+  for (const r of recognized) summary[r.evidence_tier] += 1;
   return summary;
 }
 
@@ -69,6 +78,9 @@ function isTierAB(t: TierLetter): boolean {
 }
 
 export function buildPreview(
+  // Every matched compound (dose or not) — drives recognized_compounds + tier summary.
+  recognized: RecognizedCompound[],
+  // Only the scorable (dosed) compounds — drives dose comparisons + SEI/waste.
   contexts: CompoundContext[],
   result: StackScoreResult,
   overlaps: OverlapGroup[],
@@ -105,16 +117,12 @@ export function buildPreview(
           sharedIngredient: costedOverlap.sharedIngredient,
           monthlyCost: costedOverlap.approxMonthlyCost,
         })
-      : recognizedSummary(contexts.length);
+      : recognizedSummary(recognized.length);
 
   return {
     sufficient_for_scoring: sufficient,
-    recognized_compounds: contexts.map((c) => ({
-      compound_id: c.input.compoundId,
-      canonical_name: c.input.canonicalName,
-      evidence_tier: tierLetter(c.input.evidenceTier),
-    })),
-    evidence_tier_summary: tierSummary(contexts),
+    recognized_compounds: recognized,
+    evidence_tier_summary: tierSummary(recognized),
     overlap_flags: overlaps.map((o) => ({
       shared_ingredient: o.sharedIngredient,
       product_count: o.productCount,

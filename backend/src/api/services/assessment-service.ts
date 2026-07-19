@@ -15,8 +15,10 @@ import {
   type CompoundContext,
   type OverlapGroup,
   type PreviewResponse,
+  type RecognizedCompound,
   type ReportResponse,
 } from './report-builder.js';
+import { tierLetter } from '../../compliance/claim-templates.js';
 import type { EvidenceTier } from '../../db/schema.js';
 
 /** A user's stack item as captured/confirmed (mirrors user_stack_items). */
@@ -75,6 +77,24 @@ export async function assembleAssessment(
     .map((s) => s.compoundId)
     .filter((id): id is string => id != null);
   const evidence = await provider.resolve(compoundIds, intake.goalTag);
+
+  // Recognized = every matched compound we have evidence for, WHETHER OR NOT a dose was
+  // given (deduped). This is what the Preview lists as "recognized" and is deliberately
+  // separate from whether we can SCORE the compound (which also needs a dose). Without this
+  // split, a recognized-but-doseless compound (e.g. "TMG 500" with no unit) would vanish and
+  // the Preview would wrongly say "couldn't recognize any compounds."
+  const recognizedMap = new Map<string, RecognizedCompound>();
+  for (const item of intake.stackItems) {
+    if (!item.compoundId) continue;
+    const ev = evidence.get(item.compoundId);
+    if (!ev || recognizedMap.has(item.compoundId)) continue;
+    recognizedMap.set(item.compoundId, {
+      compound_id: item.compoundId,
+      canonical_name: ev.canonicalName,
+      evidence_tier: tierLetter(ev.evidenceTier),
+    });
+  }
+  const recognized = [...recognizedMap.values()];
 
   // Scorable items: a matched compound, an interpretable dose, and resolved evidence.
   const inputs: ScoredCompoundInput[] = [];
@@ -142,7 +162,7 @@ export async function assembleAssessment(
   const sufficientForScoring = totalSpend > 0 && inputs.length > 0;
 
   return {
-    preview: buildPreview(contexts, result, overlaps, { sufficientForScoring }),
+    preview: buildPreview(recognized, contexts, result, overlaps, { sufficientForScoring }),
     report: buildReport(contexts, result),
   };
 }
