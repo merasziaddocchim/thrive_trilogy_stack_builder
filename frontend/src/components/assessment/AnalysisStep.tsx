@@ -57,9 +57,10 @@ export function AnalysisStep({
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-stop-soft text-stop">
           <IconAlert className="h-7 w-7" />
         </span>
-        <h1 className="mt-5 text-xl font-700 text-headline">That took longer than it should have</h1>
+        <h1 className="mt-5 text-xl font-700 text-headline">We couldn&apos;t save your assessment</h1>
         <p className="mt-2 text-body">
-          Our analysis service may have been waking up. Nothing you entered was lost — try again.
+          Our service may have been waking up, or had a brief hiccup saving. Nothing you entered was
+          lost — it&apos;s still here on this device, so just try again.
         </p>
         <Button onClick={begin} className="mt-6">
           Try again

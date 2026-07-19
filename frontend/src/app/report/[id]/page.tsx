@@ -37,10 +37,16 @@ export default function ReportPage({ params }: { params: { id: string } }) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-16 text-center">
         <h1 className="text-xl font-700 text-headline">We couldn&apos;t load this report</h1>
-        <p className="mt-2 text-body">The scoring service may be waking up. Try again in a moment.</p>
-        <Button onClick={load} className="mt-6">
-          Retry
-        </Button>
+        <p className="mt-2 text-body">
+          Either the service had a brief hiccup, or this assessment has expired — sessions are kept
+          for 48 hours. Retry first; if it keeps failing, start a fresh audit.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Button onClick={load}>Retry</Button>
+          <Button href="/assessment" variant="secondary">
+            Start a new audit
+          </Button>
+        </div>
       </main>
     );
   }

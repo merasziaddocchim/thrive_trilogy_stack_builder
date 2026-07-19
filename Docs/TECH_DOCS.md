@@ -92,6 +92,56 @@ V1 uses a single free-text field (not structured product entry) for initial stac
 
 ---
 
+## 1b. Assessment session storage (implemented — founder decision, 2026-07-18)
+
+Where an in-progress or completed assessment lives between `POST /assessment` and the later
+`GET /assessment/:id/preview|report`. Replaces the original in-memory JS object (lost on every
+Render restart/cold start, unsafe across instances). **This is not user data in the account
+sense — it is anonymous, ephemeral session state.**
+
+**Table — `assessment_sessions`** (new; added via Drizzle migration `0001_assessment_sessions`,
+additive/non-breaking, does not touch the evidence tables):
+```
+ASSESSMENT_SESSION
+- session_id   text PRIMARY KEY   -- a random, identity-free token; the same value returned as
+                                     `assessment_id` by POST /assessment. Reuses the existing
+                                     session identifier — no second ID system is introduced.
+- data         jsonb NOT NULL     -- the assessment intake (stack items + profile). The report is
+                                     DERIVED from this on read (single source of truth), not stored.
+- created_at   timestamp NOT NULL
+- expires_at   timestamp NOT NULL -- created_at + 48 hours; nothing is retained past this
+- index on expires_at             -- speeds the expired-row sweep
+```
+
+**Anonymity / scope (hard rules):**
+- **No accounts, no login, no email, no identity** tied to a session. `session_id` is an opaque
+  random token (a UUID). The evidence database (`compounds`/`sources`/`dose_records`/…) is
+  completely separate and unaffected.
+- **48-hour cap.** Nothing persists beyond `expires_at`. This is the maximum lifetime, enforced two
+  ways (below), not merely advisory.
+
+**Expiry + cleanup (Render free tier has no cron/background jobs):**
+1. **Lazy delete-on-read:** every session fetch checks `expires_at`; if past, the session behaves
+   as *not found* (never an error) and the row is deleted.
+2. **Opportunistic sweep-on-create:** each new session creation first deletes all already-expired
+   rows. Both steps are best-effort — a cleanup hiccup never blocks a user's save. (Acceptable
+   consequence: if the app receives zero new sessions for a long stretch, expired rows may linger
+   until the next creation; they are never readable and are swept then.)
+
+**Failure behavior (never silent, never a raw 500):** a write failure returns
+`503 session_store_unavailable` (the API never pretends a failed save succeeded); a read DB failure
+returns `503`; a missing/expired session returns `404 session_not_found`. The frontend surfaces
+these as a clear, retryable message (e.g. "we couldn't save your assessment — nothing you entered
+was lost, try again" / "this assessment has expired — sessions are kept 48 hours") rather than
+silently substituting sample data.
+
+**Code:** `backend/src/api/services/session-store.ts` (pure logic + `SessionRepository` interface,
+unit-tested via an in-memory repo), `session-repository.ts` (Drizzle/Postgres implementation).
+Durable persistence of richer user-side tables (`user_profiles`/`user_stack_items`, §1) remains a
+separate, later concern; this section only covers anonymous session bridging.
+
+---
+
 ## 2. Scoring methodology — the composite formula
 
 This section is the technical implementation of the ceiling principle agreed earlier: **weak evidence caps the achievable score regardless of dosing accuracy; dosing accuracy determines where you land within that cap.**
