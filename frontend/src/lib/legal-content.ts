@@ -97,10 +97,10 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'The fastest way to reach the Thrive Trilogy team is by email. For privacy or data requests (see our Privacy Policy and Do Not Sell or Share My Info page), please include enough detail for us to locate any information tied to your request.',
         ],
-        bullets: ['Email: hello@thrivetrilogy.com', 'Response time: we aim to reply within a few business days.'],
+        bullets: ['Email: support@thrivetrilogy.com', 'Response time: we aim to reply within a few business days.'],
       },
       {
-        note: 'Founder review: confirm the correct public contact email (hello@thrivetrilogy.com is a placeholder) and whether a mailing address is required for any of the legal pages (DMCA and some privacy frameworks expect one).',
+        note: 'Founder review — still open (the contact address, support@thrivetrilogy.com, is confirmed per CLAIMS_COMPLIANCE §5b and is the single address for general contact and DMCA): confirm whether a mailing address is required for any of the legal pages (DMCA and some privacy frameworks expect one).',
       },
     ],
   },
@@ -119,18 +119,18 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         heading: 'Types of cookies',
         bullets: [
           'Essential: needed for the site to function and to remember basic preferences.',
-          'Analytics: we use Google Analytics to understand which pages are used, in aggregate.',
+          'Analytics: none currently active. We plan to add Google Analytics in the future; this page will list its specific cookies and retention periods before it becomes active.',
           'Affiliate/attribution: set by partners when you follow a paid link, so a referral can be credited.',
         ],
       },
       {
         heading: 'Managing cookies',
         paragraphs: [
-          'You can control or delete cookies through your browser settings. Blocking some cookies may affect how parts of the site work. See also our Do Not Sell or Share My Info page for advertising-related choices, including how we treat Google Analytics.',
+          'You can control or delete cookies through your browser settings. Blocking some cookies may affect how parts of the site work. See also our Do Not Sell or Share My Info page for advertising-related choices.',
         ],
       },
       {
-        note: 'Founder review — still open (the analytics vendor, Google Analytics, is confirmed per CLAIMS_COMPLIANCE §5b): (1) whether GA advertising features (Google Signals / ads personalization) are enabled or disabled — this determines the "sharing" posture on the Do Not Sell page; (2) the specific GA cookie names and retention settings, to list here; (3) which affiliate/attribution cookies are actually set, if any. Do not claim cookies we do not set.',
+        note: 'Founder review — still open (analytics status — none active, GA planned — is confirmed per CLAIMS_COMPLIANCE §5b): (1) when GA is added, decide its advertising-features configuration and list its cookie names/retention here before it goes live; (2) which affiliate/attribution cookies are actually set, if any. Do not claim cookies we do not set.',
       },
     ],
   },
@@ -191,15 +191,15 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
     intro: `This page describes your choices about the "sale" or "sharing" of your personal information under California’s CCPA/CPRA and similar state laws.`,
     blocks: [
       {
-        heading: 'We do not sell your personal information',
+        heading: 'We do not sell or currently share your personal information',
         paragraphs: [
-          'We do not sell your personal information for money. We do use Google Analytics, and under these laws analytics configured with advertising features can count as "sharing" personal information for cross-context behavioral advertising. Until we have confirmed that Google Analytics’ advertising features are disabled for this site, we treat our use of it as "sharing" and offer the opt-out below.',
+          'We do not sell your personal information for money. As of the last-reviewed date below, no analytics or advertising technology is active on this app, so no "sharing" of personal information for cross-context behavioral advertising is occurring. We plan to add Google Analytics in the future; analytics configured with advertising features can count as "sharing" under these laws, so before it becomes active we will update this page and ship a working opt-out control in the same release.',
         ],
       },
       {
         heading: 'How to opt out',
         paragraphs: [
-          'To opt out, email us (see the Contact page) with the subject "Do Not Sell or Share." We will not discriminate against you for exercising these rights. We are working to honor the browser Global Privacy Control signal and to add an on-page control that switches off the analytics data flow directly; until those ship, the email channel above is the reliable way to opt out.',
+          'You can register an opt-out preference at any time by emailing us (support@thrivetrilogy.com — see the Contact page) with the subject "Do Not Sell or Share"; we will honor it if and when any sharing-classified technology becomes active. We will not discriminate against you for exercising these rights.',
         ],
       },
       {
@@ -209,7 +209,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — posture is set (Google Analytics treated as "sharing" per CLAIMS_COMPLIANCE §5b) but two things remain: (1) DECISION — confirm whether GA’s advertising features (Google Signals / ads personalization) are disabled; if they are, the "sharing" posture on this page can be revised. (2) ENGINEERING FOLLOW-UP — a functional on-page opt-out that actually stops the GA data flow (plus verified GPC honoring) is out of scope for this copy pass: GA has no integration point in this app’s codebase yet, so there is nothing to switch off here. Per §5b, GA must not be tagged into the app without that control shipping in the same change. Also confirm whether a dedicated opt-out request form is needed.',
+        note: 'Founder review — current state is accurate (no analytics active, per CLAIMS_COMPLIANCE §5b), but two items bind when Google Analytics is added: (1) DECISION — GA’s advertising-features configuration (Google Signals / ads personalization on or off), which determines whether this page’s posture becomes "sharing"; (2) ENGINEERING — per §5b, GA must not be tagged into the app without a functional on-page opt-out (actually stopping the GA data flow) plus a GPC-honoring decision shipping in the same change (logged in TECH_DOCS §8). Also confirm whether a dedicated opt-out request form is needed.',
       },
     ],
   },
@@ -319,7 +319,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'Analytics and sharing',
         paragraphs: [
-          'We use Google Analytics to understand, in aggregate, how the site is used. Under some state privacy laws, analytics configured with advertising features can count as "sharing" personal information for cross-context behavioral advertising; until we have confirmed those features are disabled, we treat our use of Google Analytics as "sharing" and offer an opt-out — see our Do Not Sell or Share My Info page.',
+          'As of the last-reviewed date below, no analytics tool is active on this app — nothing is collecting data about your visit for analytics purposes. We plan to add Google Analytics in the future; before it becomes active, we will update this policy, our Cookie Policy, and our Do Not Sell or Share My Info page, and ship a working opt-out control at the same time.',
           'We do not sell your personal information. We rely on service providers (for example, hosting) to operate the app; they may process information on our behalf under appropriate terms. See also our Cookie Policy.',
         ],
       },
@@ -330,7 +330,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — still open on this page (retention, the intake processor, analytics vendor, and email facts above are now confirmed per CLAIMS_COMPLIANCE §5b): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) whether Google Analytics advertising features (Google Signals / ads personalization) are disabled — until confirmed, this policy treats GA as "sharing." Have a qualified privacy attorney review before launch.',
+        note: 'Founder review — still open on this page (retention, the intake processor, analytics status, and email facts above are confirmed per CLAIMS_COMPLIANCE §5b): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) when Google Analytics is added, decide its advertising-features configuration (Google Signals / ads personalization on or off) — that determines the "sharing" posture — and update this policy before it becomes active. Have a qualified privacy attorney review before launch.',
       },
     ],
   },
