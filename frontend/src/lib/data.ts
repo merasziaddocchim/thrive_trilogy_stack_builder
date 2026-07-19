@@ -27,7 +27,15 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 function logFallback(fn: string, err: unknown): void {
   const reason = err instanceof Error ? err.message : String(err);
   // eslint-disable-next-line no-console
-  console.warn(`[data] live ${fn} failed → falling back to sample data. Reason: ${reason}`, err);
+  console.warn(`[data] live ${fn} failed → ${reason}`, err);
+}
+
+// When NO backend URL is configured (local dev / a preview build), honestly show sample
+// fixtures + the banner. But when a backend IS configured and it errored (a real save/load
+// failure, an expired session, a 5xx), do NOT silently substitute sample data — that would
+// hide data loss. In that case we rethrow so the screen shows a clear, retryable error.
+function isNoBackendConfigured(err: unknown): boolean {
+  return err instanceof Error && err.message === 'no_backend_configured';
 }
 
 /** Wraps a payload result with whether it came from fixtures (sample) or the live backend. */
@@ -53,7 +61,10 @@ export async function createAssessment(payload: AssessmentPayload): Promise<{ as
     return await live.createAssessment(payload);
   } catch (err) {
     logFallback('createAssessment', err);
-    return { assessment_id: 'demo' };
+    // No backend → demo mode. A configured backend that failed to save → surface it (do not
+    // pretend the save worked and proceed to a broken report).
+    if (isNoBackendConfigured(err)) return { assessment_id: 'demo' };
+    throw err;
   }
 }
 
@@ -66,6 +77,7 @@ export async function getPreview(
     return { data: await live.getPreview(id), isSample: false };
   } catch (err) {
     logFallback('getPreview', err);
+    if (!isNoBackendConfigured(err)) throw err; // configured-backend error → let the UI show it
     await delay(400);
     return { data: opts.hasSpend ? FIXTURE_PREVIEW_STATE_A : FIXTURE_PREVIEW_STATE_B, isSample: true };
   }
@@ -77,6 +89,7 @@ export async function getReport(id: string): Promise<Sourced<ReportResponse>> {
     return { data: await live.getReport(id), isSample: false };
   } catch (err) {
     logFallback('getReport', err);
+    if (!isNoBackendConfigured(err)) throw err; // configured-backend error → let the UI show it
     await delay(500);
     return { data: FIXTURE_REPORT, isSample: true };
   }

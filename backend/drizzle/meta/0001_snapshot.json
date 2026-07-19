@@ -1,0 +1,979 @@
+{
+  "id": "14d10e18-71d2-4ec3-9e4e-7f0d238c3aac",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.assessment_sessions": {
+      "name": "assessment_sessions",
+      "schema": "",
+      "columns": {
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "assessment_sessions_expires_at_idx": {
+          "name": "assessment_sessions_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.assessments": {
+      "name": "assessments",
+      "schema": "",
+      "columns": {
+        "assessment_id": {
+          "name": "assessment_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "assessments_user_profile_id_user_profiles_user_profile_id_fk": {
+          "name": "assessments_user_profile_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "assessments",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_profile_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.bioavailability_records": {
+      "name": "bioavailability_records",
+      "schema": "",
+      "columns": {
+        "bioavailability_record_id": {
+          "name": "bioavailability_record_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_format": {
+          "name": "delivery_format",
+          "type": "delivery_format",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "relative_bioavailability_pct": {
+          "name": "relative_bioavailability_pct",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bioavailability_records_compound_id_compounds_compound_id_fk": {
+          "name": "bioavailability_records_compound_id_compounds_compound_id_fk",
+          "tableFrom": "bioavailability_records",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bioavailability_records_source_id_sources_source_id_fk": {
+          "name": "bioavailability_records_source_id_sources_source_id_fk",
+          "tableFrom": "bioavailability_records",
+          "tableTo": "sources",
+          "columnsFrom": [
+            "source_id"
+          ],
+          "columnsTo": [
+            "source_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.compounds": {
+      "name": "compounds",
+      "schema": "",
+      "columns": {
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "canonical_name": {
+          "name": "canonical_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aliases": {
+          "name": "aliases",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "compound_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mechanism_summary": {
+          "name": "mechanism_summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.dose_records": {
+      "name": "dose_records",
+      "schema": "",
+      "columns": {
+        "dose_record_id": {
+          "name": "dose_record_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "studied_dose_min_mg": {
+          "name": "studied_dose_min_mg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "studied_dose_max_mg": {
+          "name": "studied_dose_max_mg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "studied_duration_weeks": {
+          "name": "studied_duration_weeks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "delivery_format": {
+          "name": "delivery_format",
+          "type": "delivery_format",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome_measured": {
+          "name": "outcome_measured",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "effect_direction": {
+          "name": "effect_direction",
+          "type": "effect_direction",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "effect_size": {
+          "name": "effect_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "extraction_method": {
+          "name": "extraction_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewer_id": {
+          "name": "reviewer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "review_date": {
+          "name": "review_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dose_records_compound_id_compounds_compound_id_fk": {
+          "name": "dose_records_compound_id_compounds_compound_id_fk",
+          "tableFrom": "dose_records",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dose_records_source_id_sources_source_id_fk": {
+          "name": "dose_records_source_id_sources_source_id_fk",
+          "tableFrom": "dose_records",
+          "tableTo": "sources",
+          "columnsFrom": [
+            "source_id"
+          ],
+          "columnsTo": [
+            "source_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.interaction_records": {
+      "name": "interaction_records",
+      "schema": "",
+      "columns": {
+        "interaction_record_id": {
+          "name": "interaction_record_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "compound_id_a": {
+          "name": "compound_id_a",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "compound_id_b": {
+          "name": "compound_id_b",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interaction_type": {
+          "name": "interaction_type",
+          "type": "interaction_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mechanism_note": {
+          "name": "mechanism_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "interaction_severity",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'informational'"
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "interaction_records_compound_id_a_compounds_compound_id_fk": {
+          "name": "interaction_records_compound_id_a_compounds_compound_id_fk",
+          "tableFrom": "interaction_records",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id_a"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "interaction_records_compound_id_b_compounds_compound_id_fk": {
+          "name": "interaction_records_compound_id_b_compounds_compound_id_fk",
+          "tableFrom": "interaction_records",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id_b"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "interaction_records_source_id_sources_source_id_fk": {
+          "name": "interaction_records_source_id_sources_source_id_fk",
+          "tableFrom": "interaction_records",
+          "tableTo": "sources",
+          "columnsFrom": [
+            "source_id"
+          ],
+          "columnsTo": [
+            "source_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.scoring_parameters": {
+      "name": "scoring_parameters",
+      "schema": "",
+      "columns": {
+        "scoring_parameter_id": {
+          "name": "scoring_parameter_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "goal_tag": {
+          "name": "goal_tag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recommended_range_low_mg": {
+          "name": "recommended_range_low_mg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommended_range_high_mg": {
+          "name": "recommended_range_high_mg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidence_tier": {
+          "name": "evidence_tier",
+          "type": "evidence_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contributing_source_ids": {
+          "name": "contributing_source_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidence_tier_rationale": {
+          "name": "evidence_tier_rationale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bioavailability_adjustment_factor": {
+          "name": "bioavailability_adjustment_factor",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_reviewed_date": {
+          "name": "last_reviewed_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "scoring_parameters_compound_id_compounds_compound_id_fk": {
+          "name": "scoring_parameters_compound_id_compounds_compound_id_fk",
+          "tableFrom": "scoring_parameters",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.sources": {
+      "name": "sources",
+      "schema": "",
+      "columns": {
+        "source_id": {
+          "name": "source_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "citation": {
+          "name": "citation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doi_or_url": {
+          "name": "doi_or_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "study_type": {
+          "name": "study_type",
+          "type": "study_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sample_size": {
+          "name": "sample_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "population_match": {
+          "name": "population_match",
+          "type": "population_match",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "journal_tier": {
+          "name": "journal_tier",
+          "type": "journal_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "publication_date": {
+          "name": "publication_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "extraction_status": {
+          "name": "extraction_status",
+          "type": "extraction_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_ai_extraction'"
+        },
+        "reviewer_id": {
+          "name": "reviewer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "review_date": {
+          "name": "review_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "review_notes": {
+          "name": "review_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.user_feedback": {
+      "name": "user_feedback",
+      "schema": "",
+      "columns": {
+        "user_feedback_id": {
+          "name": "user_feedback_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome_self_report": {
+          "name": "outcome_self_report",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reported_at": {
+          "name": "reported_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_feedback_user_profile_id_user_profiles_user_profile_id_fk": {
+          "name": "user_feedback_user_profile_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "user_feedback",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_profile_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_feedback_compound_id_compounds_compound_id_fk": {
+          "name": "user_feedback_compound_id_compounds_compound_id_fk",
+          "tableFrom": "user_feedback",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.user_lab_results": {
+      "name": "user_lab_results",
+      "schema": "",
+      "columns": {
+        "user_lab_result_id": {
+          "name": "user_lab_result_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marker": {
+          "name": "marker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "taken_at": {
+          "name": "taken_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_lab_results_user_profile_id_user_profiles_user_profile_id_fk": {
+          "name": "user_lab_results_user_profile_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "user_lab_results",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_profile_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.user_profiles": {
+      "name": "user_profiles",
+      "schema": "",
+      "columns": {
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "goals_ranked": {
+          "name": "goals_ranked",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "budget_monthly": {
+          "name": "budget_monthly",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "risk_tolerance": {
+          "name": "risk_tolerance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.user_stack_items": {
+      "name": "user_stack_items",
+      "schema": "",
+      "columns": {
+        "user_stack_item_id": {
+          "name": "user_stack_item_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_profile_id": {
+          "name": "user_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "compound_id": {
+          "name": "compound_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dose_taken_mg": {
+          "name": "dose_taken_mg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "delivery_format": {
+          "name": "delivery_format",
+          "type": "delivery_format",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_paid": {
+          "name": "price_paid",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_stack_items_user_profile_id_user_profiles_user_profile_id_fk": {
+          "name": "user_stack_items_user_profile_id_user_profiles_user_profile_id_fk",
+          "tableFrom": "user_stack_items",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_profile_id"
+          ],
+          "columnsTo": [
+            "user_profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_stack_items_compound_id_compounds_compound_id_fk": {
+          "name": "user_stack_items_compound_id_compounds_compound_id_fk",
+          "tableFrom": "user_stack_items",
+          "tableTo": "compounds",
+          "columnsFrom": [
+            "compound_id"
+          ],
+          "columnsTo": [
+            "compound_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "public.compound_category": {
+      "name": "compound_category",
+      "schema": "public",
+      "values": [
+        "nad_precursor",
+        "methylation",
+        "longevity_compound",
+        "delivery_modifier"
+      ]
+    },
+    "public.delivery_format": {
+      "name": "delivery_format",
+      "schema": "public",
+      "values": [
+        "standard_capsule",
+        "liposomal",
+        "sublingual",
+        "powder",
+        "injectable"
+      ]
+    },
+    "public.effect_direction": {
+      "name": "effect_direction",
+      "schema": "public",
+      "values": [
+        "positive",
+        "null_no_effect",
+        "negative"
+      ]
+    },
+    "public.evidence_tier": {
+      "name": "evidence_tier",
+      "schema": "public",
+      "values": [
+        "A_strong",
+        "B_moderate",
+        "C_limited",
+        "D_preliminary"
+      ]
+    },
+    "public.extraction_status": {
+      "name": "extraction_status",
+      "schema": "public",
+      "values": [
+        "pending_ai_extraction",
+        "ai_extracted",
+        "human_reviewed",
+        "rejected"
+      ]
+    },
+    "public.interaction_severity": {
+      "name": "interaction_severity",
+      "schema": "public",
+      "values": [
+        "informational",
+        "caution",
+        "avoid"
+      ]
+    },
+    "public.interaction_type": {
+      "name": "interaction_type",
+      "schema": "public",
+      "values": [
+        "synergistic",
+        "redundant_pathway",
+        "antagonistic",
+        "contraindicated_with_medication_class"
+      ]
+    },
+    "public.journal_tier": {
+      "name": "journal_tier",
+      "schema": "public",
+      "values": [
+        "tier_1_high_impact",
+        "tier_2_peer_reviewed",
+        "tier_3_preprint_or_low_impact"
+      ]
+    },
+    "public.population_match": {
+      "name": "population_match",
+      "schema": "public",
+      "values": [
+        "general_healthy_adult",
+        "older_adult_55plus",
+        "clinical_condition",
+        "animal_model",
+        "n/a"
+      ]
+    },
+    "public.study_type": {
+      "name": "study_type",
+      "schema": "public",
+      "values": [
+        "meta_analysis",
+        "systematic_review",
+        "RCT",
+        "cohort_observational",
+        "animal_model",
+        "in_vitro",
+        "case_report",
+        "mechanism_review"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

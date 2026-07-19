@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { saveIntake, getIntake } from '../services/assessment-store.js';
+import { createAssessmentSession, getAssessmentSession } from '../services/session-repository.js';
 import { assembleAssessment, type StoredStackItem } from '../services/assessment-service.js';
 import { dbEvidenceProvider } from '../services/repository.js';
 import { ClaimComplianceError } from '../../compliance/claim-guard.js';
@@ -42,7 +42,7 @@ function toMg(dose: { amount: number; unit: string } | null | undefined): number
 }
 
 // POST /assessment -> { assessment_id }
-assessmentRouter.post('/', (req, res) => {
+assessmentRouter.post('/', async (req, res) => {
   const parsed = assessmentSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', issues: parsed.error.issues });
@@ -53,16 +53,41 @@ assessmentRouter.post('/', (req, res) => {
     deliveryFormat: s.delivery_format ?? null,
     pricePaid: s.monthly_price ?? null,
   }));
-  const assessmentId = saveIntake({
-    stackItems,
-    goalTag: parsed.data.user_profile?.priority_goal ?? 'general',
-  });
-  res.status(201).json({ assessment_id: assessmentId });
+  try {
+    const assessmentId = await createAssessmentSession({
+      stackItems,
+      goalTag: parsed.data.user_profile?.priority_goal ?? 'general',
+    });
+    return res.status(201).json({ assessment_id: assessmentId });
+  } catch {
+    // The durable save failed (DB unreachable / pool exhausted). Never pretend it succeeded —
+    // return a clear 503 (not a raw 500) so the client can tell the user to retry.
+    return res.status(503).json({
+      error: 'session_store_unavailable',
+      message: "We couldn't save your assessment right now. Please try again in a moment.",
+    });
+  }
 });
 
 async function respondWith(kind: 'preview' | 'report', id: string, res: import('express').Response) {
-  const intake = getIntake(id);
-  if (!intake) return res.status(404).json({ error: 'assessment_not_found' });
+  // Load the session. A DB read failure is a 503 (transient); a missing/expired session is a
+  // 404 (sessions are kept 48 hours) — never a raw 500, never silent.
+  let intake;
+  try {
+    intake = await getAssessmentSession(id);
+  } catch {
+    return res.status(503).json({
+      error: 'session_store_unavailable',
+      message: "We couldn't load your assessment right now. Please try again in a moment.",
+    });
+  }
+  if (!intake) {
+    return res.status(404).json({
+      error: 'session_not_found',
+      message:
+        "This assessment wasn't found or has expired. Sessions are kept for 48 hours — please start a new audit.",
+    });
+  }
   try {
     const outputs = await assembleAssessment(intake, dbEvidenceProvider);
     return res.json(kind === 'preview' ? outputs.preview : outputs.report);

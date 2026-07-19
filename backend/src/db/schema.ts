@@ -25,6 +25,7 @@ import {
   real,
   timestamp,
   jsonb,
+  index,
 } from 'drizzle-orm/pg-core';
 
 // -----------------------------------------------------------------------------
@@ -276,3 +277,32 @@ export const assessments = pgTable('assessments', {
   userProfileId: uuid('user_profile_id').references(() => userProfiles.userProfileId),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+// =============================================================================
+// ASSESSMENT SESSIONS (TECH_DOCS §1b) — durable, ANONYMOUS, 48h-expiring storage for an
+// in-progress or completed assessment. This is NOT a user account: session_id is a random,
+// identity-free token (no email, no login, no accounts). It replaces the old in-memory
+// store so a session survives Render restarts/cold starts and is safe across instances.
+// Independent of the evidence tables (compounds/sources/…), which are untouched.
+// =============================================================================
+export const assessmentSessions = pgTable(
+  'assessment_sessions',
+  {
+    // The random session token — the same `assessment_id` returned by POST /assessment.
+    sessionId: text('session_id').primaryKey(),
+    // The assessment intake (stack items + profile) as JSON; the report is DERIVED from it
+    // on read (single source of truth), not stored separately.
+    data: jsonb('data').notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).notNull(),
+    // created_at + 48 hours. Rows past this are treated as "not found" and swept (see
+    // session-store.ts). Nothing is persisted beyond this window.
+    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+  },
+  (t) => ({
+    // Speeds up the expired-row sweep on session creation.
+    expiresAtIdx: index('assessment_sessions_expires_at_idx').on(t.expiresAt),
+  }),
+);
+
+export type AssessmentSessionRow = typeof assessmentSessions.$inferSelect;
+export type NewAssessmentSessionRow = typeof assessmentSessions.$inferInsert;
