@@ -114,12 +114,12 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
       'Dollerup OL, et al. A randomized placebo-controlled clinical trial of nicotinamide riboside in obese men: safety, insulin-sensitivity, and lipid-mobilizing effects. Am J Clin Nutr. 2018;108(2):343-353.',
     doiOrUrl: 'https://pubmed.ncbi.nlm.nih.gov/29992272/',
     studyType: 'RCT',
-    sampleSize: null,
+    sampleSize: 40, // Founder-confirmed 2026-07-20: 40 healthy sedentary men, BMI>30, ages 40-70 (was null).
     populationMatch: 'clinical_condition',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2018-08-01'),
     extractionStatus: 'ai_extracted',
-    reviewNotes: VERIFIED,
+    reviewNotes: `${VERIFIED} Sample size founder-confirmed 2026-07-20: n=40 (healthy sedentary men, BMI>30, ages 40-70).`,
   },
   {
     sourceId: S.timmers2011,
@@ -176,7 +176,7 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
   {
     sourceId: S.mcrae2013,
     citation:
-      'McRae MP. Betaine supplementation decreases plasma homocysteine in healthy adult participants: a meta-analysis. Nutr Res. 2013;33(2):159-165? (5 RCTs, 2002-2010).',
+      'McRae MP. Betaine supplementation decreases plasma homocysteine in healthy adult participants: a meta-analysis. J Chiropr Med. 2013;12(1):20-25. doi:10.1016/j.jcm.2012.11.001 (5 RCTs, 2002-2010).',
     doiOrUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3610948/',
     studyType: 'meta_analysis',
     sampleSize: null,
@@ -184,7 +184,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2013-02-01'),
     extractionStatus: 'ai_extracted',
-    reviewNotes: `${VERIFIED} Aggregates 5 RCTs (>=4 g/day, 6-24 wk); exact volume/pages not confirmed (marked with ?).`,
+    reviewNotes:
+      'Citation corrected by founder review 2026-07-20: journal/volume/pages were wrong (had Nutr Res 2013;33(2):159-165); correct is J Chiropr Med 2013;12(1):20-25, doi:10.1016/j.jcm.2012.11.001. PMC3610948 link and the underlying science (5 RCTs, 2002-2010, >=4 g/day, 6-24 wk, pooled homocysteine reduction ~1.23 umol/L) unchanged and founder-confirmed.',
   },
   {
     sourceId: S.hoffman2009,
