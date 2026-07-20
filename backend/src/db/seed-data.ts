@@ -1,14 +1,17 @@
 // =============================================================================
 // EVIDENCE SEED DATA — batch 1 (5 compounds). Real, web-verified research only.
 //
-// VERIFICATION NOTE (read before trusting any citation): every source below was
-// confirmed to EXIST with its title / journal / year / dose / n via web search across
-// multiple independent results (PubMed, PMC, publisher). Direct DOI resolution
-// (Crossref / raw fetch) was blocked by the environment proxy (HTTP 403), so DOIs/URLs
-// were assembled from search-confirmed metadata, not fetched byte-for-byte. Nothing here
-// is fabricated; where a fact (exact n, duration, DOI) could not be confirmed it is left
-// null. Founder review is still required — see the `— AI-extracted, pending founder
-// review.` suffix on every scoring rationale, and extractionStatus = 'ai_extracted'.
+// VERIFICATION NOTE: every source below was originally confirmed to EXIST with its
+// title / journal / year / dose / n via web search across multiple independent results
+// (PubMed, PMC, publisher). Direct DOI resolution was blocked by the environment proxy
+// (HTTP 403) at extraction time, so DOIs/URLs were originally assembled from
+// search-confirmed metadata.
+//
+// FOUNDER REVIEW COMPLETE (2026-07-20): all 12 sources have been personally verified by
+// the founder against their primary sources (doses / n / outcomes / citations), with the
+// McRae 2013 citation corrected (see PR #11) — no other corrections. Every source is now
+// extractionStatus = 'human_reviewed' with reviewDate set, and the scoring rationales no
+// longer carry the "pending founder review" suffix. This dataset is review-backed.
 //
 // Compliance: mechanismSummary and evidenceTierRationale are mechanism/comparison-level
 // only — no disease/treatment/benefit claims (CLAIMS_COMPLIANCE §5/§10). Study outcomes
@@ -52,6 +55,10 @@ export const SEED_SOURCE_IDS = S;
 
 const VERIFIED = 'Existence + metadata verified via web search 2026-07-13; DOI not fetched directly (resolver blocked).';
 
+// Founder review completed 2026-07-20 — all 12 sources verified against their primaries.
+// Applied as reviewDate on every source (reviewerId is left null: no users row is modeled yet).
+const REVIEWED_ON = new Date('2026-07-20');
+
 // ---- LAYER 1: SOURCES -------------------------------------------------------
 export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
   {
@@ -64,7 +71,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'clinical_condition',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2021-06-11'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: VERIFIED,
   },
   {
@@ -77,7 +85,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2021-07-08'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: VERIFIED,
   },
   {
@@ -92,7 +101,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2020-02-28'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} NOTE: single-arm interventional PK study; no studyType enum fits exactly (used cohort_observational).`,
   },
   {
@@ -105,7 +115,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'older_adult_55plus',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2018-03-29'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: VERIFIED,
   },
   {
@@ -118,7 +129,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'clinical_condition',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2018-08-01'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} Sample size founder-confirmed 2026-07-20: n=40 (healthy sedentary men, BMI>30, ages 40-70).`,
   },
   {
@@ -131,7 +143,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2011-11-02'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: VERIFIED,
   },
   {
@@ -144,7 +157,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2012-11-07'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: VERIFIED,
   },
   {
@@ -157,7 +171,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'clinical_condition',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2008-05-01'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} DOI assembled from journal PII (S0026-0495(08)00046-2), not directly resolved.`,
   },
   {
@@ -170,7 +185,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'clinical_condition',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2015-02-23'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} Aggregates 27 RCTs (2569 patients). DOI not directly resolved.`,
   },
   {
@@ -183,7 +199,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2013-02-01'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes:
       'Citation corrected by founder review 2026-07-20: journal/volume/pages were wrong (had Nutr Res 2013;33(2):159-165); correct is J Chiropr Med 2013;12(1):20-25, doi:10.1016/j.jcm.2012.11.001. PMC3610948 link and the underlying science (5 RCTs, 2002-2010, >=4 g/day, 6-24 wk, pooled homocysteine reduction ~1.23 umol/L) unchanged and founder-confirmed.',
   },
@@ -197,7 +214,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2009-02-27'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} Mixed result (squat repetitions improved, bench press unchanged).`,
   },
   {
@@ -210,7 +228,8 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
     populationMatch: 'n/a',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2021-02-01'),
-    extractionStatus: 'ai_extracted',
+    extractionStatus: 'human_reviewed',
+    reviewDate: REVIEWED_ON,
     reviewNotes: `${VERIFIED} Used for the NAD+ salvage-pathway mechanism and the NMN/NR redundancy record.`,
   },
 ];
@@ -372,10 +391,10 @@ export const SEED_INTERACTION_RECORDS: (typeof interactionRecords.$inferInsert)[
 ];
 
 // ---- LAYER 3: SCORING PARAMETERS (the layer the formula reads) ---------------
-// Evidence tiers assigned per the mechanical rule in TECH_DOCS §1. Rationales are
-// comparison-level and each ends with the required review-pending suffix. bioavailability
-// adjustment factor is 1.0 everywhere: no verified per-format human PK exists (see above).
-const SUFFIX = '— AI-extracted, pending founder review.';
+// Evidence tiers assigned per the mechanical rule in TECH_DOCS §1; rationales are
+// comparison-level. Founder review complete 2026-07-20: rationales are final (no
+// review-pending suffix) and lastReviewedDate is set. bioavailability adjustment factor
+// is 1.0 everywhere: no verified per-format human PK exists (see above).
 
 export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] = [
   {
@@ -383,55 +402,62 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     recommendedRangeLowMg: 250, recommendedRangeHighMg: 500,
     evidenceTier: 'B_moderate',
     contributingSourceIds: [S.yoshino2021, S.irie2020],
-    evidenceTierRationale: `Based on a single small human RCT (n=25) at 250 mg/day plus a single-dose safety/PK study; early-stage and not yet replicated at scale. ${SUFFIX}`,
+    evidenceTierRationale: `Based on a single small human RCT (n=25) at 250 mg/day plus a single-dose safety/PK study; early-stage and not yet replicated at scale.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.nmn, goalTag: 'training_and_recovery',
     recommendedRangeLowMg: 600, recommendedRangeHighMg: 1200,
     evidenceTier: 'B_moderate',
     contributingSourceIds: [S.liao2021],
-    evidenceTierRationale: `A single human RCT (n=48) reported improved aerobic capacity at 600-1200 mg/day over 6 weeks. ${SUFFIX}`,
+    evidenceTierRationale: `A single human RCT (n=48) reported improved aerobic capacity at 600-1200 mg/day over 6 weeks.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.nr, goalTag: 'healthy_aging',
     recommendedRangeLowMg: 300, recommendedRangeHighMg: 1000,
     evidenceTier: 'B_moderate',
     contributingSourceIds: [S.martens2018, S.dollerup2018],
-    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity, so evidence is moderate and outcome-dependent. ${SUFFIX}`,
+    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity, so evidence is moderate and outcome-dependent.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.resveratrol, goalTag: 'metabolic_health',
     recommendedRangeLowMg: 150, recommendedRangeHighMg: 500,
     evidenceTier: 'C_limited',
     contributingSourceIds: [S.timmers2011, S.yoshino2012],
-    evidenceTierRationale: `Human trials are small and conflicting (a 150 mg/day trial reported metabolic changes; a 75 mg/day trial found none) and oral bioavailability is low; no dose-adequacy conclusion is drawn. ${SUFFIX}`,
+    evidenceTierRationale: `Human trials are small and conflicting (a 150 mg/day trial reported metabolic changes; a 75 mg/day trial found none) and oral bioavailability is low; no dose-adequacy conclusion is drawn.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.berberine, goalTag: 'metabolic_health',
     recommendedRangeLowMg: 900, recommendedRangeHighMg: 1500,
     evidenceTier: 'A_strong',
     contributingSourceIds: [S.yin2008, S.lan2015],
-    evidenceTierRationale: `Supported by a meta-analysis of 27 randomised controlled trials plus a head-to-head human RCT; studied doses cluster around 900-1500 mg/day. ${SUFFIX}`,
+    evidenceTierRationale: `Supported by a meta-analysis of 27 randomised controlled trials plus a head-to-head human RCT; studied doses cluster around 900-1500 mg/day.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.tmg, goalTag: 'healthy_aging',
     recommendedRangeLowMg: 1500, recommendedRangeHighMg: 6000,
     evidenceTier: 'B_moderate',
     contributingSourceIds: [S.mcrae2013],
-    evidenceTierRationale: `A meta-analysis of randomised trials found betaine lowers plasma homocysteine (a methylation-metabolism marker); a surrogate endpoint, so rated moderate. Studied doses range 1500-6000 mg/day. ${SUFFIX}`,
+    evidenceTierRationale: `A meta-analysis of randomised trials found betaine lowers plasma homocysteine (a methylation-metabolism marker); a surrogate endpoint, so rated moderate. Studied doses range 1500-6000 mg/day.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
   {
     compoundId: C.tmg, goalTag: 'training_and_recovery',
     recommendedRangeLowMg: 2500, recommendedRangeHighMg: 5000,
     evidenceTier: 'C_limited',
     contributingSourceIds: [S.hoffman2009],
-    evidenceTierRationale: `Human ergogenic data are limited and mixed (some strength measures improved, others unchanged) at ~2500 mg/day; preliminary. ${SUFFIX}`,
+    evidenceTierRationale: `Human ergogenic data are limited and mixed (some strength measures improved, others unchanged) at ~2500 mg/day; preliminary.`,
     bioavailabilityAdjustmentFactor: 1.0,
+    lastReviewedDate: REVIEWED_ON,
   },
 ];

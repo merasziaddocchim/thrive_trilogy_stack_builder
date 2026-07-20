@@ -16,6 +16,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:counts": "tsx src/db/counts.ts",
     "db:correct:batch1": "tsx src/db/corrections/2026-07-20-batch1.ts",
+    "db:signoff:batch1": "tsx src/db/corrections/2026-07-20-batch1-signoff.ts",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint . && node scripts/check-firewall.mjs",
     "firewall": "node scripts/check-firewall.mjs",
