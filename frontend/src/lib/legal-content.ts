@@ -48,7 +48,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'Thrive Trilogy was founded by Ziad Meras, M.Sc. Organic Chemistry. Ziad personally reviews the evidence records that feed the tool against their primary sources before they are used. Author and review credentials are shown on our methodology page.',
         ],
-        note: 'Founder review — same accuracy gap flagged on How We Review Supplements: the live batch-1 records are still ai_extracted, pending your review. Complete that review before launch or soften this sentence (CLAIMS_COMPLIANCE §7).',
       },
       {
         heading: 'Our relationship to the research',
@@ -275,9 +274,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'Our methodology page covers the same pipeline in more depth, including how evidence bounds the Spend Efficiency Index and why the score is independent of affiliate relationships.',
         ],
-      },
-      {
-        note: 'Founder review — accuracy gap, not a copy question: the batch-1 evidence records currently live in production are still marked ai_extracted, pending founder review (STATUS.md §9 top open item). Until that review completes and records are flipped to human_reviewed, this page’s statement that only reviewed records feed the score is ahead of reality. Close the gap by completing the batch-1 review before launch (preferred), or this copy must be softened — per CLAIMS_COMPLIANCE §7, the gap between a claimed review step and actual practice is itself the liability.',
       },
     ],
   },

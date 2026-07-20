@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { scoreStack, type ScoredCompoundInput } from '../scoring-engine/index.js';
-import { SEED_COMPOUNDS, SEED_SCORING_PARAMETERS } from './seed-data.js';
+import { SEED_COMPOUNDS, SEED_SCORING_PARAMETERS, SEED_SOURCES } from './seed-data.js';
 
 // Drives the REAL scoring engine against the REAL seeded evidence parameters (not a mock),
 // using a synthetic stack that includes underdosed, in-range, and overdosed compounds. Also
@@ -88,6 +88,23 @@ test('seeded scoring parameters all carry an evidence tier and non-empty sources
   for (const p of SEED_SCORING_PARAMETERS) {
     assert.ok(p.evidenceTier, `${p.compoundId} missing evidence tier`);
     assert.ok(p.contributingSourceIds.length > 0, `${p.compoundId} missing contributing sources`);
-    assert.match(p.evidenceTierRationale ?? '', /pending founder review\.$/);
+  }
+});
+
+test('batch-1 founder review is complete: sources human_reviewed, no pending-review suffix', () => {
+  // Founder review completed 2026-07-20 — the review-pending state must be fully gone.
+  for (const s of SEED_SOURCES) {
+    assert.equal(
+      s.extractionStatus,
+      'human_reviewed',
+      `${s.sourceId} should be human_reviewed after batch-1 sign-off`,
+    );
+  }
+  for (const p of SEED_SCORING_PARAMETERS) {
+    assert.doesNotMatch(
+      p.evidenceTierRationale ?? '',
+      /pending founder review/,
+      `${p.compoundId} rationale still carries the review-pending suffix`,
+    );
   }
 });
