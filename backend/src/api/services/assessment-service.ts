@@ -19,6 +19,9 @@ import {
   type ReportResponse,
 } from './report-builder.js';
 import { tierLetter } from '../../compliance/claim-templates.js';
+// The affiliate-engine is firewalled from scoring; the orchestrator (this file) is the seam that
+// composes scoring output with the affiliate Start section — affiliate never feeds the score.
+import { buildStartSection, type RecognizedForStart } from '../../affiliate-engine/index.js';
 import type { EvidenceTier } from '../../db/schema.js';
 
 /** A user's stack item as captured/confirmed (mirrors user_stack_items). */
@@ -161,8 +164,18 @@ export async function assembleAssessment(
   const totalSpend = inputs.reduce((sum, i) => sum + Math.max(0, i.dollarsSpent), 0);
   const sufficientForScoring = totalSpend > 0 && inputs.length > 0;
 
+  // Start section: keyed off the compounds PRESENT IN THE REPORT (the scored contexts), each
+  // with its established evidence tier. The affiliate-engine only selects founder-reviewed
+  // products; it cannot and does not influence any score above.
+  const recognizedForStart: RecognizedForStart[] = contexts.map((c) => ({
+    compoundId: c.input.compoundId,
+    canonicalName: c.input.canonicalName,
+    evidenceTier: tierLetter(c.input.evidenceTier),
+  }));
+  const startSection = buildStartSection(recognizedForStart);
+
   return {
     preview: buildPreview(recognized, contexts, result, overlaps, { sufficientForScoring }),
-    report: buildReport(contexts, result),
+    report: buildReport(contexts, result, startSection),
   };
 }

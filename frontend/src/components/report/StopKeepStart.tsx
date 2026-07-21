@@ -1,16 +1,14 @@
 'use client';
-// Stop / Keep / Start sections (exact casing/words locked, BRAND §3). Dashboard density:
-// each compound row shows name, dollar amount, and Evidence Tier WITHOUT a click; the full
-// citation/tier rationale expands on tap (BRAND §5, prompt §7). Distinct card treatment per
-// section via a left-accent — the ONE place colored side-borders are allowed (structural
-// wayfinding, prompt §7). Start rows with an affiliate link render per-link disclosure.
+// Stop / Keep sections (exact casing/words locked, BRAND §3). Dashboard density: each compound
+// row shows name, dollar amount, and Evidence Tier WITHOUT a click; the full citation/tier
+// rationale expands on tap (BRAND §5, prompt §7). Distinct card treatment per section via a
+// left-accent — the ONE place colored side-borders are allowed (structural wayfinding, prompt §7).
+// The "Start" section (affiliate products, Tier 1/2/3) is rendered separately by StartSection.
 import { useState } from 'react';
-import type { ReportResponse, StartRow } from '@/lib/types';
+import type { ReportResponse } from '@/lib/types';
 import { TierBadge, TierDisclosure } from '@/components/ui/EvidenceTier';
-import { AffiliateDisclosure } from './AffiliateDisclosure';
-import { IconArrowRight } from '@/components/ui/Icon';
 
-type SectionKey = 'Stop' | 'Keep' | 'Start';
+type SectionKey = 'Stop' | 'Keep';
 
 const SECTION_STYLE: Record<SectionKey, { border: string; chip: string; blurb: string }> = {
   Stop: {
@@ -22,11 +20,6 @@ const SECTION_STYLE: Record<SectionKey, { border: string; chip: string; blurb: s
     border: 'border-l-keep',
     chip: 'bg-keep-soft text-keep',
     blurb: 'Within studied ranges and supported by evidence.',
-  },
-  Start: {
-    border: 'border-l-start',
-    chip: 'bg-start-soft text-start',
-    blurb: 'Options worth considering, each shown with its evidence tier.',
   },
 };
 
@@ -94,36 +87,6 @@ function ExpandableRow({
   );
 }
 
-function StartExtras({ row }: { row: StartRow }) {
-  return (
-    <div className="mt-3 space-y-1.5">
-      {row.educational_link && (
-        // Educational article → functionally a citation, NO disclosure needed (§6).
-        <a
-          href={row.educational_link.href}
-          className="inline-flex items-center gap-1.5 text-sm font-600 text-accent underline underline-offset-4"
-        >
-          {row.educational_link.label}
-          <IconArrowRight className="h-4 w-4" />
-        </a>
-      )}
-      {row.affiliate_link && (
-        // Affiliate link → per-link disclosure IMMEDIATELY adjacent, same size/font (§6, BRAND §7).
-        <p className="text-sm">
-          <a
-            href={row.affiliate_link.href}
-            rel="sponsored nofollow"
-            className="font-600 text-accent underline underline-offset-4"
-          >
-            {row.affiliate_link.label}
-          </a>
-          <AffiliateDisclosure />
-        </p>
-      )}
-    </div>
-  );
-}
-
 function Section({
   title,
   children,
@@ -176,24 +139,6 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
             lastReviewed={r.last_reviewed}
             reviewer={r.reviewer_name}
             sourceIds={r.source_ids}
-          />
-        ))}
-      </Section>
-
-      <Section title="Start">
-        {report.start.map((r) => (
-          <ExpandableRow
-            key={r.compound}
-            name={r.compound}
-            amount={null}
-            amountLabel=""
-            reason={r.reason}
-            tier={r.evidence_tier}
-            rationale={r.tier_rationale}
-            lastReviewed={r.last_reviewed}
-            reviewer={r.reviewer_name}
-            sourceIds={r.source_ids}
-            extra={<StartExtras row={r} />}
           />
         ))}
       </Section>

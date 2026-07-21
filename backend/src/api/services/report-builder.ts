@@ -20,6 +20,9 @@ import {
   type TierLetter,
 } from '../../compliance/claim-templates.js';
 import type { ScoredCompoundInput, CompoundSubScore, StackScoreResult } from '../../scoring-engine/index.js';
+// Type-only import — the Start section is COMPUTED by the affiliate-engine in assessment-service
+// and passed in; report-builder only places it into the response shape (no affiliate logic here).
+import type { StartSection } from '../../affiliate-engine/index.js';
 
 export interface CompoundContext {
   input: ScoredCompoundInput;
@@ -151,7 +154,10 @@ export interface ReportResponse {
   safety_flag: boolean | null;
   stop: Array<EvidenceMeta & { compound: string; reason: string; est_monthly_waste: number }>;
   keep: Array<EvidenceMeta & { compound: string; note: string; monthly_cost: number }>;
+  /** Legacy per-compound "start" suggestions (unused; superseded by start_section). */
   start: Array<EvidenceMeta & { compound: string; reason: string; affiliate_link?: null }>;
+  /** Affiliate "Start" section — Tier 1/2/3 products (firewalled affiliate-engine output). */
+  start_section: StartSection;
   total_estimated_annual_waste: { low: number; high: number };
 }
 
@@ -185,7 +191,11 @@ function reasonFor(c: CompoundContext): string {
   return preliminaryDoseNote(c.input.canonicalName, c.input.labelDoseMg, 'mg');
 }
 
-export function buildReport(contexts: CompoundContext[], result: StackScoreResult): ReportResponse {
+export function buildReport(
+  contexts: CompoundContext[],
+  result: StackScoreResult,
+  startSection: StartSection,
+): ReportResponse {
   const stop: ReportResponse['stop'] = [];
   const keep: ReportResponse['keep'] = [];
 
@@ -234,7 +244,8 @@ export function buildReport(contexts: CompoundContext[], result: StackScoreResul
     safety_flag: result.safetyFlag,
     stop,
     keep,
-    start: [], // produced by the separate recommendation/affiliate layer (not built) — see file header.
+    start: [], // legacy field retained for the §6 contract; superseded by start_section.
+    start_section: startSection, // from the firewalled affiliate-engine (see assessment-service).
     total_estimated_annual_waste: { low: result.waste.annualLow, high: result.waste.annualHigh },
   };
 }

@@ -123,11 +123,42 @@ export interface StartRow extends EvidenceMeta {
   educational_link?: { href: string; label: string } | null;
 }
 
+// ---- Affiliate "Start" section (firewalled affiliate-engine output) ---------
+export interface StartProduct {
+  brand: string;
+  product: string;
+  href: string; // existing thrivetrilogy.com /go/ cloaked redirect — used verbatim
+}
+// Tier 1: an evidence-reviewed compound in the stack + its product options. The tier reflects
+// the COMPOUND (already established), never the product/brand.
+export interface StartTier1Group {
+  compound_id: string;
+  compound: string;
+  evidence_tier: EvidenceTier;
+  products: StartProduct[];
+}
+// Tier 2: "Also available" — NOT evidence-scored, no tier badge.
+export interface StartTier2Item extends StartProduct {
+  category: string;
+}
+// Tier 3: a bundle relevant to the stack; not evidence-scored, contents noted for relevance.
+export interface StartBundle extends StartProduct {
+  contains: string;
+}
+export interface StartSectionData {
+  tier1: StartTier1Group[];
+  tier2: StartTier2Item[];
+  tier3: StartBundle[];
+}
+
 export interface ReportResponse {
   composite_score: number; // Spend Efficiency Index, 0–100
   safety_flag: boolean | null;
   stop: StopRow[];
   keep: KeepRow[];
+  /** Legacy per-compound start rows (unused; superseded by start_section). */
   start: StartRow[];
+  /** Affiliate Start section — Tier 1/2/3 products. */
+  start_section: StartSectionData;
   total_estimated_annual_waste: { low: number; high: number };
 }

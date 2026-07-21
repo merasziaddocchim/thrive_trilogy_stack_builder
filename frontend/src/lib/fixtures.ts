@@ -217,34 +217,64 @@ export const FIXTURE_REPORT: ReportResponse = {
       source_ids: ['src_tmg_rct'],
     },
   ],
-  start: [
-    {
-      compound: 'NMN — consider adjusting toward the studied range',
-      reason:
-        'Your current intake of NMN is 250 mg — 17% below the range used in human research (300–500 mg), based on Yoshino 2021. If you keep NMN as your NAD+ precursor, moving toward the studied range may better match the evidence.',
-      evidence_tier: 'B',
-      tier_rationale: 'A single human RCT supports NMN in this range.',
-      last_reviewed: REV_DATE,
-      reviewer_name: REV,
-      source_ids: ['src_nmn_rct_2021'],
-      // Educational article — functionally a citation, no disclosure needed
-      // (CLAIMS_COMPLIANCE §6). Illustrative internal path.
-      educational_link: { href: 'https://thrivetrilogy.com/nmn-dosing-protocol', label: 'NMN Dosing Protocol Guide' },
-      affiliate_link: null,
-    },
-    {
-      compound: 'Urolithin A',
-      reason:
-        'Not currently in your stack. A clinical trial found effects on mitochondrial markers at studied doses. Consider whether it fits your priority before adding.',
-      evidence_tier: 'B',
-      tier_rationale: 'A single human RCT supports Urolithin A at the studied dose.',
-      last_reviewed: REV_DATE,
-      reviewer_name: REV,
-      source_ids: ['src_urolithin_rct'],
-      // Affiliate link → REQUIRES per-link disclosure rendered immediately adjacent.
-      affiliate_link: { href: 'https://example-partner.com/urolithin-a', label: 'View a reviewed Urolithin A option' },
-      educational_link: null,
-    },
-  ],
+  // Legacy per-compound start rows are superseded by start_section (below).
+  start: [],
+  // Affiliate Start section — mirrors what the firewalled affiliate-engine returns for this
+  // sample stack (Berberine, TMG, NR, Resveratrol present; TMG makes the bundles relevant).
+  // Excluded/ambiguous items (partiQlar NR, unitemized bundles) are intentionally absent.
+  start_section: {
+    tier1: [
+      {
+        compound_id: 'cmp_berberine',
+        compound: 'Berberine',
+        evidence_tier: 'A',
+        products: [
+          { brand: 'NMNBio', product: 'Berberine 400mg with Milk Thistle', href: '/go/nmnbio-berberine' },
+          { brand: 'Renue by Science', product: 'Berberine (Liposomal)', href: '/go/renue-berberine' },
+        ],
+      },
+      {
+        compound_id: 'cmp_tmg',
+        compound: 'TMG (Trimethylglycine)',
+        evidence_tier: 'B',
+        products: [
+          { brand: 'NMNBio', product: 'TMG 500mg, 90 Capsules', href: '/go/nmnbio-tmg' },
+          { brand: 'Renue by Science', product: 'TMG Methylation Essentials', href: '/go/renue-tmg' },
+        ],
+      },
+      {
+        compound_id: 'cmp_nr',
+        compound: 'NR (Nicotinamide Riboside)',
+        evidence_tier: 'B',
+        products: [
+          { brand: 'Renue by Science', product: 'NR Powder Smooth Taste Blend', href: '/go/renue-nrpowder' },
+          { brand: 'Genuine Purity', product: 'Liposomal NR', href: '/go/genuinepurity-nr' },
+        ],
+      },
+      {
+        compound_id: 'cmp_resveratrol',
+        compound: 'Resveratrol',
+        evidence_tier: 'C',
+        products: [
+          { brand: 'Renue by Science', product: 'Trans-Resveratrol (Liposomal)', href: '/go/renue-trans-resveratrol' },
+          { brand: 'Genuine Purity', product: 'Liposomal Trans-Resveratrol', href: '/go/gen-trans-reservatrol' },
+          { brand: 'partiQlar', product: 'Pure Resveratrol, 60 Capsules', href: '/go/partiQlar_Resveratrol' },
+        ],
+      },
+    ],
+    tier2: [
+      { brand: 'Renue by Science', product: 'CaAKG (Liposomal)', href: '/go/renue-CaAKG', category: 'CaAKG' },
+      { brand: 'Renue by Science', product: 'Quercetin (Liposomal)', href: '/go/renue-Quercetin', category: 'Quercetin' },
+      { brand: 'partiQlar', product: 'Pure Spermidine, 60 Capsules', href: '/go/partiQlar_Spermidine', category: 'Spermidine' },
+      { brand: 'Calocurb', product: 'Calocurb GLP-1 Activator', href: '/go/calocurb', category: 'GLP-1 (not a reviewed compound)' },
+      { brand: 'Jinfiniti', product: 'Ultimate Longevity Panel (CLIA-certified testing)', href: '/go/jinfiniti-ultimate', category: 'Diagnostic testing, not a supplement' },
+      { brand: 'Jinfiniti', product: 'NAD Dosing Protocol ($396 offer)', href: '/go/jinfiniti-dosing-prot', category: 'Diagnostic testing, not a supplement' },
+      { brand: 'Jinfiniti', product: 'NAD Membership Program (15% recurring)', href: '/go/jinfiniti-nad-memebrship', category: 'Membership/discount program' },
+    ],
+    tier3: [
+      { brand: 'NMNBio', product: 'Longevity Starter Pack', href: '/go/nmnbio-long-starterpack', contains: 'NMN, TMG, and Quercetin' },
+      { brand: 'NMNBio', product: 'Morning Bundle', href: '/go/nmnbio-morning', contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)' },
+    ],
+  },
   total_estimated_annual_waste: { low: 340, high: 520 },
 };
