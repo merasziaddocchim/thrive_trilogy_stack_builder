@@ -85,8 +85,27 @@ export const LEGAL_PAGES: Array<{ slug: string; title: string }> = [
 ];
 
 // Author / reviewer identity (E-E-A-T; BRAND_GUIDELINES §9, CLAIMS_COMPLIANCE §2).
+// `lastReviewed` is the fallback / non-report review date shown on the methodology, homepage,
+// legal, and SEO-schema surfaces; keep it in step with the latest evidence review (batch-1
+// review completed 2026-07-20, PR #12). The Report page does NOT depend on this constant — it
+// derives its "Last reviewed" date from the live report's per-compound review dates (the DB
+// `last_reviewed_date` PR #12 set), so that footer can never go stale on its own.
 export const REVIEWER = {
   name: 'Ziad Meras',
   credential: 'M.Sc. Organic Chemistry',
-  lastReviewed: '2026-07-10',
+  lastReviewed: '2026-07-20',
 } as const;
+
+// Single source of truth for the plain-language description of AI's role, reused on the Report
+// footer, methodology, and homepage so these copies can't drift apart. Must stay accurate per
+// CLAIMS_COMPLIANCE §7 (no AI overclaim) and consistent with the Disclaimer page's "How AI is
+// and is not involved" copy: the scoring/dosing math is deterministic; AI is used only for
+// database extraction, which a credentialed reviewer then verifies; free-text intake is
+// deterministic text-matching, not AI.
+export const AI_ROLE_NOTE =
+  'Your report is calculated by deterministic scoring software against our reviewed research ' +
+  'database — it is not written by an AI language model. That database is built by extracting ' +
+  'study data from primary sources with AI, then verifying it against those sources by a ' +
+  'credentialed reviewer; your free-text entry is matched to compounds by deterministic ' +
+  'text-matching, and you confirm those matches before anything is scored. This is not a ' +
+  'substitute for professional medical advice.';

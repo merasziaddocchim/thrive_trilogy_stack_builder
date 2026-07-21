@@ -13,7 +13,7 @@ import { SafetyFlag } from '@/components/report/SafetyFlag';
 import { Disclaimer } from '@/components/compliance/Disclaimer';
 import { Button, FixtureTag } from '@/components/ui/primitives';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
-import { TERMS, REVIEWER } from '@/lib/constants';
+import { TERMS, REVIEWER, AI_ROLE_NOTE } from '@/lib/constants';
 
 export default function ReportPage({ params }: { params: { id: string } }) {
   const [report, setReport] = useState<ReportResponse | null>(null);
@@ -64,6 +64,18 @@ export default function ReportPage({ params }: { params: { id: string } }) {
   const empty =
     report.stop.length === 0 && report.keep.length === 0 && report.start.length === 0;
 
+  // "Last reviewed" reflects the ACTUAL evidence review date carried by this report's compounds
+  // (the DB `last_reviewed_date` set by the batch-1 sign-off, PR #12) — the max across all rows,
+  // so it tracks re-reviews automatically and never goes stale independently. Falls back to the
+  // shared REVIEWER date only when no row carries one (e.g. an empty report). ISO dates compare
+  // lexicographically, so string max is date max.
+  const reviewDates = [...report.stop, ...report.keep, ...report.start]
+    .map((r) => r.last_reviewed)
+    .filter((d): d is string => Boolean(d));
+  const lastReviewed = reviewDates.length
+    ? reviewDates.reduce((a, b) => (a > b ? a : b))
+    : REVIEWER.lastReviewed;
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center justify-between gap-3">
@@ -109,9 +121,8 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       )}
 
       <p className="mt-8 border-t border-border pt-4 text-xs text-muted">
-        Reviewed by {REVIEWER.name}, {REVIEWER.credential}. Last reviewed {REVIEWER.lastReviewed}.
-        This report was generated using AI, based on our reviewed research database, and is not a
-        substitute for professional medical advice.
+        Reviewed by {REVIEWER.name}, {REVIEWER.credential}. Last reviewed {lastReviewed}.{' '}
+        {AI_ROLE_NOTE}
       </p>
     </main>
   );
