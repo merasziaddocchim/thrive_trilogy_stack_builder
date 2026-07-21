@@ -155,6 +155,44 @@ test('mixed newlines and commas segment correctly together', async () => {
   );
 });
 
+// --- The commentary-vs-possible-compound distinction (locked in going forward) ---
+// A trailing fragment whose only words are filler/uncertainty is COMMENTARY about the previous
+// compound and is merged into it — it must NOT appear as its own "Not recognized" row.
+test('trailing commentary is merged into the preceding compound, not shown as its own row', async () => {
+  const a = await parseIntake('TMG 1000mg, not sure of the dose', COMPOUNDS);
+  assert.equal(a.length, 1, 'commentary must not become a second item');
+  assert.equal(a[0].compoundId, 'cmp_tmg');
+  assert.ok(!a.some((i) => i.confidence === 'unmatched'), 'no spurious unrecognized row');
+
+  // Different commentary phrasings, all pure filler/uncertainty → still merged.
+  for (const note of ['no idea on the dosage', "don't remember the amount", 'maybe some, not sure']) {
+    const items = await parseIntake(`Spermidine, ${note}`, COMPOUNDS);
+    assert.equal(items.length, 1, `"${note}" should merge, leaving one item`);
+    assert.equal(items[0].compoundId, 'cmp_spermidine');
+  }
+});
+
+// The mirror case: a trailing fragment that could plausibly be a real (but unrecognized)
+// compound name has a content word of its own, so it MUST still surface as a flagged row —
+// we never silently drop something that might be real.
+test('a possible unrecognized compound after a comma still surfaces as a flagged row', async () => {
+  const a = await parseIntake('NMN 500mg, quercetin', COMPOUNDS);
+  assert.equal(a.length, 2, 'the unknown compound must not be swallowed');
+  const q = byRaw(a, 'quercetin');
+  assert.equal(q.compoundId, null);
+  assert.equal(q.confidence, 'unmatched');
+
+  // Even with a hedge word attached, a real content word keeps the fragment surfaced.
+  const b = await parseIntake('NMN 500mg, some new peptide', COMPOUNDS);
+  assert.equal(b.length, 2);
+  assert.ok(byRaw(b, 'peptide').confidence === 'unmatched');
+
+  // A short unknown name (no dose) still surfaces rather than merging.
+  const c = await parseIntake('Berberine 500mg, fisetin', COMPOUNDS);
+  assert.equal(c.length, 2);
+  assert.equal(byRaw(c, 'fisetin').compoundId, null);
+});
+
 test('typo tolerance: "berberin" still matches Berberine', () => {
   const m = matchCompound('berberin', COMPOUNDS);
   assert.equal(m.compound?.compoundId, 'cmp_berberine');
