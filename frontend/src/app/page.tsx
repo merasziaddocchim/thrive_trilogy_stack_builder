@@ -14,6 +14,8 @@ import {
   IconArrowRight,
 } from '@/components/ui/Icon';
 import { TERMS, REVIEWER, AI_ROLE_NOTE } from '@/lib/constants';
+import { FaqSection } from '@/components/home/FaqSection';
+import { FaqPageSchema } from '@/components/seo/StructuredData';
 
 export default function HomePage() {
   return (
@@ -241,6 +243,15 @@ export default function HomePage() {
             Read the methodology
           </Link>
         </Card>
+      </section>
+
+      {/* ==================== SECTION F2 — FAQ ====================
+          Curated subset of the /faq legal page, as an accessible accordion. Placed near the
+          bottom (before the final CTA) so it doesn't disrupt above-the-fold content. The
+          FAQPage JSON-LD is the main SEO value and is built from the SAME copy as the accordion. */}
+      <section className="mx-auto max-w-3xl px-4 py-16 sm:py-20">
+        <FaqPageSchema />
+        <FaqSection />
       </section>
 
       {/* ==================== SECTION G — FINAL CTA ==================== */}
