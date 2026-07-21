@@ -2,14 +2,18 @@
 // Exits non-zero if a violation is found, so it can gate a build in any CI system.
 //
 // Rules:
-//   scoring-engine/  must not import anything affiliate-related.
-//   intake-parser/   must not import affiliate- OR scoring-engine-related code — it feeds
-//                    structured output INTO scoring and must never depend on it (TECH_DOCS §1a).
+//   scoring-engine/    must not import anything affiliate-related.
+//   affiliate-engine/  must not import scoring-engine — the firewall is bidirectional: affiliate
+//                      data must never reach the scoring path, and the affiliate module must not
+//                      depend on scoring (TECH_DOCS §4, CLAIMS_COMPLIANCE §6).
+//   intake-parser/     must not import affiliate- OR scoring-engine-related code — it feeds
+//                      structured output INTO scoring and must never depend on it (TECH_DOCS §1a).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const GUARDED = [
   { dir: 'scoring-engine', forbidden: [/affiliate/i] },
+  { dir: 'affiliate-engine', forbidden: [/scoring-engine/i] },
   { dir: 'intake-parser', forbidden: [/affiliate/i, /scoring-engine/i] },
 ];
 
@@ -42,4 +46,4 @@ if (violations > 0) {
   console.error(`\nFirewall check failed: ${violations} forbidden import(s).`);
   process.exit(1);
 }
-console.log('Firewall check passed: scoring-engine/ and intake-parser/ are clean.');
+console.log('Firewall check passed: scoring-engine/, affiliate-engine/, and intake-parser/ are clean.');
