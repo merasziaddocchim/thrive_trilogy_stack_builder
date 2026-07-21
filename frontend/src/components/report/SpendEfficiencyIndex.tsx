@@ -52,12 +52,11 @@ export function SpendEfficiencyIndex({
         </p>
       </div>
 
-      {/* Provisional-ceilings note — the four ceiling values live in ONE constant. */}
+      {/* Evidence-tier ceilings note — the four ceiling values live in ONE constant. */}
       <p className="text-xs text-muted sm:col-span-5">
         Score ceilings by evidence tier (A {EVIDENCE_TIER_CEILINGS.A} · B{' '}
-        {EVIDENCE_TIER_CEILINGS.B} · C {EVIDENCE_TIER_CEILINGS.C} · D {EVIDENCE_TIER_CEILINGS.D}) are
-        provisional and pending review; weaker evidence caps the achievable score regardless of
-        dosing.
+        {EVIDENCE_TIER_CEILINGS.B} · C {EVIDENCE_TIER_CEILINGS.C} · D {EVIDENCE_TIER_CEILINGS.D}) cap
+        the achievable score: weaker evidence limits the score regardless of dosing.
       </p>
     </section>
   );

@@ -103,7 +103,8 @@ export default function MethodologyPage() {
         <h2 className="text-xl font-700 text-headline">How evidence bounds the score</h2>
         <p className="mt-3 text-body">
           The {TERMS.sei} is capped by evidence tier: strong dosing on a weakly-evidenced compound
-          cannot produce a high score. The ceilings below are provisional and pending review.
+          cannot produce a high score. The ceilings below are fixed and applied to every scored
+          compound.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {TIERS.map((t) => (

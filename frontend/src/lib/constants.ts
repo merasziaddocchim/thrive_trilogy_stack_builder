@@ -1,11 +1,12 @@
 import type { EvidenceTier } from './types';
 
 // =============================================================================
-// SINGLE SOURCE OF TRUTH for the provisional evidence-tier ceilings.
+// SINGLE SOURCE OF TRUTH for the evidence-tier ceilings.
 //
-// PROVISIONAL — pending founder sign-off (TECH_DOCS §2/§8, STATUS §9). These four
-// numbers must NOT be hard-coded anywhere else in the UI, and must NOT be presented
-// in copy as clinically final. When Ziad confirms the values, edit ONLY this object.
+// CONFIRMED/locked 2026-07-12 (TECH_DOCS §2/§8, STATUS §9). These four numbers must
+// NOT be hard-coded anywhere else in the UI — reference this object so any future
+// change is a one-line edit here. The batch-1 evidence these ceilings apply to is
+// founder-reviewed as of 2026-07-20 (PR #12), so UI copy no longer calls them provisional.
 // =============================================================================
 export const EVIDENCE_TIER_CEILINGS: Record<EvidenceTier, number> = {
   A: 100,
