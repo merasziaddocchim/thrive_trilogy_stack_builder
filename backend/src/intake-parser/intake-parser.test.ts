@@ -27,9 +27,16 @@ function byRaw(items: ParsedItem[], substr: string): ParsedItem {
   return found;
 }
 
-test('parses the sample stack into one item per line', async () => {
+test('parses the newline-separated sample stack without dropping any compound', async () => {
   const items = await parseIntake(SAMPLE, COMPOUNDS);
-  assert.equal(items.length, 7);
+  // Every recognized compound in the sample must be present (nothing silently dropped).
+  for (const id of ['cmp_nmn', 'cmp_nr', 'cmp_resveratrol', 'cmp_tmg', 'cmp_berberine', 'cmp_spermidine']) {
+    assert.ok(items.some((i) => i.compoundId === id), `expected an item for ${id}`);
+  }
+  // The comma inside "(Renue by Science, sublingual)" must NOT split the NMN line.
+  const nmn = byRaw(items, 'NMN 250mg');
+  assert.equal(nmn.deliveryFormat, 'sublingual');
+  assert.equal(nmn.monthlyPrice, 45);
 });
 
 test('high-confidence match: NMN with dose, format, and price', async () => {
@@ -87,6 +94,103 @@ test('the parsed set contains a realistic mix of high, low, and unmatched', asyn
   assert.ok(counts.high >= 1, 'expected at least one high-confidence match');
   assert.ok(counts.low >= 1, 'expected at least one low-confidence match');
   assert.ok(counts.unmatched >= 1, 'expected at least one unmatched item');
+});
+
+// --- Regression: multi-compound input on a SINGLE comma-separated line (the reported bug) ---
+// Before the fix the extractor split on newlines only, so a comma-separated line collapsed into
+// one candidate — only the first compound (NMN) reached the Confirm screen; Berberine and TMG
+// were silently dropped, not even shown as low-confidence items.
+test('regression: comma-separated compounds on one line all appear (NMN 500mg, Berberine 500mg, TMG 500)', async () => {
+  const items = await parseIntake('NMN 500mg, Berberine 500mg, TMG 500', COMPOUNDS);
+  assert.equal(items.length, 3, 'all three compounds must appear — none dropped');
+
+  const nmn = byRaw(items, 'NMN');
+  assert.equal(nmn.compoundId, 'cmp_nmn');
+  assert.equal(nmn.confidence, 'high');
+  assert.deepEqual(nmn.dose, { amount: 500, unit: 'mg' });
+
+  const berb = byRaw(items, 'Berberine');
+  assert.equal(berb.compoundId, 'cmp_berberine');
+  assert.equal(berb.confidence, 'high');
+  assert.deepEqual(berb.dose, { amount: 500, unit: 'mg' });
+
+  // "TMG 500" has no unit → dose uninterpretable → recognized name but downgraded to low
+  // (flagged for the user), NOT dropped — the specific behavior the bug report called out.
+  const tmg = byRaw(items, 'TMG');
+  assert.equal(tmg.compoundId, 'cmp_tmg');
+  assert.equal(tmg.confidence, 'low');
+  assert.equal(tmg.dose, null);
+});
+
+test('regression: comma-separated names with no doses still yield one item per compound', async () => {
+  const items = await parseIntake('NMN, Berberine, TMG', COMPOUNDS);
+  assert.equal(items.length, 3);
+  assert.deepEqual(
+    items.map((i) => i.compoundId).sort(),
+    ['cmp_berberine', 'cmp_nmn', 'cmp_tmg'],
+  );
+});
+
+test('regression: semicolon-separated compounds are split too', async () => {
+  const items = await parseIntake('NMN 500mg; Resveratrol 150mg', COMPOUNDS);
+  assert.equal(items.length, 2);
+  assert.equal(byRaw(items, 'NMN').compoundId, 'cmp_nmn');
+  assert.equal(byRaw(items, 'Resveratrol').compoundId, 'cmp_resveratrol');
+});
+
+test('a comma between a compound and its own dose does NOT over-split ("Vitamin D, 5000 IU")', async () => {
+  // Vitamin D is not in the DB; the point is that this stays ONE candidate carrying the dose,
+  // rather than splitting into "Vitamin D" + a nameless "5000 IU" item.
+  const items = await parseIntake('Vitamin D, 5000 IU', COMPOUNDS);
+  assert.equal(items.length, 1);
+  assert.deepEqual(items[0].dose, { amount: 5000, unit: 'iu' });
+});
+
+test('mixed newlines and commas segment correctly together', async () => {
+  const items = await parseIntake('NMN 500mg, Berberine 500mg\nResveratrol 150mg', COMPOUNDS);
+  assert.equal(items.length, 3);
+  assert.deepEqual(
+    items.map((i) => i.compoundId).sort(),
+    ['cmp_berberine', 'cmp_nmn', 'cmp_resveratrol'],
+  );
+});
+
+// --- The commentary-vs-possible-compound distinction (locked in going forward) ---
+// A trailing fragment whose only words are filler/uncertainty is COMMENTARY about the previous
+// compound and is merged into it — it must NOT appear as its own "Not recognized" row.
+test('trailing commentary is merged into the preceding compound, not shown as its own row', async () => {
+  const a = await parseIntake('TMG 1000mg, not sure of the dose', COMPOUNDS);
+  assert.equal(a.length, 1, 'commentary must not become a second item');
+  assert.equal(a[0].compoundId, 'cmp_tmg');
+  assert.ok(!a.some((i) => i.confidence === 'unmatched'), 'no spurious unrecognized row');
+
+  // Different commentary phrasings, all pure filler/uncertainty → still merged.
+  for (const note of ['no idea on the dosage', "don't remember the amount", 'maybe some, not sure']) {
+    const items = await parseIntake(`Spermidine, ${note}`, COMPOUNDS);
+    assert.equal(items.length, 1, `"${note}" should merge, leaving one item`);
+    assert.equal(items[0].compoundId, 'cmp_spermidine');
+  }
+});
+
+// The mirror case: a trailing fragment that could plausibly be a real (but unrecognized)
+// compound name has a content word of its own, so it MUST still surface as a flagged row —
+// we never silently drop something that might be real.
+test('a possible unrecognized compound after a comma still surfaces as a flagged row', async () => {
+  const a = await parseIntake('NMN 500mg, quercetin', COMPOUNDS);
+  assert.equal(a.length, 2, 'the unknown compound must not be swallowed');
+  const q = byRaw(a, 'quercetin');
+  assert.equal(q.compoundId, null);
+  assert.equal(q.confidence, 'unmatched');
+
+  // Even with a hedge word attached, a real content word keeps the fragment surfaced.
+  const b = await parseIntake('NMN 500mg, some new peptide', COMPOUNDS);
+  assert.equal(b.length, 2);
+  assert.ok(byRaw(b, 'peptide').confidence === 'unmatched');
+
+  // A short unknown name (no dose) still surfaces rather than merging.
+  const c = await parseIntake('Berberine 500mg, fisetin', COMPOUNDS);
+  assert.equal(c.length, 2);
+  assert.equal(byRaw(c, 'fisetin').compoundId, null);
 });
 
 test('typo tolerance: "berberin" still matches Berberine', () => {
