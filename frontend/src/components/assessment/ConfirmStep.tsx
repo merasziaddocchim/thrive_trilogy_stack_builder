@@ -203,8 +203,8 @@ export function ConfirmStep({
       continueLabel="Looks right — continue"
       footnote={
         <p className="text-xs text-muted">
-          We use AI to read your free-text entry and match it to compounds. You&apos;re confirming
-          those matches now, before anything is scored.
+          We read your free-text entry and match it to compounds using automated text-matching (not
+          an AI model). You&apos;re confirming those matches now, before anything is scored.
         </p>
       }
     >

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { PersonSchema, ArticleSchema } from '@/components/seo/StructuredData';
 import { TierBadge } from '@/components/ui/EvidenceTier';
-import { TERMS, TIER_META, EVIDENCE_TIER_CEILINGS, REVIEWER } from '@/lib/constants';
+import { TERMS, TIER_META, EVIDENCE_TIER_CEILINGS, REVIEWER, AI_ROLE_NOTE } from '@/lib/constants';
 import type { EvidenceTier } from '@/lib/types';
 
 // Methodology page: YMYL/E-E-A-T critical (TECH_DOCS §7, CLAIMS_COMPLIANCE §2). SSG/ISR,
@@ -73,11 +73,7 @@ export default function MethodologyPage() {
             </li>
           ))}
         </ol>
-        <p className="mt-4 text-sm text-muted">
-          This report was generated using AI, based on our reviewed research database, and is not a
-          substitute for professional medical advice. AI is also used to read your free-text stack
-          entry and match it to compounds — you confirm those matches before anything is scored.
-        </p>
+        <p className="mt-4 text-sm text-muted">{AI_ROLE_NOTE}</p>
       </section>
 
       <section className="mt-10">

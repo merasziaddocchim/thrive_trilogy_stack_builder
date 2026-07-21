@@ -13,7 +13,7 @@ import {
   IconReceipt,
   IconArrowRight,
 } from '@/components/ui/Icon';
-import { TERMS, REVIEWER } from '@/lib/constants';
+import { TERMS, REVIEWER, AI_ROLE_NOTE } from '@/lib/constants';
 
 export default function HomePage() {
   return (
@@ -196,12 +196,7 @@ export default function HomePage() {
                 credentialed human reviewer before it enters our database. Nothing reaches your
                 report on extraction alone.
               </p>
-              <p className="mt-4 text-sm text-muted">
-                This report was generated using AI, based on our reviewed research database, and is
-                not a substitute for professional medical advice. AI is also used to read your
-                free-text entry and match it to compounds — you confirm those matches before
-                anything is scored.
-              </p>
+              <p className="mt-4 text-sm text-muted">{AI_ROLE_NOTE}</p>
             </div>
             <div>
               <IconCircle><IconReceipt className="h-6 w-6" /></IconCircle>
