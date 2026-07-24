@@ -23,6 +23,12 @@ import type { ScoredCompoundInput, CompoundSubScore, StackScoreResult } from '..
 // Type-only import — the Start section is COMPUTED by the affiliate-engine in assessment-service
 // and passed in; report-builder only places it into the response shape (no affiliate logic here).
 import type { StartSection } from '../../affiliate-engine/index.js';
+// Same arrangement for article links: COMPUTED by the firewalled article-engine in
+// assessment-service and passed in. report-builder only places them — it attaches the
+// per-compound educational "Learn more" link to Stop/Keep rows (safe anywhere, no disclosure
+// needed, CLAIMS §6) and carries the rest through. Roundups are never touched here: they belong
+// to the Start section only, which is exactly the placement rule this file must not break.
+import type { ArticleLinks, Article } from '../../article-engine/index.js';
 
 export interface CompoundContext {
   input: ScoredCompoundInput;
@@ -149,15 +155,20 @@ interface EvidenceMeta {
   source_ids: string[];
 }
 
+/** Educational "further reading" link on a Stop/Keep row. Never a roundup (CLAIMS §6). */
+type LearnMore = { learn_more?: Article };
+
 export interface ReportResponse {
   composite_score: number;
   safety_flag: boolean | null;
-  stop: Array<EvidenceMeta & { compound: string; reason: string; est_monthly_waste: number }>;
-  keep: Array<EvidenceMeta & { compound: string; note: string; monthly_cost: number }>;
+  stop: Array<EvidenceMeta & LearnMore & { compound: string; reason: string; est_monthly_waste: number }>;
+  keep: Array<EvidenceMeta & LearnMore & { compound: string; note: string; monthly_cost: number }>;
   /** Legacy per-compound "start" suggestions (unused; superseded by start_section). */
   start: Array<EvidenceMeta & { compound: string; reason: string; affiliate_link?: null }>;
   /** Affiliate "Start" section — Tier 1/2/3 products (firewalled affiliate-engine output). */
   start_section: StartSection;
+  /** Article cross-links (firewalled article-engine output). Roundups are Start-only. */
+  article_links: ArticleLinks;
   total_estimated_annual_waste: { low: number; high: number };
 }
 
@@ -195,9 +206,18 @@ export function buildReport(
   contexts: CompoundContext[],
   result: StackScoreResult,
   startSection: StartSection,
+  articleLinks: ArticleLinks,
 ): ReportResponse {
   const stop: ReportResponse['stop'] = [];
   const keep: ReportResponse['keep'] = [];
+
+  // Educational link for this compound's row, if the founder's mapping has one. Educational
+  // articles are the ONLY kind allowed here (CLAIMS §6): a roundup in a Stop/Keep row would
+  // blur the independence claim the same way a paid ranking would.
+  const learnMoreFor = (compoundId: string): LearnMore => {
+    const a = articleLinks.learn_more[compoundId];
+    return a ? { learn_more: a } : {};
+  };
 
   for (const c of contexts) {
     const tier = tierLetter(c.input.evidenceTier);
@@ -210,6 +230,7 @@ export function buildReport(
         reason: reasonFor(c),
         est_monthly_waste: round2(c.input.dollarsSpent),
         ...meta(c),
+        ...learnMoreFor(c.input.compoundId),
       });
     } else if (wellDosed && verifiable) {
       keep.push({
@@ -226,6 +247,7 @@ export function buildReport(
             : reasonFor(c),
         monthly_cost: round2(c.input.dollarsSpent),
         ...meta(c),
+        ...learnMoreFor(c.input.compoundId),
       });
     } else {
       // Underdosed/overdosed, or unverifiable (Tier C/D / no range) → Stop.
@@ -235,6 +257,7 @@ export function buildReport(
         reason: reasonFor(c),
         est_monthly_waste: round2(c.input.dollarsSpent * shortfall),
         ...meta(c),
+        ...learnMoreFor(c.input.compoundId),
       });
     }
   }
@@ -246,6 +269,7 @@ export function buildReport(
     keep,
     start: [], // legacy field retained for the §6 contract; superseded by start_section.
     start_section: startSection, // from the firewalled affiliate-engine (see assessment-service).
+    article_links: articleLinks, // from the firewalled article-engine (see assessment-service).
     total_estimated_annual_waste: { low: result.waste.annualLow, high: result.waste.annualHigh },
   };
 }

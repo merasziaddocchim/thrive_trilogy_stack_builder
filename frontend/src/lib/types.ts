@@ -102,16 +102,58 @@ export interface EvidenceMeta {
   source_ids: string[];
 }
 
+// ---- Article cross-links (firewalled article-engine output) -----------------
+// Placement is a compliance boundary, not a style choice (CLAIMS_COMPLIANCE §6 extension,
+// applied in BRAND_GUIDELINES §8):
+//   educational → anywhere, incl. Stop/Keep rows and Evidence Tier content. No disclosure.
+//   roundup     → Start section ONLY, with per-link disclosure.
+//   hub pages   → general placement only, never a per-compound slot.
+// Every href is absolute on thrivetrilogy.com (a different subdomain from this app), so links
+// render with target="_blank" rel="noopener noreferrer".
+export interface ArticleLink {
+  title: string;
+  href: string;
+  /** Marks the best Stop/Keep-row candidate for a compound; not used for rendering order. */
+  primary?: boolean;
+}
+
+export interface ArticleGroup {
+  compound_id: string;
+  compound: string;
+  articles: ArticleLink[];
+}
+
+export interface HubPage {
+  title: string;
+  href: string;
+  relevance: string;
+}
+
+export interface ArticleLinks {
+  /** Educational, per compound — safe to render anywhere in the Report. */
+  related_reading: ArticleGroup[];
+  /** Roundups, per compound — Start section ONLY, per-link disclosure required. */
+  start_roundups: ArticleGroup[];
+  /** General pillar pages — never rendered inside a per-compound slot. */
+  hubs: HubPage[];
+  /** compound_id → the single educational "Learn more" link for that compound's row. */
+  learn_more: Record<string, ArticleLink>;
+}
+
 export interface StopRow extends EvidenceMeta {
   compound: string;
   reason: string;
   est_monthly_waste: number;
+  /** Educational further-reading link. Never a roundup (CLAIMS_COMPLIANCE §6). */
+  learn_more?: ArticleLink;
 }
 
 export interface KeepRow extends EvidenceMeta {
   compound: string;
   note: string;
   monthly_cost: number;
+  /** Educational further-reading link. Never a roundup (CLAIMS_COMPLIANCE §6). */
+  learn_more?: ArticleLink;
 }
 
 export interface StartRow extends EvidenceMeta {
@@ -160,5 +202,7 @@ export interface ReportResponse {
   start: StartRow[];
   /** Affiliate Start section — Tier 1/2/3 products. */
   start_section: StartSectionData;
+  /** Article cross-links — educational (anywhere), roundups (Start only), hubs (general). */
+  article_links: ArticleLinks;
   total_estimated_annual_waste: { low: number; high: number };
 }

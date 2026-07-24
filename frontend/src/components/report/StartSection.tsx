@@ -7,9 +7,14 @@
 // EVERY product link is an affiliate link, so EVERY link carries its OWN adjacent disclosure in
 // the same body size/font (CLAIMS_COMPLIANCE §6 four-factor test; BRAND §7) and rel="sponsored
 // nofollow". The evidence tier badge reflects the COMPOUND, never the product/brand.
-import type { StartProduct, StartSectionData } from '@/lib/types';
+// Roundup ARTICLE links (thrivetrilogy.com "Best X" posts + single-brand reviews) also render
+// here and ONLY here — CLAIMS_COMPLIANCE §6 extension treats them as affiliate-adjacent, so
+// they are Start-section-only with per-link disclosure. They are NOT paid links themselves, so
+// they carry no rel="sponsored"; they DO leave this subdomain, so they open in a new tab with
+// rel="noopener noreferrer".
+import type { ArticleGroup, StartProduct, StartSectionData } from '@/lib/types';
 import { TierBadge } from '@/components/ui/EvidenceTier';
-import { AffiliateDisclosure } from './AffiliateDisclosure';
+import { AffiliateDisclosure, ContentLinkDisclosure } from './AffiliateDisclosure';
 
 // One affiliate product line: "Brand — Product" link + its own inline disclosure.
 function ProductLink({ item, suffix }: { item: StartProduct; suffix?: string }) {
@@ -28,9 +33,35 @@ function ProductLink({ item, suffix }: { item: StartProduct; suffix?: string }) 
   );
 }
 
-export function StartSection({ section }: { section: StartSectionData }) {
+// One roundup-article line: title link + its own inline disclosure. No rel="sponsored" (not a
+// paid link); opens in a new tab because it leaves app.thrivetrilogy.com for the blog.
+function RoundupLink({ title, href }: { title: string; href: string }) {
+  return (
+    <li className="text-sm">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-600 text-accent underline underline-offset-4"
+      >
+        {title}
+      </a>
+      <ContentLinkDisclosure />
+    </li>
+  );
+}
+
+export function StartSection({
+  section,
+  roundups = [],
+}: {
+  section: StartSectionData;
+  /** Per-compound roundup articles. Start-section-only by compliance rule (CLAIMS §6). */
+  roundups?: ArticleGroup[];
+}) {
   const { tier1, tier2, tier3 } = section;
-  const nothing = tier1.length === 0 && tier2.length === 0 && tier3.length === 0;
+  const nothing =
+    tier1.length === 0 && tier2.length === 0 && tier3.length === 0 && roundups.length === 0;
   if (nothing) return null;
 
   return (
@@ -78,6 +109,33 @@ export function StartSection({ section }: { section: StartSectionData }) {
               <ProductLink key={i.href} item={i} suffix={i.category} />
             ))}
           </ul>
+        </section>
+      )}
+
+      {/* ROUNDUP ARTICLES — grouped per compound, Start-section-only (CLAIMS §6 extension).
+          Visually separated from the product tiers because these are reading, not products:
+          no tier badges (an article isn't evidence-scored) and no purchase framing. A
+          dual-tagged roundup appears under each compound it covers — see article-engine. */}
+      {roundups.length > 0 && (
+        <section className="rounded-lg border border-dashed border-border bg-surface-subtle p-4">
+          <h3 className="text-sm font-700 text-headline">Product guides from our blog</h3>
+          <p className="mt-1 text-sm text-muted">
+            Our own reviews and comparisons for the compounds in your report. These rank specific
+            products and earn commission, so they live here rather than in your findings — your
+            score and Evidence Tiers are calculated independently of them.
+          </p>
+          <div className="mt-3 space-y-3">
+            {roundups.map((g) => (
+              <div key={g.compound_id}>
+                <span className="text-sm font-700 text-headline">{g.compound}</span>
+                <ul className="mt-1.5 space-y-1.5">
+                  {g.articles.map((a) => (
+                    <RoundupLink key={a.href} title={a.title} href={a.href} />
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

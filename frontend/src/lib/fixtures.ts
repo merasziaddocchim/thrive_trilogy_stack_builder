@@ -15,6 +15,11 @@ import { REVIEWER } from './constants';
 const REV = REVIEWER.name;
 const REV_DATE = REVIEWER.lastReviewed;
 
+// The blog runs on the root domain; this app is a different subdomain, so article hrefs are
+// absolute (a relative path would resolve against app.thrivetrilogy.com and 404). Mirrors
+// BLOG_ORIGIN in the backend's article-engine.
+const BLOG = 'https://thrivetrilogy.com';
+
 // A realistic multi-line free-text entry, used as the default extractor input so the
 // "Confirm What We Found" screen has a mixed-confidence list to handle (prompt §4).
 export const FIXTURE_RAW_STACK_INPUT = `NMN 250mg (Renue by Science, sublingual) - about $45/mo
@@ -180,6 +185,7 @@ export const FIXTURE_REPORT: ReportResponse = {
       last_reviewed: REV_DATE,
       reviewer_name: REV,
       source_ids: ['src_nr_rct_2018', 'src_nad_salvage_review'],
+      learn_more: { title: 'NMN vs NR: Which NAD+ Precursor Actually Wins?', href: `${BLOG}/nmn-vs-nr-nad-precursor/` },
     },
     {
       compound: 'Resveratrol',
@@ -191,6 +197,7 @@ export const FIXTURE_REPORT: ReportResponse = {
       last_reviewed: REV_DATE,
       reviewer_name: REV,
       source_ids: ['src_resveratrol_bioavail', 'src_resveratrol_cohort'],
+      learn_more: { title: 'The Resveratrol Paradox: Why You Are Excreting 99% of Your Longevity Supplement', href: `${BLOG}/resveratrol-brick-dust-paradox/` },
     },
   ],
   keep: [
@@ -204,6 +211,7 @@ export const FIXTURE_REPORT: ReportResponse = {
       last_reviewed: REV_DATE,
       reviewer_name: REV,
       source_ids: ['src_berberine_meta_2015', 'src_berberine_vs_metformin'],
+      learn_more: { title: 'Berberine vs Metformin: 5 Critical Differences a Chemist Actually Cares About', href: `${BLOG}/berberine-vs-metformin/` },
     },
     {
       compound: 'TMG (Trimethylglycine)',
@@ -215,6 +223,7 @@ export const FIXTURE_REPORT: ReportResponse = {
       last_reviewed: REV_DATE,
       reviewer_name: REV,
       source_ids: ['src_tmg_rct'],
+      learn_more: { title: 'TMG vs Methylfolate: Molecular Side-by-Side Matrix', href: `${BLOG}/tmg-vs-methylfolate/` },
     },
   ],
   // Legacy per-compound start rows are superseded by start_section (below).
@@ -275,6 +284,93 @@ export const FIXTURE_REPORT: ReportResponse = {
       { brand: 'NMNBio', product: 'Longevity Starter Pack', href: '/go/nmnbio-long-starterpack', contains: 'NMN, TMG, and Quercetin' },
       { brand: 'NMNBio', product: 'Morning Bundle', href: '/go/nmnbio-morning', contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)' },
     ],
+  },
+  // Article cross-links — mirrors what the firewalled article-engine returns for this sample
+  // stack (NR, Resveratrol, Berberine, TMG). Educational articles are grouped per compound and
+  // may render anywhere; roundups are Start-section-only; hubs are general, never per-compound.
+  // Excluded compounds (Urolithin A, Spermidine, Fisetin, Quercetin, AKG, p-Synephrine) and the
+  // non-single-compound roundups never appear here, exactly as in the real output.
+  article_links: {
+    related_reading: [
+      {
+        compound_id: 'cmp_nr',
+        compound: 'NR (Nicotinamide Riboside)',
+        articles: [
+          { title: 'NMN vs NR: Which NAD+ Precursor Actually Wins?', href: `${BLOG}/nmn-vs-nr-nad-precursor/` },
+          { title: 'The Salvage Pathway: Why Your Body Recycles NAD+', href: `${BLOG}/nad-salvage-pathway/` },
+          { title: 'NAD+ and Longevity: What This Molecule Actually Does to Your Cells', href: `${BLOG}/nad-longevity-molecule/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_resveratrol',
+        compound: 'Resveratrol',
+        articles: [
+          { title: 'The Resveratrol Paradox: Why You Are Excreting 99% of Your Longevity Supplement', href: `${BLOG}/resveratrol-brick-dust-paradox/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_berberine',
+        compound: 'Berberine',
+        articles: [
+          { title: 'Berberine vs Metformin: 5 Critical Differences a Chemist Actually Cares About', href: `${BLOG}/berberine-vs-metformin/` },
+          { title: 'Why Your Berberine Isn\u2019t Working \u2014 And What Dihydroberberine Actually Does', href: `${BLOG}/dihydroberberine-vs-berberine/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_tmg',
+        compound: 'TMG (Trimethylglycine)',
+        articles: [
+          { title: 'TMG vs Methylfolate: Molecular Side-by-Side Matrix', href: `${BLOG}/tmg-vs-methylfolate/` },
+          { title: 'Methylation Supplements: The Biochemist\u2019s Complete Guide', href: `${BLOG}/methylation-supplements-guide/` },
+          { title: 'TMG and Methylation: Why You Need It With NMN', href: `${BLOG}/tmg-supplement-methylation-nmn/` },
+          { title: 'MTHFR Supplement Protocol: Chemist\u2019s Quick Verdict', href: `${BLOG}/mthfr-supplement-protocol/` },
+        ],
+      },
+    ],
+    start_roundups: [
+      {
+        compound_id: 'cmp_nr',
+        compound: 'NR (Nicotinamide Riboside)',
+        articles: [
+          { title: 'Best NR Supplements 2026', href: `${BLOG}/best-nr-supplements-2026/` },
+          { title: 'Best NAD+ Supplements 2026', href: `${BLOG}/5-best-nad-supplements-2026/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_resveratrol',
+        compound: 'Resveratrol',
+        articles: [
+          { title: 'Best Resveratrol Supplements 2026', href: `${BLOG}/best-resveratrol-supplements-2026/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_berberine',
+        compound: 'Berberine',
+        articles: [
+          { title: 'Best Berberine Supplements 2026', href: `${BLOG}/best-berberine-supplements-2026/` },
+        ],
+      },
+      {
+        compound_id: 'cmp_tmg',
+        compound: 'TMG (Trimethylglycine)',
+        articles: [
+          { title: 'Best TMG Supplement 2026', href: `${BLOG}/best-tmg-supplement-2026/` },
+          { title: 'Best Methylation Supplement Stack 2026', href: `${BLOG}/best-methylation-supplement-2026/` },
+        ],
+      },
+    ],
+    hubs: [
+      { title: 'NAD+ Precursors: The Biochemist\u2019s Complete Guide', href: `${BLOG}/nad-precursors/`, relevance: 'NMN + NR' },
+      { title: 'Methylation Supplements: The Biochemist\u2019s Analysis', href: `${BLOG}/methylation/`, relevance: 'TMG' },
+      { title: 'Longevity Compounds: Molecular Analysis by a Chemist', href: `${BLOG}/longevity-compounds/`, relevance: 'General' },
+      { title: 'Supplement Delivery Systems: Bioavailability Decoded', href: `${BLOG}/delivery-systems/`, relevance: 'General' },
+    ],
+    learn_more: {
+      cmp_nr: { title: 'NMN vs NR: Which NAD+ Precursor Actually Wins?', href: `${BLOG}/nmn-vs-nr-nad-precursor/` },
+      cmp_resveratrol: { title: 'The Resveratrol Paradox: Why You Are Excreting 99% of Your Longevity Supplement', href: `${BLOG}/resveratrol-brick-dust-paradox/` },
+      cmp_berberine: { title: 'Berberine vs Metformin: 5 Critical Differences a Chemist Actually Cares About', href: `${BLOG}/berberine-vs-metformin/` },
+      cmp_tmg: { title: 'TMG vs Methylfolate: Molecular Side-by-Side Matrix', href: `${BLOG}/tmg-vs-methylfolate/` },
+    },
   },
   total_estimated_annual_waste: { low: 340, high: 520 },
 };

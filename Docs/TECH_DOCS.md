@@ -225,6 +225,7 @@ This pipeline **is** the claim in CLAIMS_COMPLIANCE.md §7 ("extracted by AI, ve
 
 - **Hard constraint:** no UI component may render a compound-specific claim string without a linked `evidence_tier` and `contributing_source_ids`. Enforce at the API layer (§6), not just in frontend discipline — the API should refuse to serve a claim object missing these fields.
 - **Hard constraint:** the scoring engine and the affiliate-recommendation engine must be separate services/modules with no shared ranking logic — affiliate data (commission rate, partner status) must not be a queryable input anywhere in `scoring_engine/`. Enforce via code review checklist + a lint rule if feasible (e.g., a CI check that `scoring_engine/` imports contain no affiliate-related modules).
+- **Hard constraint (same rule, extended 2026-07-24):** `article-engine/` — which selects thrivetrilogy.com article cross-links for the Report — is firewalled identically. Roundup articles are affiliate-monetized (`CLAIMS_COMPLIANCE.md` §6 extension), so article selection must never influence the score, and the module must not be importable by `scoring-engine/` (nor import it). Its only input is which compounds are in the Report — no score, dose, tier, or dollar figure. Implemented modules under guard, all bidirectional where noted: `scoring-engine/` ✗→ affiliate/article; `affiliate-engine/` ✗→ scoring; `article-engine/` ✗→ scoring; `intake-parser/` ✗→ affiliate/scoring/article. Enforced by `backend/scripts/check-firewall.mjs` (build-gating, run in `npm run lint`), and each direction is proven by a negative probe in the test suite rather than assumed.
 - **Hard constraint:** claim copy generation must draw from the template bank in CLAIMS_COMPLIANCE.md §9 — no freehand LLM-generated claim sentences ship without going through the escalation path (CLAIMS_COMPLIANCE.md §11).
 - Disclaimer component (CLAIMS_COMPLIANCE.md §5 language) renders adjacent to every report section, not just once in a footer.
 
@@ -266,9 +267,18 @@ GET /assessment/{id}/report   (post email-capture)
       stop: [{compound, reason, evidence_tier, source_ids[], est_monthly_waste}],
       keep: [{compound, evidence_tier, source_ids[]}],
       start: [{compound, reason, evidence_tier, source_ids[], affiliate_link?}],
-      total_estimated_annual_waste: {low, high} }
+      total_estimated_annual_waste: {low, high},
+      article_links: {
+        related_reading: [{compound_id, compound, articles: [{title, href}]}],  # educational
+        start_roundups: [{compound_id, compound, articles: [{title, href}]}],   # Start ONLY
+        hubs: [{title, href, relevance}],                                       # general only
+        learn_more: {compound_id: {title, href}} } }                            # educational
   # every object in stop/keep/start MUST include evidence_tier + source_ids — enforced
   # per §4; API layer rejects/logs any internally-generated object missing these fields
+  # stop/keep rows may also carry an optional `learn_more` educational link (never a roundup).
+  # article_links comes from the firewalled article-engine (§4); hrefs are ABSOLUTE on
+  # https://thrivetrilogy.com — the blog is a different subdomain from the app, so a relative
+  # path would resolve against app.thrivetrilogy.com and 404.
 ```
 
 Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md §4 requirement (linked evidence tier + sources) at the schema level, not just by convention.
