@@ -76,19 +76,21 @@ SCORING_PARAMETER
 - **C:** observational/cohort only, or animal studies with mechanistic plausibility
 - **D:** in-vitro/animal-only, or a single small human study
 
-*(Exact n-thresholds for "adequate" are a policy decision — proposed defaults to be confirmed with Ziad before the first compound batch ships. Once confirmed, log the decision in §8.)*
+*(Exact n-thresholds for "adequate" are a policy decision — still unset as a written rule. **Batch 1 shipped without one**: the gate below was satisfied in practice by per-source founder review rather than by a numeric threshold — see §2 "Parameter sign-off status" and §8. A written threshold is still needed before batch 2, since per-source review does not scale and is not auditable as a rule. Once set, log it in §8.)*
 
 **User-side tables** (not detailed here — standard shape): `USER_PROFILE` (goals ranked, budget, risk tolerance), `USER_STACK_ITEM` (compound_id, dose taken, delivery format, price paid, source: photo-scan, manual, or free-text LLM-extraction — see §1a), `USER_LAB_RESULT`, `USER_FEEDBACK` (outcome self-report, feeds personalization — see §3).
 
 ---
 
-## 1a. Intake parsing (planned — not yet implemented)
+## 1a. Intake parsing (implemented — built PR #2, live; extractor default is an open decision)
 
-V1 uses a single free-text field (not structured product entry) for initial stack capture — founder decision, 2026-07-11, chosen over a simple fuzzy-match-only approach for better accuracy, and over a stubbed placeholder to avoid deferring the hardest part of the UX. An LLM call extracts candidate compound + dose + price matches against `compounds.canonical_name`/`aliases`, each carrying a confidence level. Below a reasonable threshold, matches are surfaced to the user for confirmation/correction rather than silently accepted — UI: a dedicated "Confirm What We Found" screen, inserted between stack capture and the context questions.
+V1 uses a single free-text field (not structured product entry) for initial stack capture — founder decision, 2026-07-11, chosen over a simple fuzzy-match-only approach for better accuracy, and over a stubbed placeholder to avoid deferring the hardest part of the UX. Candidate compound + dose + price matches are extracted against `compounds.canonical_name`/`aliases`, each carrying a confidence level. Below a reasonable threshold, matches are surfaced to the user for confirmation/correction rather than silently accepted — UI: a dedicated "Confirm What We Found" screen, inserted between stack capture and the context questions. Both the extraction step and the confirmation screen are built and live.
 
-**Architecture:** its own module, `backend/src/intake-parser/`, isolated from both `scoring-engine/` and `affiliate-engine/` — it feeds structured output *into* the scoring engine but must not live inside it, consistent with the firewall pattern in §4. **Not yet built** as of this writing — the frontend is being built first, against a mocked extraction response, so UI work isn't blocked on this module existing.
+**Architecture:** its own module, `backend/src/intake-parser/`, isolated from both `scoring-engine/` and `affiliate-engine/` — it feeds structured output *into* the scoring engine but does not live inside it, consistent with the firewall pattern in §4 (the firewall check covers this module). **Built and merged in PR #2, deployed, and matching free text against the live seeded database in production** (confirmed 2026-07-18). Behavior since built:
+- **The default extractor is deterministic, not an LLM.** `POST /intake` uses a heuristic regex/fuzzy extractor; an `LlmExtractor` is an optional injectable interface that is **not** wired in by default. This diverges from the original free-text + LLM-extraction decision above, and **which one ships as the V1 default is still an open founder decision** (§8; also `STATUS.md` §9). Two dependents ride on that decision: whether bare numbers like "TMG 500" are assumed `mg`, and the Privacy Policy's LLM-provider disclosure.
+- **Segmentation (PR #13):** input is split on newlines **and** commas/semicolons, parenthesis-aware, with trailing qualifier/commentary fragments merged back into the preceding compound while any fragment containing a real content word still surfaces as its own flagged row — so an unrecognized-but-real compound is never silently dropped.
 
-**Compliance note:** this is a new AI capability in the product and must be disclosed per `CLAIMS_COMPLIANCE.md` §7 — never described as "AI-verified" or similar overclaim, only as a plain, factual description of what happens (extraction, then human confirmation).
+**Compliance note:** disclosure is owned by `CLAIMS_COMPLIANCE.md` §7 — never "AI-verified" or similar overclaim, only a plain factual description of what happens. **While the heuristic extractor is the default, user-facing copy must not describe intake as "AI" at all** (§7's AI-washing rule cuts both ways; the confirmed fact lives in `CLAIMS_COMPLIANCE.md` §5b item 2, which also gates enabling any LLM extractor on updating the Privacy Policy *first*).
 
 ---
 
@@ -203,7 +205,7 @@ Total Estimated Annual Waste = (Redundancy Waste + Underdosing Waste) × 12
 ### Parameter sign-off status
 - Evidence-tier ceiling values (100/80/60/40) — **CONFIRMED/locked 2026-07-12**
 - Overdosing penalty slope (50×, asymmetric to underdosing) — **CONFIRMED/locked 2026-07-12**
-- Minimum sample-size threshold for Tier A/B distinction — **still open**, needs sign-off before the first compound batch ships
+- Minimum sample-size threshold for Tier A/B distinction — **still open as a written rule; the "before the first compound batch ships" gate was passed without one.** What happened instead (recorded 2026-07-24, no action pending on batch 1): batch 1's tier assignments were made per-source and then **personally verified against the primary sources by the founder** (all 12 sources, completed 2026-07-20 — `STATUS.md` §9), so each individual A/B call is human-backed and defensible. Founder review **substituted for** the formal threshold on this batch; it did not set one. **Still required before batch 2** — per-source review does not scale, and an unwritten threshold means the mechanical, auditable derivation rule in §1 is not actually mechanical yet, which is the property `CLAIMS_COMPLIANCE.md` §4 relies on. Batch 1 needs no revisiting when the threshold is set unless the threshold would change an existing A/B call, in which case re-tier those rows.
 
 ---
 
@@ -292,7 +294,8 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 | 2026-07-03 | Backend language: Python/FastAPI vs Node/TypeScript | **Resolved — Node.js (Express)** |
 | 2026-07-03 | Evidence-tier ceiling values (100/80/60/40) | **Resolved — CONFIRMED/locked 2026-07-12** |
 | 2026-07-03 | Overdosing vs underdosing penalty asymmetry (50× slope) | **Resolved — CONFIRMED/locked 2026-07-12** |
-| 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed — **still open** |
+| 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed — **still open.** Batch 1 shipped without it: founder per-source verification of all 12 sources (2026-07-20) substituted for the formal gate. **Needed before batch 2** — see §2 sign-off status |
+| 2026-07-11 | Intake extractor default: heuristic (deterministic) vs LLM | **Open.** Built heuristic-by-default in PR #2 and live; the LLM path is an injectable interface, not wired in. Diverges from the 2026-07-11 "free-text + LLM extraction" resolution below — that decision covered the *capture method* (free text), and the extractor question is now separable. Carries two dependents: bare-number unit assumption ("TMG 500" → mg?) and the Privacy Policy LLM-provider disclosure (gated by `CLAIMS_COMPLIANCE.md` §5b item 2) |
 | — | Single-repo (monorepo) vs two-repo structure | **Resolved — monorepo**, two top-level folders, confirmed |
 | — | Render graduation trigger (when to move off free tier) | Proposed: first week with meaningful live-scoring traffic — define threshold |
 | 2026-07-10 | Article cross-linking placement (educational vs. roundup content from thrivetrilogy.com) | **Resolved** — see `related_articles` field in §1 and full rule in `BRAND_GUIDELINES.md` §8 |
