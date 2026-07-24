@@ -10,6 +10,7 @@ import type { ReportResponse } from '@/lib/types';
 import { SpendEfficiencyIndex } from '@/components/report/SpendEfficiencyIndex';
 import { StopKeepStart } from '@/components/report/StopKeepStart';
 import { StartSection } from '@/components/report/StartSection';
+import { RelatedReading } from '@/components/report/RelatedReading';
 import { SafetyFlag } from '@/components/report/SafetyFlag';
 import { Disclaimer } from '@/components/compliance/Disclaimer';
 import { Button, FixtureTag } from '@/components/ui/primitives';
@@ -118,7 +119,16 @@ export default function ReportPage({ params }: { params: { id: string } }) {
             <SpendEfficiencyIndex score={report.composite_score} waste={report.total_estimated_annual_waste} />
           </div>
           <StopKeepStart report={report} />
-          <StartSection section={report.start_section} />
+          {/* Roundup articles render INSIDE the Start section only (CLAIMS §6 extension);
+              educational articles + general hubs render in their own Related reading block. */}
+          <StartSection
+            section={report.start_section}
+            roundups={report.article_links?.start_roundups ?? []}
+          />
+          <RelatedReading
+            groups={report.article_links?.related_reading ?? []}
+            hubs={report.article_links?.hubs ?? []}
+          />
         </>
       )}
 

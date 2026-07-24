@@ -2,19 +2,28 @@
 // Exits non-zero if a violation is found, so it can gate a build in any CI system.
 //
 // Rules:
-//   scoring-engine/    must not import anything affiliate-related.
+//   scoring-engine/    must not import anything affiliate-related, or the article-engine —
+//                      neither commercial placement nor article selection may reach the score.
 //   affiliate-engine/  must not import scoring-engine — the firewall is bidirectional: affiliate
 //                      data must never reach the scoring path, and the affiliate module must not
 //                      depend on scoring (TECH_DOCS §4, CLAIMS_COMPLIANCE §6).
+//   article-engine/    must not import scoring-engine — same bidirectional rule as affiliate.
+//                      Article cross-linking is affiliate-adjacent (roundups are monetized,
+//                      CLAIMS_COMPLIANCE §6 extension), so it gets the identical treatment:
+//                      article selection must never influence the score, and the module must not
+//                      depend on scoring.
 //   intake-parser/     must not import affiliate- OR scoring-engine-related code — it feeds
 //                      structured output INTO scoring and must never depend on it (TECH_DOCS §1a).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+// NOTE: match /article-engine/ specifically, not /article/i — a bare "article" would false-
+// positive on unrelated identifiers (e.g. related_articles[] in the schema, TECH_DOCS §1).
 const GUARDED = [
-  { dir: 'scoring-engine', forbidden: [/affiliate/i] },
+  { dir: 'scoring-engine', forbidden: [/affiliate/i, /article-engine/i] },
   { dir: 'affiliate-engine', forbidden: [/scoring-engine/i] },
-  { dir: 'intake-parser', forbidden: [/affiliate/i, /scoring-engine/i] },
+  { dir: 'article-engine', forbidden: [/scoring-engine/i] },
+  { dir: 'intake-parser', forbidden: [/affiliate/i, /scoring-engine/i, /article-engine/i] },
 ];
 
 function walk(dir) {
@@ -46,4 +55,6 @@ if (violations > 0) {
   console.error(`\nFirewall check failed: ${violations} forbidden import(s).`);
   process.exit(1);
 }
-console.log('Firewall check passed: scoring-engine/, affiliate-engine/, and intake-parser/ are clean.');
+console.log(
+  'Firewall check passed: scoring-engine/, affiliate-engine/, article-engine/, and intake-parser/ are clean.',
+);

@@ -22,6 +22,9 @@ import { tierLetter } from '../../compliance/claim-templates.js';
 // The affiliate-engine is firewalled from scoring; the orchestrator (this file) is the seam that
 // composes scoring output with the affiliate Start section — affiliate never feeds the score.
 import { buildStartSection, type RecognizedForStart } from '../../affiliate-engine/index.js';
+// Same seam for article cross-links: the article-engine is firewalled from scoring, and this
+// orchestrator composes its output with the scored report. Articles never feed the score.
+import { buildArticleLinks, type RecognizedForArticles } from '../../article-engine/index.js';
 import type { EvidenceTier } from '../../db/schema.js';
 
 /** A user's stack item as captured/confirmed (mirrors user_stack_items). */
@@ -174,8 +177,17 @@ export async function assembleAssessment(
   }));
   const startSection = buildStartSection(recognizedForStart);
 
+  // Article links: keyed off the same in-report compounds. Selection takes ONLY the compound
+  // identity — no score, dose, tier, or dollar figure is passed in, so an article cannot
+  // influence any number above (TECH_DOCS §4; enforced structurally by the firewall).
+  const recognizedForArticles: RecognizedForArticles[] = contexts.map((c) => ({
+    compoundId: c.input.compoundId,
+    canonicalName: c.input.canonicalName,
+  }));
+  const articleLinks = buildArticleLinks(recognizedForArticles);
+
   return {
     preview: buildPreview(recognized, contexts, result, overlaps, { sufficientForScoring }),
-    report: buildReport(contexts, result, startSection),
+    report: buildReport(contexts, result, startSection, articleLinks),
   };
 }

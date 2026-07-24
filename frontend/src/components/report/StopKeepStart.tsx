@@ -5,8 +5,27 @@
 // left-accent — the ONE place colored side-borders are allowed (structural wayfinding, prompt §7).
 // The "Start" section (affiliate products, Tier 1/2/3) is rendered separately by StartSection.
 import { useState } from 'react';
-import type { ReportResponse } from '@/lib/types';
+import type { ArticleLink, ReportResponse } from '@/lib/types';
 import { TierBadge, TierDisclosure } from '@/components/ui/EvidenceTier';
+
+// "Learn more" — an EDUCATIONAL article only (mechanism/dosing/delivery explainers). Safe in a
+// Stop/Keep row with no disclosure, because it recommends no purchasable product and is
+// functionally a citation (CLAIMS_COMPLIANCE §6 extension; BRAND §8 renders it as a plain
+// further-reading link). A roundup here would be the exact placement §6 forbids — the backend
+// never puts one in this field. Rendered OUTSIDE the row's expand <button>: an anchor nested
+// inside a button is invalid HTML and traps the link from keyboard/AT users.
+function LearnMore({ article }: { article: ArticleLink }) {
+  return (
+    <a
+      href={article.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-accent underline underline-offset-4"
+    >
+      Learn more<span className="sr-only">: {article.title}</span>
+    </a>
+  );
+}
 
 type SectionKey = 'Stop' | 'Keep';
 
@@ -33,6 +52,7 @@ function ExpandableRow({
   lastReviewed,
   reviewer,
   sourceIds,
+  learnMore,
   extra,
 }: {
   name: string;
@@ -44,6 +64,7 @@ function ExpandableRow({
   lastReviewed: string;
   reviewer: string;
   sourceIds: string[];
+  learnMore?: ArticleLink;
   extra?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -68,6 +89,13 @@ function ExpandableRow({
           <TierBadge tier={tier} />
         </span>
       </button>
+
+      {/* Outside the button (valid HTML, independently focusable), still adjacent to the row. */}
+      {learnMore && (
+        <div className="px-4 pb-3 -mt-1">
+          <LearnMore article={learnMore} />
+        </div>
+      )}
 
       {open && (
         <div className="border-t border-border px-4 py-3">
@@ -122,6 +150,7 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
             lastReviewed={r.last_reviewed}
             reviewer={r.reviewer_name}
             sourceIds={r.source_ids}
+            learnMore={r.learn_more}
           />
         ))}
       </Section>
@@ -139,6 +168,7 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
             lastReviewed={r.last_reviewed}
             reviewer={r.reviewer_name}
             sourceIds={r.source_ids}
+            learnMore={r.learn_more}
           />
         ))}
       </Section>
