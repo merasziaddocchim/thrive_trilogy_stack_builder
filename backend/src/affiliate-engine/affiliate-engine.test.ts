@@ -7,6 +7,7 @@ import {
   TIER3_BUNDLES,
 } from './catalog.js';
 import { SEED_COMPOUND_IDS } from '../db/seed-data.js';
+import { BLOG_ORIGIN, blogUrl, isAbsoluteBlogUrl } from '../shared/blog-url.js';
 
 const C = SEED_COMPOUND_IDS;
 
@@ -32,7 +33,7 @@ test('Tier 1: one product group per recognized compound, with the compound its e
   assert.ok(nmn);
   assert.equal(nmn.evidence_tier, 'B'); // reflects the compound, passed through unchanged
   assert.equal(nmn.products.length, 5); // NMNBio, Renue, Genuine Purity, Wonderfeel, partiQlar
-  assert.ok(nmn.products.some((p) => p.href === '/go/nmnbio-nmn-500mg'));
+  assert.ok(nmn.products.some((p) => p.href === blogUrl('/go/nmnbio-nmn-500mg')));
 
   const berb = section.tier1.find((g) => g.compound_id === C.berberine);
   assert.ok(berb);
@@ -94,7 +95,7 @@ test('Tier 3: only the two ITEMIZED bundles exist in the catalog', () => {
   assert.equal(TIER3_BUNDLES.length, 2);
   assert.deepEqual(
     TIER3_BUNDLES.map((b) => b.href).sort(),
-    ['/go/nmnbio-long-starterpack', '/go/nmnbio-morning'],
+    [blogUrl('/go/nmnbio-long-starterpack'), blogUrl('/go/nmnbio-morning')],
   );
 });
 
@@ -121,16 +122,19 @@ test('the ambiguous partiQlar NR links never appear even when NR is in the stack
   const nr = section.tier1.find((g) => g.compound_id === C.nr);
   assert.ok(nr);
   // NR keeps exactly its two unambiguous products; both partiQlar NR entries are held out.
-  assert.deepEqual(nr.products.map((p) => p.href), ['/go/renue-nrpowder', '/go/genuinepurity-nr']);
+  assert.deepEqual(nr.products.map((p) => p.href), [
+    blogUrl('/go/renue-nrpowder'),
+    blogUrl('/go/genuinepurity-nr'),
+  ]);
   const hrefs = nr.products.map((p) => p.href);
-  assert.ok(!hrefs.includes('/go/partiQlar_main'));
-  assert.ok(!hrefs.includes('/go/partiQlar_NR'));
+  assert.ok(!hrefs.includes(blogUrl('/go/partiQlar_main')));
+  assert.ok(!hrefs.includes(blogUrl('/go/partiQlar_NR')));
 });
 
 test('the two unitemized bundles never appear in Tier 3 for any stack', () => {
   const hrefs = buildStartSection([recognized(C.nmn), recognized(C.tmg)]).tier3.map((b) => b.href);
-  assert.ok(!hrefs.includes('/go/nmnbio-longessentials'));
-  assert.ok(!hrefs.includes('/go/nmnbio-ultbiohacker'));
+  assert.ok(!hrefs.includes(blogUrl('/go/nmnbio-longessentials')));
+  assert.ok(!hrefs.includes(blogUrl('/go/nmnbio-ultbiohacker')));
 });
 
 // ---- Links used verbatim ----------------------------------------------------
@@ -141,6 +145,92 @@ test('all catalog links use the /go/ redirect format exactly (none rewritten)', 
     ...TIER3_BUNDLES.map((b) => b.href),
   ];
   for (const href of allCatalogHrefs) {
-    assert.match(href, /^\/go\//, `link ${href} must be a /go/ redirect`);
+    assert.match(
+      href,
+      new RegExp(`^${BLOG_ORIGIN}/go/`),
+      `link ${href} must be a /go/ redirect on the root domain`,
+    );
   }
+});
+
+// ---- REGRESSION: absolute URLs (production bug, 2026-07-24) --------------------------------
+// All 23 renderable affiliate links shipped as bare '/go/...' strings. The app is served from
+// app.thrivetrilogy.com and defines no /go/ route, so every one of them resolved to
+// https://app.thrivetrilogy.com/go/... and 404'd — silently, since a relative href is valid
+// TypeScript, valid HTML, and valid at build time. These tests fail the build if it recurs.
+const ALL_STACKS: RecognizedForStart[][] = [
+  [],
+  [recognized(C.nmn)],
+  [recognized(C.nr)],
+  [recognized(C.tmg)],
+  [recognized(C.berberine)],
+  [recognized(C.resveratrol)],
+  [recognized(C.nmn), recognized(C.nr), recognized(C.resveratrol), recognized(C.berberine), recognized(C.tmg)],
+];
+
+test('REGRESSION: every rendered affiliate link is absolute on the ROOT domain', () => {
+  let checked = 0;
+  for (const stack of ALL_STACKS) {
+    for (const href of allHrefs(buildStartSection(stack))) {
+      checked++;
+      assert.ok(isAbsoluteBlogUrl(href), `not an absolute root-domain URL: ${href}`);
+      assert.ok(href.startsWith('https://'), `not https: ${href}`);
+    }
+  }
+  assert.ok(checked > 0, 'no links were checked — the assertion would be vacuous');
+});
+
+test('REGRESSION: no rendered affiliate link is relative', () => {
+  for (const stack of ALL_STACKS) {
+    for (const href of allHrefs(buildStartSection(stack))) {
+      assert.ok(!href.startsWith('/'), `relative href would resolve against the app: ${href}`);
+      assert.ok(/^https?:\/\//i.test(href), `href has no scheme/host: ${href}`);
+    }
+  }
+});
+
+test('REGRESSION: no affiliate link points at the app subdomain', () => {
+  for (const stack of ALL_STACKS) {
+    for (const href of allHrefs(buildStartSection(stack))) {
+      assert.ok(
+        !href.includes('app.thrivetrilogy.com'),
+        `link points at the app, not the root domain: ${href}`,
+      );
+      assert.equal(new URL(href).host, 'thrivetrilogy.com', `wrong host in ${href}`);
+    }
+  }
+});
+
+test('REGRESSION: every /go/ path from the founder file survives prefixing intact', () => {
+  // The path must be preserved EXACTLY (founder decision: links used verbatim) — prefixing
+  // must not normalise case, strip a trailing segment, or double up the origin.
+  const section = buildStartSection([
+    recognized(C.nmn), recognized(C.nr), recognized(C.tmg),
+    recognized(C.berberine), recognized(C.resveratrol),
+  ]);
+  const paths = allHrefs(section).map((h) => new URL(h).pathname);
+  for (const p of paths) assert.match(p, /^\/go\/[A-Za-z0-9_-]+$/, `path mangled: ${p}`);
+  // Case-sensitive tracking IDs are preserved verbatim (these differ only by case/underscore).
+  const all = allHrefs(section);
+  assert.ok(all.includes(blogUrl('/go/PartiQlar_NMN')));
+  assert.ok(all.includes(blogUrl('/go/partiQlar_Resveratrol')));
+  // The founder's own misspelling is preserved, not "corrected".
+  assert.ok(all.includes(blogUrl('/go/jinfiniti-nad-memebrship')));
+  // Origin appears exactly once — no double-prefixing.
+  for (const href of all) {
+    assert.equal(href.split(BLOG_ORIGIN).length - 1, 1, `origin repeated in ${href}`);
+  }
+});
+
+test('REGRESSION: the excluded list is absolute too, so exclusion checks still match', () => {
+  // If EXCLUDED_HREFS stayed relative while the catalog went absolute, the "never surfaces"
+  // assertions above would compare two different formats and pass vacuously forever.
+  for (const bad of EXCLUDED_HREFS) {
+    assert.ok(isAbsoluteBlogUrl(bad), `excluded href must be in the same format: ${bad}`);
+  }
+});
+
+test('blogUrl is idempotent — an already-absolute URL is not prefixed twice', () => {
+  assert.equal(blogUrl('/go/x'), `${BLOG_ORIGIN}/go/x`);
+  assert.equal(blogUrl(`${BLOG_ORIGIN}/go/x`), `${BLOG_ORIGIN}/go/x`);
 });

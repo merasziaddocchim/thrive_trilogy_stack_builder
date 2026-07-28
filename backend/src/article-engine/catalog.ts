@@ -17,18 +17,14 @@
 // Moving an article between these two arrays changes where it may legally appear. Any such move
 // requires the founder decision to be recorded in Docs/article-linking-structured.md first.
 import { SEED_COMPOUND_IDS } from '../db/seed-data.js';
+// Shared with affiliate-engine — ONE URL utility, not one per engine. This module used to
+// define its own `blogUrl`, which is how the affiliate catalog was able to ship relative hrefs
+// while this one was correct: the rule existed in code but only in one of the two places that
+// needed it. See ../shared/blog-url.ts.
+import { BLOG_ORIGIN, blogUrl } from '../shared/blog-url.js';
 
-/** The blog lives on the root domain; the app is a different subdomain (app.thrivetrilogy.com). */
-export const BLOG_ORIGIN = 'https://thrivetrilogy.com';
-
-/**
- * Absolute URL for a founder-supplied relative path. The source file stores relative paths
- * (e.g. `/nmn-dosing-protocol-guide/`); every href we emit must be absolute, because a relative
- * href on app.thrivetrilogy.com would resolve to the APP subdomain and 404 (task §3).
- */
-export function blogUrl(path: string): string {
-  return `${BLOG_ORIGIN}${path}`;
-}
+// Re-exported so existing importers (and tests) keep working unchanged.
+export { BLOG_ORIGIN, blogUrl };
 
 export interface Article {
   title: string;

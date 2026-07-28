@@ -28,7 +28,8 @@ first — the code follows that file, never the reverse.
 
 - `catalog.ts` — the founder-reviewed mapping, transcribed verbatim from
   `Docs/article-linking-structured.md`. Paths are the live blog slugs exactly as
-  supplied; `blogUrl()` makes every emitted href absolute against
+  supplied; `blogUrl()` — from the shared `src/shared/blog-url.ts`, the same utility
+  `affiliate-engine` uses — makes every emitted href absolute against
   `https://thrivetrilogy.com`, because the app runs on a different subdomain and a
   relative href would resolve to the app and 404. Excluded compounds/articles are
   absent structurally *and* listed as `EXCLUDED_SLUG_FRAGMENTS` so tests assert
