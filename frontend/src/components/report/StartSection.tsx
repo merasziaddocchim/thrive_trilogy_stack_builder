@@ -5,13 +5,23 @@
 //   Tier 2 "Also available"       — NOT evidence-scored, no badge, explicitly flagged as such.
 //   Tier 3 "Bundles worth considering" — only when the stack overlaps a bundle's contents.
 // EVERY product link is an affiliate link, so EVERY link carries its OWN adjacent disclosure in
-// the same body size/font (CLAIMS_COMPLIANCE §6 four-factor test; BRAND §7) and rel="sponsored
-// nofollow". The evidence tier badge reflects the COMPOUND, never the product/brand.
+// the same body size/font (CLAIMS_COMPLIANCE §6 four-factor test; BRAND §7). The evidence tier
+// badge reflects the COMPOUND, never the product/brand.
 // Roundup ARTICLE links (thrivetrilogy.com "Best X" posts + single-brand reviews) also render
 // here and ONLY here — CLAIMS_COMPLIANCE §6 extension treats them as affiliate-adjacent, so
-// they are Start-section-only with per-link disclosure. They are NOT paid links themselves, so
-// they carry no rel="sponsored"; they DO leave this subdomain, so they open in a new tab with
-// rel="noopener noreferrer".
+// they are Start-section-only with per-link disclosure.
+//
+// LINK ATTRIBUTES — every link in this section leaves the app for the root domain, so all of
+// them open in a new tab. `rel` differs by kind, and the difference is meaningful:
+//   affiliate product/bundle → rel="sponsored nofollow noopener noreferrer"
+//        `sponsored` + `nofollow` because the click IS monetized (a paid link); `noopener
+//        noreferrer` because target="_blank" without them leaves the opened page able to
+//        reach back via window.opener.
+//   roundup article          → rel="noopener noreferrer" only
+//        deliberately NO `sponsored`: linking our own article is not itself a paid placement.
+//        The endorsement risk is disclosed in copy (ContentLinkDisclosure), not via rel.
+// Keeping affiliate links same-tab while article links opened in a new tab was an
+// inconsistency, not a decision — resolved 2026-07-24 in favour of new-tab everywhere.
 import type { ArticleGroup, StartProduct, StartSectionData } from '@/lib/types';
 import { TierBadge } from '@/components/ui/EvidenceTier';
 import { AffiliateDisclosure, ContentLinkDisclosure } from './AffiliateDisclosure';
@@ -22,7 +32,8 @@ function ProductLink({ item, suffix }: { item: StartProduct; suffix?: string }) 
     <li className="text-sm">
       <a
         href={item.href}
-        rel="sponsored nofollow"
+        target="_blank"
+        rel="sponsored nofollow noopener noreferrer"
         className="font-600 text-accent underline underline-offset-4"
       >
         {item.brand} — {item.product}
@@ -153,7 +164,8 @@ export function StartSection({
               <li key={b.href} className="text-sm">
                 <a
                   href={b.href}
-                  rel="sponsored nofollow"
+                  target="_blank"
+                  rel="sponsored nofollow noopener noreferrer"
                   className="font-600 text-accent underline underline-offset-4"
                 >
                   {b.brand} — {b.product}
