@@ -15,9 +15,10 @@ import { REVIEWER } from './constants';
 const REV = REVIEWER.name;
 const REV_DATE = REVIEWER.lastReviewed;
 
-// The blog runs on the root domain; this app is a different subdomain, so article hrefs are
-// absolute (a relative path would resolve against app.thrivetrilogy.com and 404). Mirrors
-// BLOG_ORIGIN in the backend's article-engine.
+// The blog AND the /go/ affiliate redirects run on the root domain; this app is a different
+// subdomain, so every outbound href is absolute (a relative path resolves against
+// app.thrivetrilogy.com and 404s — that shipped as a production bug for all 23 affiliate
+// links). Mirrors BLOG_ORIGIN in the backend's shared/blog-url.ts.
 const BLOG = 'https://thrivetrilogy.com';
 
 // A realistic multi-line free-text entry, used as the default extractor input so the
@@ -238,8 +239,8 @@ export const FIXTURE_REPORT: ReportResponse = {
         compound: 'Berberine',
         evidence_tier: 'A',
         products: [
-          { brand: 'NMNBio', product: 'Berberine 400mg with Milk Thistle', href: '/go/nmnbio-berberine' },
-          { brand: 'Renue by Science', product: 'Berberine (Liposomal)', href: '/go/renue-berberine' },
+          { brand: 'NMNBio', product: 'Berberine 400mg with Milk Thistle', href: `${BLOG}/go/nmnbio-berberine` },
+          { brand: 'Renue by Science', product: 'Berberine (Liposomal)', href: `${BLOG}/go/renue-berberine` },
         ],
       },
       {
@@ -247,8 +248,8 @@ export const FIXTURE_REPORT: ReportResponse = {
         compound: 'TMG (Trimethylglycine)',
         evidence_tier: 'B',
         products: [
-          { brand: 'NMNBio', product: 'TMG 500mg, 90 Capsules', href: '/go/nmnbio-tmg' },
-          { brand: 'Renue by Science', product: 'TMG Methylation Essentials', href: '/go/renue-tmg' },
+          { brand: 'NMNBio', product: 'TMG 500mg, 90 Capsules', href: `${BLOG}/go/nmnbio-tmg` },
+          { brand: 'Renue by Science', product: 'TMG Methylation Essentials', href: `${BLOG}/go/renue-tmg` },
         ],
       },
       {
@@ -256,8 +257,8 @@ export const FIXTURE_REPORT: ReportResponse = {
         compound: 'NR (Nicotinamide Riboside)',
         evidence_tier: 'B',
         products: [
-          { brand: 'Renue by Science', product: 'NR Powder Smooth Taste Blend', href: '/go/renue-nrpowder' },
-          { brand: 'Genuine Purity', product: 'Liposomal NR', href: '/go/genuinepurity-nr' },
+          { brand: 'Renue by Science', product: 'NR Powder Smooth Taste Blend', href: `${BLOG}/go/renue-nrpowder` },
+          { brand: 'Genuine Purity', product: 'Liposomal NR', href: `${BLOG}/go/genuinepurity-nr` },
         ],
       },
       {
@@ -265,24 +266,24 @@ export const FIXTURE_REPORT: ReportResponse = {
         compound: 'Resveratrol',
         evidence_tier: 'C',
         products: [
-          { brand: 'Renue by Science', product: 'Trans-Resveratrol (Liposomal)', href: '/go/renue-trans-resveratrol' },
-          { brand: 'Genuine Purity', product: 'Liposomal Trans-Resveratrol', href: '/go/gen-trans-reservatrol' },
-          { brand: 'partiQlar', product: 'Pure Resveratrol, 60 Capsules', href: '/go/partiQlar_Resveratrol' },
+          { brand: 'Renue by Science', product: 'Trans-Resveratrol (Liposomal)', href: `${BLOG}/go/renue-trans-resveratrol` },
+          { brand: 'Genuine Purity', product: 'Liposomal Trans-Resveratrol', href: `${BLOG}/go/gen-trans-reservatrol` },
+          { brand: 'partiQlar', product: 'Pure Resveratrol, 60 Capsules', href: `${BLOG}/go/partiQlar_Resveratrol` },
         ],
       },
     ],
     tier2: [
-      { brand: 'Renue by Science', product: 'CaAKG (Liposomal)', href: '/go/renue-CaAKG', category: 'CaAKG' },
-      { brand: 'Renue by Science', product: 'Quercetin (Liposomal)', href: '/go/renue-Quercetin', category: 'Quercetin' },
-      { brand: 'partiQlar', product: 'Pure Spermidine, 60 Capsules', href: '/go/partiQlar_Spermidine', category: 'Spermidine' },
-      { brand: 'Calocurb', product: 'Calocurb GLP-1 Activator', href: '/go/calocurb', category: 'GLP-1 (not a reviewed compound)' },
-      { brand: 'Jinfiniti', product: 'Ultimate Longevity Panel (CLIA-certified testing)', href: '/go/jinfiniti-ultimate', category: 'Diagnostic testing, not a supplement' },
-      { brand: 'Jinfiniti', product: 'NAD Dosing Protocol ($396 offer)', href: '/go/jinfiniti-dosing-prot', category: 'Diagnostic testing, not a supplement' },
-      { brand: 'Jinfiniti', product: 'NAD Membership Program (15% recurring)', href: '/go/jinfiniti-nad-memebrship', category: 'Membership/discount program' },
+      { brand: 'Renue by Science', product: 'CaAKG (Liposomal)', href: `${BLOG}/go/renue-CaAKG`, category: 'CaAKG' },
+      { brand: 'Renue by Science', product: 'Quercetin (Liposomal)', href: `${BLOG}/go/renue-Quercetin`, category: 'Quercetin' },
+      { brand: 'partiQlar', product: 'Pure Spermidine, 60 Capsules', href: `${BLOG}/go/partiQlar_Spermidine`, category: 'Spermidine' },
+      { brand: 'Calocurb', product: 'Calocurb GLP-1 Activator', href: `${BLOG}/go/calocurb`, category: 'GLP-1 (not a reviewed compound)' },
+      { brand: 'Jinfiniti', product: 'Ultimate Longevity Panel (CLIA-certified testing)', href: `${BLOG}/go/jinfiniti-ultimate`, category: 'Diagnostic testing, not a supplement' },
+      { brand: 'Jinfiniti', product: 'NAD Dosing Protocol ($396 offer)', href: `${BLOG}/go/jinfiniti-dosing-prot`, category: 'Diagnostic testing, not a supplement' },
+      { brand: 'Jinfiniti', product: 'NAD Membership Program (15% recurring)', href: `${BLOG}/go/jinfiniti-nad-memebrship`, category: 'Membership/discount program' },
     ],
     tier3: [
-      { brand: 'NMNBio', product: 'Longevity Starter Pack', href: '/go/nmnbio-long-starterpack', contains: 'NMN, TMG, and Quercetin' },
-      { brand: 'NMNBio', product: 'Morning Bundle', href: '/go/nmnbio-morning', contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)' },
+      { brand: 'NMNBio', product: 'Longevity Starter Pack', href: `${BLOG}/go/nmnbio-long-starterpack`, contains: 'NMN, TMG, and Quercetin' },
+      { brand: 'NMNBio', product: 'Morning Bundle', href: `${BLOG}/go/nmnbio-morning`, contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)' },
     ],
   },
   // Article cross-links — mirrors what the firewalled article-engine returns for this sample

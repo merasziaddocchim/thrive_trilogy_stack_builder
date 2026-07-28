@@ -16,6 +16,11 @@ frontend/compliance layer adjacent to each link, not here.
   `Docs/affiliate-products-structured.md`. Links are the existing `/go/` cloaked
   redirects, used exactly as given. Excluded/ambiguous entries are intentionally
   absent and listed in `EXCLUDED_HREFS` so tests can assert they never leak.
+  **Every href goes through `blogUrl()` from `src/shared/blog-url.ts`** — the same
+  utility `article-engine` uses. The `/go/` redirects live on the ROOT domain, so a
+  bare `'/go/...'` string resolves against `app.thrivetrilogy.com` and 404s. That
+  bug shipped to production for all 23 links (2026-07-24); the regression tests in
+  `affiliate-engine.test.ts` fail the build if any link goes relative again.
 - `index.ts` — `buildStartSection(recognized)` selects which products to surface for
   a given stack (Tier 1 keyed to the scored compounds, Tier 2 always, Tier 3 only
   when the stack overlaps a bundle's contents). Selection only — no scoring, no
