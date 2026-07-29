@@ -1,0 +1,120 @@
+name: CI
+
+# Runs the checks this repo already has. Nothing here is a new check: every command below
+# is a script already defined in backend/package.json or frontend/package.json.
+#
+# Why this file exists: until 2026-07-29 none of these ran automatically. The repo carried a
+# .gitlab-ci.yml that could never execute (this project is on GitHub), Render's build command
+# only compiles the backend, and Vercel only runs `next build`. So the backend test suite, the
+# compliance firewall, and both typechecks were only ever run by hand — including the affiliate
+# link regression tests written specifically to stop a production bug from recurring.
+#
+# GATING: a red run here does NOT block a merge on its own. Blocking requires branch protection
+# (Settings -> Branches -> require these status checks to pass), which is a repository setting.
+# A workflow cannot grant itself that power. Until it is enabled, this reports; it does not gate.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # backend and frontend declare no `needs:`, so they run in parallel.
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # NOT currently required. The suite passes with a completely empty environment:
+      # backend/src/api/cors.test.ts self-provides a fake DATABASE_URL via `??=` before it
+      # imports the app, so nothing reaches the schema unset. Set here anyway so the job stays
+      # deterministic if a test ever imports backend/src/config/env.ts, which parses
+      # DATABASE_URL through a zod `.string().url()` schema at import time and would throw.
+      #
+      # This is a placeholder pointing at nothing. There is no database at this address, it is
+      # not a credential, and it grants no access. Never put a real connection string here —
+      # workflow files are not secret storage.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/placeholder_not_a_real_database
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # `engines` in backend/package.json and frontend/package.json both say ">=20".
+          # There is no .nvmrc or .node-version, and neither Render nor Vercel pins a version,
+          # so 20 is the only version this project has ever named for CI (the retired
+          # .gitlab-ci.yml used node:20-alpine).
+          node-version: '20'
+
+      # No lockfile is committed, so `npm ci` is not possible and actions/setup-node caching
+      # (which keys off a lockfile) is unavailable. `--no-package-lock` stops the runner writing
+      # one, so CI cannot drift into introducing a lockfile as a side effect.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
+
+      # backend/package.json "lint" = eslint . && node scripts/check-firewall.mjs
+      - name: Lint
+        run: npm run lint
+
+      # backend/package.json "typecheck" = tsc --noEmit
+      - name: Typecheck
+        run: npm run typecheck
+
+      # backend/package.json "test" = tsx --test "src/**/*.test.ts"  (93 tests)
+      - name: Test
+        run: npm test
+
+      # WHY THIS STEP EXISTS
+      # backend/src/article-engine/article-engine.test.ts defines a helper, withInjectedImport,
+      # whose two negative firewall probes WRITE a forbidden import line into real tracked source
+      # files (article-engine/index.ts and scoring-engine/index.ts), run the firewall script to
+      # prove it is caught, then restore the original content in a `finally` block.
+      #
+      # That restore is not guaranteed. A crash, a timeout, or a cancelled run landing between
+      # the write and the `finally` leaves a forbidden import sitting in committed source — the
+      # exact violation the firewall exists to prevent, introduced by the test that proves the
+      # firewall works. Any tracked file still modified after the suite finishes is a real
+      # failure, so fail the job here rather than let it reach a commit or a merge.
+      #
+      # `git diff` covers tracked files across the whole repo (not just this job's
+      # working-directory), and ignores untracked paths — so node_modules and any generated
+      # lockfile are correctly out of scope.
+      - name: Verify tests left the working tree clean
+        run: git diff --exit-code
+
+      # Also run standalone, not only via `npm run lint`, so that editing the lint script can
+      # never silently drop the compliance firewall (TECH_DOCS §4, CLAIMS_COMPLIANCE §6).
+      # Identical to the `firewall` script in backend/package.json.
+      - name: Firewall check
+        run: node scripts/check-firewall.mjs
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    # No env vars: every NEXT_PUBLIC_* read in frontend/src has a `??` fallback, and both
+    # commands below pass with a completely empty environment.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
+
+      # frontend/package.json "typecheck" = tsc --noEmit
+      - name: Typecheck
+        run: npm run typecheck
+
+      # frontend/package.json "build" = next build  (production build)
+      - name: Build
+        run: npm run build
