@@ -24,5 +24,18 @@ npm run dev                  # http://localhost:3000
 
 ## Notes
 - Design tokens in `tailwind.config.ts` are ESTIMATES from BRAND_GUIDELINES §4 -
-  confirm exact hex/font-family against live CSS before finalizing.
-- No business logic (scoring formula, claim templates) is implemented - stubs only.
+  confirm exact hex/font-family against live CSS before finalizing (still open, STATUS §9).
+- The full V1 UI is built and deployed: assessment flow with the "Confirm What We Found"
+  step, Preview, Stack Report (SEI, Stop/Keep/Start, Start section, related reading),
+  methodology, homepage FAQ + FAQPage JSON-LD, and the 12 legal/utility routes. Scoring
+  itself is computed by the backend - this app renders it.
+- `lib/data.ts` is live-first: it calls the real backend and only falls back to
+  `lib/fixtures.ts` on failure, which is the only time the "Preview build - sample data"
+  banner appears.
+- Legal-page copy in `lib/legal-content.ts` states facts owned by CLAIMS_COMPLIANCE §5b -
+  it must never originate or contradict them. Draft copy still needs attorney review.
+
+## Checks
+`npm run typecheck` and `npm run build` run in CI (`.github/workflows/ci.yml`) on every
+PR and push to `main`; branch protection on `main` means a failure blocks the merge.
+There is no frontend test suite.
