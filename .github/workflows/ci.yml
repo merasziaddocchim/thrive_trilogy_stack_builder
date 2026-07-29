@@ -9,6 +9,9 @@ name: CI
 # compliance firewall, and both typechecks were only ever run by hand — including the affiliate
 # link regression tests written specifically to stop a production bug from recurring.
 #
+# Both jobs run on Node 22 — see the note on the setup-node step in the backend job. The
+# ">=20" in both package.json `engines` is inaccurate: the test suite cannot run on Node 20.
+#
 # GATING: a red run here does NOT block a merge on its own. Blocking requires branch protection
 # (Settings -> Branches -> require these status checks to pass), which is a repository setting.
 # A workflow cannot grant itself that power. Until it is enabled, this reports; it does not gate.
@@ -45,11 +48,20 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # `engines` in backend/package.json and frontend/package.json both say ">=20".
-          # There is no .nvmrc or .node-version, and neither Render nor Vercel pins a version,
-          # so 20 is the only version this project has ever named for CI (the retired
-          # .gitlab-ci.yml used node:20-alpine).
-          node-version: '20'
+          # 22, NOT the ">=20" that both package.json `engines` declare, and not the
+          # node:20-alpine the retired .gitlab-ci.yml used. That declaration is inaccurate:
+          # backend/package.json "test" is `tsx --test "src/**/*.test.ts"`, and `node --test`
+          # only expands glob patterns from Node 22 on. Under Node 20 the pattern is taken as
+          # a literal path and the run dies immediately with
+          #   Could not find '.../backend/src/**/*.test.ts'
+          # This was proven, not assumed: the first CI run on this branch used '20' and failed
+          # exactly that way (run 30448060959). The GitLab config never surfaced it because it
+          # only ran lint and typecheck, never the test suite.
+          #
+          # 22 satisfies `engines: >=20`, so this narrows within the declared range rather than
+          # contradicting it. Fixing `engines`/the glob belongs in package.json and is out of
+          # scope here.
+          node-version: '22'
 
       # No lockfile is committed, so `npm ci` is not possible and actions/setup-node caching
       # (which keys off a lockfile) is unavailable. `--no-package-lock` stops the runner writing
@@ -106,7 +118,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Matches the backend job. The frontend alone would run on 20, but pinning both to one
+          # version keeps CI consistent and avoids implying the repo supports two.
+          node-version: '22'
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund --no-package-lock
