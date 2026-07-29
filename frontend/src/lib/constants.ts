@@ -109,3 +109,14 @@ export const AI_ROLE_NOTE =
   'credentialed reviewer; your free-text entry is matched to compounds by deterministic ' +
   'text-matching, and you confirm those matches before anything is scored. This is not a ' +
   'substitute for professional medical advice.';
+
+// Single source of truth for how free-text intake is processed, rendered on the Confirm
+// screen. Deliberately NOT the same text as AI_ROLE_NOTE above: that one describes the whole
+// pipeline, this one describes intake ONLY — at the point the user confirms matches, neither
+// scoring nor database extraction has happened yet, so the fuller note would be less accurate
+// there. Wording is originated by CLAIMS_COMPLIANCE §7 (second approved disclosure) and this
+// constant must match it character-for-character, not the reverse. Consolidated 2026-07-29
+// from a hardcoded string in ConfirmStep.tsx.
+export const INTAKE_METHOD_NOTE =
+  'We read your free-text entry and match it to compounds using automated text-matching (not an AI model). ' +
+  'You\'re confirming those matches now, before anything is scored.';

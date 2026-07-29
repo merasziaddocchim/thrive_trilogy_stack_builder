@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/primitives';
 import { IconPencil, IconTrash, IconPlus, IconAlert, IconCheck } from '@/components/ui/Icon';
 import { DELIVERY_LABELS, type AuditState } from './audit-state';
 import type { ExtractedItem, DeliveryFormat } from '@/lib/types';
+import { INTAKE_METHOD_NOTE } from '@/lib/constants';
 
 let nextId = 1000;
 
@@ -202,10 +203,7 @@ export function ConfirmStep({
       }}
       continueLabel="Looks right — continue"
       footnote={
-        <p className="text-xs text-muted">
-          We read your free-text entry and match it to compounds using automated text-matching (not
-          an AI model). You&apos;re confirming those matches now, before anything is scored.
-        </p>
+        <p className="text-xs text-muted">{INTAKE_METHOD_NOTE}</p>
       }
     >
       {lowCount > 0 && (

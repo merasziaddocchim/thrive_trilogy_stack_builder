@@ -52,5 +52,19 @@ first — the code follows that file, never the reverse.
 
 `scripts/check-firewall.mjs` enforces isolation in both directions: `scoring-engine/`
 may not import article-engine, and `article-engine/` may not import `scoring-engine/`.
-Verified with a negative probe (a deliberate violating import must fail the check)
-before the probe is removed — same pattern used for `affiliate-engine`.
+
+Both directions are proven by **permanent negative probes** in `article-engine.test.ts`
+— `firewall FAILS if article-engine imports scoring-engine` and `firewall FAILS if
+scoring-engine imports article-engine`. They are not run-once-and-delete: the
+`withInjectedImport` helper writes a violating import into the real source file, runs
+the firewall script, asserts it exits non-zero, and restores the file in a `finally`.
+They run on every `npm test`, so the guard is re-proven rather than assumed. (CI runs
+`git diff --exit-code` straight after the suite, because a crashed or cancelled run
+could otherwise leave an injected import behind.)
+
+**This pattern is NOT used for `affiliate-engine`.** These two are the only firewall
+probes in the suite. `check-firewall.mjs` guards seven directions in total —
+`scoring-engine` ✗→ affiliate/article, `affiliate-engine` ✗→ scoring, `article-engine`
+✗→ scoring, and `intake-parser` ✗→ affiliate/scoring/article — and all seven are
+enforced, but only the two named above are probed. The affiliate and intake-parser
+directions are enforced-but-unprobed; adding those probes is open work.
