@@ -109,9 +109,9 @@ The claim/endorsement rule governing this lives in `CLAIMS_COMPLIANCE.md` §6 (e
 The blog has 46 existing articles across four pillars (NAD+ Precursors, Methylation, Longevity Compounds, Delivery Systems — matching the `compound.category` enum in `TECH_DOCS.md` §1 exactly). Practically:
 
 - **Educational/mechanism articles** (dosing protocols, bioavailability/delivery-system guides, mechanism explainers — e.g. NMN Dosing Protocol Guide, The Salvage Pathway) render as plain further-reading links, same tone as any other citation — no special treatment needed, they may appear anywhere in the Stack Report.
-- **"Best X Supplement" roundups and brand reviews** render only in the Start section or general marketing pages, with the same per-placement disclosure as any affiliate link (`CLAIMS_COMPLIANCE.md` §6's four-factor test) — never inside Stop/Keep or Evidence Tier content.
+- **"Best X Supplement" roundups and brand reviews** render only in the Start section or general marketing pages, never inside Stop/Keep or Evidence Tier content. They carry per-link disclosure receiving the same *treatment* as an affiliate link — adjacent, same size, same body font, satisfying `CLAIMS_COMPLIANCE.md` §6's four-factor test — but **not the same sentence.** The approved wording for a roundup link is set out in `CLAIMS_COMPLIANCE.md` §6's disclosure-wording table and is not repeated here: §6 owns it, and its reasoning (a link to our own article is not itself a paid link, so the affiliate sentence would be false) is the reason the two differ. Use the sentence §6 gives; never substitute the affiliate one.
 
-Quick test: does the article rank or recommend specific purchasable products? Yes → Start-section-only, disclosed like any affiliate link. No → safe anywhere, plain link styling, no disclosure needed.
+Quick test: does the article rank or recommend specific purchasable products? Yes → Start-section-only, with per-link disclosure in the treatment described above, using §6's roundup wording. No → safe anywhere, plain link styling, no disclosure needed.
 
 **Schema dependency:** `compound.related_articles[]`, tagged `educational`/`roundup` — see `TECH_DOCS.md` §1.
 
