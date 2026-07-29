@@ -157,7 +157,15 @@ Practical test before linking any article from inside the app: does it rank or r
 
 Calling an unpaid link "a paid link" would be its own misrepresentation, so the wording differs while the four-factor test (proximity, prominence, presentation, placement) is satisfied identically. **Single-brand reviews count as roundups** (founder decision, recorded in `Docs/article-linking-structured.md`) — a review of one brand is still a product recommendation.
 
-Technical enforcement: article selection lives in a firewalled `article-engine/` module that the scoring path cannot import (`TECH_DOCS.md` §4) — the same structural separation as `affiliate-engine/`, for the same reason. Rendering rules: roundup links carry no `rel="sponsored"` (they are not themselves paid placements) but do open cross-domain with `rel="noopener noreferrer"`; educational links need no disclosure at all.
+Technical enforcement: article selection lives in a firewalled `article-engine/` module that the scoring path cannot import (`TECH_DOCS.md` §4) — the same structural separation as `affiliate-engine/`, for the same reason. Rendering rules (updated 2026-07-24 — every outbound link in the Report now opens in a new tab, since all of them leave the app for the root domain):
+
+| Link kind | `target` | `rel` | Disclosure |
+|---|---|---|---|
+| Affiliate product / bundle | `_blank` | `sponsored nofollow noopener noreferrer` | Per-link, affiliate wording |
+| Roundup article | `_blank` | `noopener noreferrer` — **deliberately no `sponsored`** | Per-link, content-link wording |
+| Educational article / hub | `_blank` | `noopener noreferrer` | None |
+
+`sponsored` marks a *paid* placement, which is why it appears on affiliate links and not on links to our own articles — the endorsement risk there is disclosed in copy, not in markup. `noopener noreferrer` accompanies every `target="_blank"` so the opened page cannot reach back through `window.opener`.
 
 ---
 
