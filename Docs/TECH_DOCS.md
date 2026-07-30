@@ -76,7 +76,15 @@ SCORING_PARAMETER
 - **C:** observational/cohort only, or animal studies with mechanistic plausibility
 - **D:** in-vitro/animal-only, or a single small human study
 
-*(Exact n-thresholds for "adequate" are a policy decision — still unset as a written rule. **Batch 1 shipped without one**: the gate below was satisfied in practice by per-source founder review rather than by a numeric threshold — see §2 "Parameter sign-off status" and §8. A written threshold is still needed before batch 2, since per-source review does not scale and is not auditable as a rule. Once set, log it in §8.)*
+**SUPERSEDED 2026-07-29 — the four bullets above are no longer the derivation rule.** Tier derivation is now owned by `CLAIMS_COMPLIANCE.md` §4a, which originates it; the list above is retained only as the pre-§4a history and must not be used to assign a tier. The n-threshold that this note previously recorded as unset is settled there too. Do not restate or reinterpret §4a here — this file implements it.
+
+**Implementation status: NOT IMPLEMENTED.** No code, schema, migration or seed value has changed. Applying §4a needs, at minimum:
+- **Two new `scoring_parameters` fields.** One recording outcome proximity (the §4a Step 2 input) and one recording direction of evidence, which §4a requires be stored separately from the tier and never folded into it. Both are currently unrepresented: proximity exists only as prose inside `evidence_tier_rationale`, and direction exists only per-source on `dose_records.effect_direction`, not at the parameter level the formula reads.
+- **A Drizzle migration** adding those two columns, additive and guarded in the same style as `0001_assessment_sessions` so it is safe to re-run on every Render deploy.
+- **Re-derivation of the 7 existing `evidence_tier` values** from §4a rather than from founder judgment, applied as an idempotent correction script under `src/db/corrections/` (the pattern used for the batch-1 sign-off), not a hand edit and not a re-seed.
+- **Production verification, not inference from a merge.** Three of the 7 values move, which changes real sub-scores and therefore the composite SEI of any stack containing NMN or NR — §4a records which three and why.
+
+Until that lands, the live database and `seed-data.ts` remain on the pre-§4a values, and `CLAIMS_COMPLIANCE.md` §4a is the only place the current rule is written down.
 
 **User-side tables** (not detailed here — standard shape): `USER_PROFILE` (goals ranked, budget, risk tolerance), `USER_STACK_ITEM` (compound_id, dose taken, delivery format, price paid, source: photo-scan, manual, or free-text LLM-extraction — see §1a), `USER_LAB_RESULT`, `USER_FEEDBACK` (outcome self-report, feeds personalization — see §3).
 
@@ -205,7 +213,7 @@ Total Estimated Annual Waste = (Redundancy Waste + Underdosing Waste) × 12
 ### Parameter sign-off status
 - Evidence-tier ceiling values (100/80/60/40) — **CONFIRMED/locked 2026-07-12**
 - Overdosing penalty slope (50×, asymmetric to underdosing) — **CONFIRMED/locked 2026-07-12**
-- Minimum sample-size threshold for Tier A/B distinction — **still open as a written rule; the "before the first compound batch ships" gate was passed without one.** What happened instead (recorded 2026-07-24, no action pending on batch 1): batch 1's tier assignments were made per-source and then **personally verified against the primary sources by the founder** (all 12 sources, completed 2026-07-20 — `STATUS.md` §9), so each individual A/B call is human-backed and defensible. Founder review **substituted for** the formal threshold on this batch; it did not set one. **Still required before batch 2** — per-source review does not scale, and an unwritten threshold means the mechanical, auditable derivation rule in §1 is not actually mechanical yet, which is the property `CLAIMS_COMPLIANCE.md` §4 relies on. Batch 1 needs no revisiting when the threshold is set unless the threshold would change an existing A/B call, in which case re-tier those rows.
+- Minimum sample-size threshold for Tier A/B distinction — **RESOLVED as a written rule 2026-07-29: `CLAIMS_COMPLIANCE.md` §4a now originates tier derivation, including the pooled-n condition.** History, for the record: batch 1's assignments were made per-source and **personally verified against the primary sources by the founder** (all 12 sources, completed 2026-07-20 — `STATUS.md` §9); that review substituted for a formal threshold on that batch but never set one, which is why the derivation rule in §1 was not actually mechanical. §4a closes that. **It is written down but not yet applied** — see the implementation-status note in §1; the live values still come from the 2026-07-20 judgment, and §4a itself records which of them move once it is applied.
 
 ---
 
@@ -305,7 +313,7 @@ Every response object that carries a claim must satisfy the CLAIMS_COMPLIANCE.md
 | 2026-07-03 | Backend language: Python/FastAPI vs Node/TypeScript | **Resolved — Node.js (Express)** |
 | 2026-07-03 | Evidence-tier ceiling values (100/80/60/40) | **Resolved — CONFIRMED/locked 2026-07-12** |
 | 2026-07-03 | Overdosing vs underdosing penalty asymmetry (50× slope) | **Resolved — CONFIRMED/locked 2026-07-12** |
-| 2026-07-03 | Min sample-size threshold for Tier A vs B | Not yet proposed — **still open.** Batch 1 shipped without it: founder per-source verification of all 12 sources (2026-07-20) substituted for the formal gate. **Needed before batch 2** — see §2 sign-off status |
+| 2026-07-03 | Min sample-size threshold for Tier A vs B | **Resolved 2026-07-29** — subsumed into the Evidence Tier assignment rule originated in `CLAIMS_COMPLIANCE.md` §4a. Written down, **not yet implemented**; see the implementation-status note in §1 |
 | 2026-07-11 | Intake extractor default: heuristic (deterministic) vs LLM | **Open.** Built heuristic-by-default in PR #2 and live; the LLM path is an injectable interface, not wired in. Diverges from the 2026-07-11 "free-text + LLM extraction" resolution below — that decision covered the *capture method* (free text), and the extractor question is now separable. Carries two dependents: bare-number unit assumption ("TMG 500" → mg?) and the Privacy Policy LLM-provider disclosure (gated by `CLAIMS_COMPLIANCE.md` §5b item 2) |
 | — | Single-repo (monorepo) vs two-repo structure | **Resolved — monorepo**, two top-level folders, confirmed |
 | — | Render graduation trigger (when to move off free tier) | Proposed: first week with meaningful live-scoring traffic — define threshold |

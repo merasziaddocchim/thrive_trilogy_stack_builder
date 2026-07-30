@@ -71,6 +71,101 @@ Rule: the app must never render a recommendation string without a linked `eviden
 
 ---
 
+## 4a. Evidence Tier assignment rule (originated 2026-07-29)
+
+Evidence Tier is a property of a compound-outcome scoring parameter, not of
+an individual source. Sources carry no tier. A parameter's tier is derived
+from the sources listed in its contributingSourceIds.
+
+This rule replaces per-source founder judgment, which was adequate for
+batch 1's twelve sources but does not scale. It applies to batch 2 onward
+AND retroactively to batch 1, because the Spend Efficiency Index compares
+compounds against one another: a tier derived from judgment and a tier
+derived from this rule are not comparable, and mixing them makes the
+ranking meaningless.
+
+Three steps, in order.
+
+Step 1 - Design sets the ceiling. The best study design among the
+parameter's contributing sources sets the highest tier attainable:
+- Meta-analysis or systematic review of human randomized controlled trials
+  gives a ceiling of Evidence Tier A
+- Human randomized controlled trial gives a ceiling of Evidence Tier B
+- Human non-randomized, open-label, or observational study gives a ceiling
+  of Evidence Tier C
+- Mechanistic, animal, in vitro, or narrative review gives a ceiling of
+  Evidence Tier D
+
+Step 2 - Outcome proximity may demote, never promote. Judged on what the
+study actually measured:
+- Clinical outcome, validated clinical marker, or head-to-head comparison
+  against an established therapy: no demotion
+- Surrogate biomarker, meaning a measure believed to track a clinical
+  outcome but not itself one: demote one tier
+- Physical performance or subjective self-report: demote one tier
+
+Step 3 - Replication may restore one tier lost in Step 2. It can never
+raise a parameter above its Step 1 ceiling. Restoration requires all of
+the following:
+- two or more independent human randomized controlled trials
+- their findings agree in direction
+- a pooled sample size of at least 30 participants across those trials
+
+Only randomized controlled trials can restore. An observational,
+single-arm, or open-label study can establish a ceiling in Step 1, but it
+cannot confirm a finding in Step 3: replication means an independent test
+capable of being wrong, and an uncontrolled study is not that test.
+
+A meta-analysis cannot trigger restoration. Its replication is already
+reflected in the Step 1 ceiling, and counting it again would double-count
+the same evidence.
+
+Direction of evidence is recorded separately and is never folded into the
+tier. A well-conducted trial that finds no effect is strong evidence of
+absence, not weak evidence. Evidence Tier expresses the quality of the
+evidence; direction expresses what it found. Conflating them would assign
+identical scores to "no adequate study exists" and "an adequate study found
+this does not work" - opposite conclusions. For a product whose purpose is
+telling a user what to stop buying, that distinction is the point.
+Direction is a separate field on the scoring parameter, and no user-facing
+statement drawn from it may be presented as an Evidence Tier.
+
+Batch-1 assignments under this rule:
+- Berberine x metabolic_health: meta-analysis of RCTs, clinical outcome
+  measured head-to-head against an established therapy, Evidence Tier A
+- TMG x healthy_aging: meta-analysis of RCTs, surrogate biomarker,
+  restoration not available to a meta-analysis, Evidence Tier B
+- NR x healthy_aging: two human RCTs, surrogate biomarker, findings do not
+  agree in direction so restoration is unavailable, Evidence Tier C
+- NMN x metabolic_health: human RCT ceiling, surrogate biomarker, only one
+  contributing RCT so restoration is unavailable, Evidence Tier C
+- NMN x training_and_recovery: human RCT, performance endpoint, single
+  study, Evidence Tier C
+- Resveratrol x metabolic_health: two human RCTs, surrogate biomarker,
+  findings do not agree in direction, Evidence Tier C
+- TMG x training_and_recovery: human RCT, performance endpoint, single
+  study, Evidence Tier C
+
+Three assignments change when this rule is applied: NR x healthy_aging from
+Evidence Tier B to C, NMN x metabolic_health from B to C, and NMN x
+training_and_recovery from B to C. Each rested on founder judgment that is
+not defensible under a stated rule. The batch-1 distribution moves from one
+A, four B and two C to one A, one B and five C. This lowers the NMN and NR
+sub-scores and therefore the composite Spend Efficiency Index of any stack
+containing either compound. That is a live, user-visible change. It must be
+verified in production rather than assumed from a merge, and it is not
+applied by the change that introduces this rule.
+
+Known open refinement, to be decided before batch 2 ships: whether
+restoration should additionally require that the trials measure the same
+outcome. Two trials measuring different endpoints are not strictly in
+conflict even when one is null, so "agree in direction" is an imprecise
+test for that case. It changes no batch-1 assignment, because every
+affected parameter already fails restoration on another condition. It has
+not been adopted and must not be applied until it is.
+
+---
+
 ## 5. DSHEA / FDA structure-function boundary
 
 Source: 21 U.S.C. § 343(r)(6); 21 CFR 101.93(f)–(g); FDA Small Entity Compliance Guide on Structure/Function Claims.
@@ -267,6 +362,7 @@ When a new compound, claim, or user-facing sentence doesn't cleanly map to §4/�
 | 2026-07-19 | Added §5b: confirmed data-practice facts for legal-page disclosures (48h anonymous retention, heuristic-only intake with LLM-enablement gate, GA treated as CCPA/CPRA "sharing" pending ad-features confirmation + functional-opt-out rule, email non-collection + planned use, DMCA agent, Delaware governing law, Reviews scope) | Founder confirmations, 2026-07-19; retention facts from `TECH_DOCS.md` §1b (PR #7) |
 | 2026-07-24 | §6 extended with approved disclosure wording for **roundup-article links** ("This is our own article, and it recommends products that can earn us a commission"), distinguished from the affiliate-link sentence because a link to our own article is not itself a paid link — using the affiliate wording there would be a misrepresentation in the other direction. Records that single-brand reviews count as roundups (founder decision), that roundup links carry no `rel="sponsored"`, and that article selection is firewalled in `article-engine/` | Article-linking build, 2026-07-24; founder mapping in `Docs/article-linking-structured.md`, founder instruction on rel/disclosure treatment |
 | 2026-07-24 | **§7 disclosure sentence corrected — the doc was justifying an overclaim the app had already fixed.** The prescribed "This report was generated using AI…" language was withdrawn: the report is produced by deterministic scoring software, not a language model. §7 now separates the three pipeline roles (deterministic scoring · AI extraction + credentialed human verification · deterministic, user-confirmed intake matching) and carries the approved disclosure text verbatim, with the app's `AI_ROLE_NOTE` constant bound to follow this section rather than define it. §8's Colorado posture bullet updated to match. No app copy changed — the shipped text was already accurate (PR #15); this closes the doc-vs-reality gap in the owning document | Drift found reviewing the four governing docs against the repo, 2026-07-24; founder-directed correction the same day |
+| 2026-07-29 | **Added §4a: the Evidence Tier assignment rule.** Replaces per-source founder judgment, which did not scale, with a stated three-step derivation (design ceiling, outcome-proximity demotion, RCT-only replication restoration) that applies to batch 2 onward and retroactively to batch 1, because the SEI compares compounds against one another and judgment-derived and rule-derived tiers are not comparable. Records the batch-1 assignments it yields, the three that change, and one open refinement that has not been adopted. Direction of evidence is held separately from tier and may never be rendered as one. §4's tier→language mapping is unaffected; its "Definition" column still describes the pre-§4a derivation and is flagged for reconciliation when §4a is applied | Founder decision, 2026-07-29. Written down only — no tier value, schema or seed record changed; implementation and production verification tracked in `TECH_DOCS.md` §1 and `STATUS.md` |
 | 2026-07-19 | §5b corrections: (1) analytics fact corrected — Google Analytics is NOT yet implemented anywhere (planned, not active); disclosure reworded to current-reality + planned addition, with the functional-opt-out/same-change rule now binding at GA's future tagging; (2) added §5b.5a — `support@thrivetrilogy.com` confirmed as the single contact address for everything (general + DMCA), `hello@` placeholder removed | Founder corrections, 2026-07-19 |
 
 *Re-verify §8 (state AI law) at minimum quarterly. Re-verify §3 and §6 (FTC guidance) upon any FTC guidance update or enforcement action involving a comparable health-app/comparison-site business model.*
