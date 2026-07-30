@@ -400,7 +400,7 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
   {
     compoundId: C.nmn, goalTag: 'metabolic_health',
     recommendedRangeLowMg: 250, recommendedRangeHighMg: 500,
-    evidenceTier: 'B_moderate',
+    evidenceTier: 'C_limited',
     contributingSourceIds: [S.yoshino2021, S.irie2020],
     evidenceTierRationale: `Based on a single small human RCT (n=25) at 250 mg/day plus a single-dose safety/PK study; early-stage and not yet replicated at scale.`,
     bioavailabilityAdjustmentFactor: 1.0,
@@ -411,7 +411,7 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
   {
     compoundId: C.nmn, goalTag: 'training_and_recovery',
     recommendedRangeLowMg: 600, recommendedRangeHighMg: 1200,
-    evidenceTier: 'B_moderate',
+    evidenceTier: 'C_limited',
     contributingSourceIds: [S.liao2021],
     evidenceTierRationale: `A single human RCT (n=48) reported improved aerobic capacity at 600-1200 mg/day over 6 weeks.`,
     bioavailabilityAdjustmentFactor: 1.0,
@@ -422,9 +422,9 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
   {
     compoundId: C.nr, goalTag: 'healthy_aging',
     recommendedRangeLowMg: 300, recommendedRangeHighMg: 1000,
-    evidenceTier: 'B_moderate',
+    evidenceTier: 'C_limited',
     contributingSourceIds: [S.martens2018, S.dollerup2018],
-    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity, so evidence is moderate and outcome-dependent.`,
+    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity. The two controlled trials do not agree with each other, so the evidence is limited and outcome-dependent.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
     outcomeProximity: 'surrogate_biomarker',
