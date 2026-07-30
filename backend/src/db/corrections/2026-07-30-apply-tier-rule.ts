@@ -71,6 +71,19 @@ const COMPOUND = {
   tmg: SEED_COMPOUNDS[4].compoundId!,
 };
 
+// Founder-approved replacement wording, keyed by `compoundId|goalTag`. Written in the SAME
+// UPDATE as the tier below, so a corrected tier and its corrected explanation land together.
+//
+// NR x healthy_aging only. Its previous rationale ended "so evidence is moderate and
+// outcome-dependent"; "moderate" is Tier B's public label (CLAIMS_COMPLIANCE section 4) and
+// this parameter is now C_limited. The rationale RENDERS TO USERS on Stop/Keep rows, so
+// writing the tier without the wording would show a C badge beside the word moderate.
+// Wording is founder-approved and reproduced verbatim -- it is not authored here.
+const APPROVED_RATIONALES: Record<string, string> = {
+  [`${COMPOUND.nr}|healthy_aging`]:
+    'A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity. The two controlled trials do not agree with each other, so the evidence is limited and outcome-dependent.',
+};
+
 interface LiveParam {
   compoundId: string;
   goalTag: string;
@@ -198,15 +211,27 @@ async function main() {
   }
 
   // --- Apply -------------------------------------------------------------------------------
+  // Tier and rationale go in ONE statement for any row that needs both, so there is never a
+  // moment where production holds the new tier beside wording that contradicts it.
   let updated = 0;
+  let rationalesUpdated = 0;
   for (const p of params) {
     const target = tierOfNew(p);
+    const approved = APPROVED_RATIONALES[`${p.compoundId}|${p.goalTag}`];
     const rows = await db
       .update(scoringParameters)
-      .set({ evidenceTier: target })
+      .set(
+        approved
+          ? { evidenceTier: target, evidenceTierRationale: approved }
+          : { evidenceTier: target },
+      )
       .where(sql`${scoringParameters.compoundId} = ${p.compoundId} and ${scoringParameters.goalTag} = ${p.goalTag}`)
       .returning({ id: scoringParameters.scoringParameterId });
     updated += rows.length;
+    if (approved) {
+      rationalesUpdated += rows.length;
+      console.log(`  rationale rewritten for ${p.goalTag} (founder-approved; removes a Tier B label from a Tier C row)`);
+    }
   }
 
   // --- AFTER --------------------------------------------------------------------------------
@@ -217,6 +242,7 @@ async function main() {
   printScores('representative stack:', scoreWith(paramsAfter, tierOfOld));
   console.log('--- ROWS ---');
   console.log(`  scoring_parameters written: ${updated} (expected 7; ${moving} of them change tier)`);
+  console.log(`  rationales rewritten:       ${rationalesUpdated} (expected 1: NR x healthy_aging)`);
 
   // --- SAFETY ASSERTION (inverted from Part One) --------------------------------------------
   if (fmtSpread(spreadBefore) === EXPECTED_BEFORE && fmtSpread(spreadAfter) !== EXPECTED_AFTER) {
@@ -238,6 +264,9 @@ async function main() {
   }
   if (updated !== 7) {
     throw new Error(`Expected to write 7 scoring parameters, wrote ${updated}.`);
+  }
+  if (rationalesUpdated !== 1) {
+    throw new Error(`Expected to rewrite 1 rationale (NR x healthy_aging), rewrote ${rationalesUpdated}.`);
   }
   console.log(`Verified: tier spread is ${fmtSpread(spreadAfter)} — §4a applied.`);
   console.log('Now confirm a real report in the browser; do not infer success from this exit code.');

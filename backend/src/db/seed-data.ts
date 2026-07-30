@@ -424,7 +424,7 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     recommendedRangeLowMg: 300, recommendedRangeHighMg: 1000,
     evidenceTier: 'C_limited',
     contributingSourceIds: [S.martens2018, S.dollerup2018],
-    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity, so evidence is moderate and outcome-dependent.`,
+    evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity. The two controlled trials do not agree with each other, so the evidence is limited and outcome-dependent.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
     outcomeProximity: 'surrogate_biomarker',

@@ -123,3 +123,59 @@ test('TRIPWIRE: stored tier spread is A x1 / B x1 / C x5 (was A x1 / B x4 / C x2
   }, {});
   assert.deepEqual(spread, { A_strong: 1, B_moderate: 1, C_limited: 5 });
 });
+
+// ---- TIER LABEL vs TIER, IN USER-FACING TEXT --------------------------------------------
+// `evidence_tier_rationale` renders to users on Stop/Keep rows (StopKeepStart.tsx), directly
+// beside the tier badge. So a rationale that uses one tier's PUBLIC LABEL (Strong / Moderate /
+// Limited / Preliminary, per CLAIMS_COMPLIANCE §4) while the row carries a different tier is a
+// user-visible contradiction, not a wording nit.
+//
+// This is the check that caught NR after §4a Part Two re-tiered it: its rationale still said
+// "so evidence is moderate" — Tier B's label — on a row that had become C_limited. That one is
+// fixed with founder-approved wording.
+//
+// KNOWN EXCEPTION, deliberately pinned rather than silently tolerated:
+//   tmg|training_and_recovery — "...at ~2500 mg/day; preliminary." on a C_limited row.
+//     "Preliminary" is Tier D's label. This PREDATES §4a (the row was already C_limited before
+//     Part Two) so it is not fallout from the tier change, and the replacement wording is
+//     user-facing claims copy, which CLAIMS_COMPLIANCE §4/§4a originate — not this change.
+//
+// The set below must SHRINK to empty when that copy is approved, and must never grow. If a new
+// parameter appears here, fix the rationale rather than adding it to the list.
+const TIER_LABEL: Record<string, string> = {
+  strong: 'A_strong',
+  moderate: 'B_moderate',
+  limited: 'C_limited',
+  preliminary: 'D_preliminary',
+};
+const KNOWN_LABEL_CONTRADICTIONS = ['tmg|training_and_recovery'];
+
+test('no rationale uses a tier label that contradicts its own stored tier (1 known exception)', () => {
+  const offenders: string[] = [];
+  for (const p of SEED_SCORING_PARAMETERS) {
+    const rationale = p.evidenceTierRationale ?? '';
+    for (const [word, impliedTier] of Object.entries(TIER_LABEL)) {
+      if (!new RegExp(`\\b${word}\\b`, 'i').test(rationale)) continue;
+      if (impliedTier === p.evidenceTier) continue; // the label matches its own tier — fine
+      const compound = String(p.compoundId).slice(-1);
+      offenders.push(`${compound}|${p.goalTag}:"${word}"->${impliedTier} on ${p.evidenceTier}`);
+    }
+  }
+  // Compare by goalTag+word rather than raw uuid so the message stays readable.
+  const keys = offenders.map((o) => o.split(':')[0]);
+  const unexpected = keys.filter(
+    (k) => !KNOWN_LABEL_CONTRADICTIONS.some((known) => k.endsWith(known.split('|')[1])),
+  );
+  assert.deepEqual(
+    unexpected,
+    [],
+    `rationale(s) use a tier label contradicting their own tier: ${offenders.join(', ')}`,
+  );
+  // And the known exception must still be exactly one — if it is fixed, this fails and the
+  // allowlist above must be emptied rather than left carrying a stale entry.
+  assert.equal(
+    offenders.length,
+    1,
+    `expected exactly the 1 known label contradiction, found ${offenders.length}: ${offenders.join(', ')}`,
+  );
+});
