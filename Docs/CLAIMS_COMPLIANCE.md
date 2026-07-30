@@ -60,12 +60,51 @@ Other operative rules:
 
 This table is the literal contract between the scoring database (`TECH_DOCS.md` §2) and any copy the app renders. No claim about a compound should exceed the phrasing ceiling for its evidence tier.
 
-| Tier | Definition (from `TECH_DOCS.md`) | Permitted phrasing strength | Required hedge |
+| Tier | Definition | Permitted phrasing strength | Required hedge |
 |---|---|---|---|
-| A — Strong | ≥1 meta-analysis or ≥2 independent human RCTs, adequate combined n | May state dose comparison plainly: "studied doses in human trials range from X–Y mg" | None required beyond standard disclaimer |
-| B — Moderate | Single human RCT, or multiple consistent cohort studies | Same dose-comparison language, but qualify source count: "a clinical trial found..." (singular, not "studies show") | "based on limited human trial data" |
-| C — Limited | Observational/cohort only, or animal studies with mechanistic plausibility | Comparison language must be prefaced: "preliminary research suggests..." | Explicit "not yet confirmed in human trials" where applicable |
-| D — Preliminary | In-vitro or animal-only, single small study | No dose-adequacy claim permitted at all — score for this compound is capped (see `TECH_DOCS.md` §2 ceiling logic) regardless of dosing accuracy | "based on early-stage / non-human research only" |
+| A — Strong | Pooled randomized human trials measuring a clinical outcome or established clinical marker | May state dose comparison plainly: "studied doses in human trials range from X–Y mg" | None required beyond standard disclaimer |
+| B — Moderate | Randomized human trial evidence, one step short of Tier A | Same dose-comparison language, but qualify source count: "a clinical trial found..." (singular, not "studies show") | "based on limited human trial data" |
+| C — Limited | Human evidence exists but is unreplicated, uncontrolled, or conflicting | Comparison language must be prefaced: "preliminary research suggests..." | Explicit "not yet confirmed in human trials" where applicable |
+| D — Preliminary | No controlled human trial evidence | No dose-adequacy claim permitted at all — score for this compound is capped (see `TECH_DOCS.md` §2 ceiling logic) regardless of dosing accuracy | "based on early-stage / non-human research only" |
+
+### What each Evidence Tier means
+
+These definitions describe how strong the evidence is. They do not describe
+a single study design, because a parameter can arrive at the same tier by
+more than one route through the assignment rule in section 4a.
+
+Evidence Tier A. Multiple randomized human trials have been pooled and
+analysed together, and they measured a clinical outcome or an established
+clinical marker rather than an indirect one. This is the strongest tier
+available and few compounds reach it.
+
+Evidence Tier B. Randomized controlled human trials support this, one step
+short of Tier A. A parameter reaches Tier B by one of three routes: pooled
+trials that measured only an indirect marker; independent controlled trials
+that agree with each other on an indirect marker; or a controlled trial
+measuring a clinical outcome directly. This is genuine controlled evidence,
+though not the strongest form of it.
+
+Evidence Tier C. Human evidence exists but has not been independently
+confirmed. This covers uncontrolled or observational studies; a single
+controlled trial measuring an indirect marker or a physical performance
+outcome; and controlled trials that do not agree with each other. A Tier C
+rating does NOT mean the evidence is animal-only or poor quality. It means
+the evidence has not been replicated in a way that would rule out chance. A
+well-run human trial can sit at Tier C.
+
+Evidence Tier D. Either there is no controlled human trial evidence at all,
+with support coming from laboratory work, animal studies, or review
+articles that do not themselves test the compound in people; or the human
+evidence is both uncontrolled and limited to an indirect marker. This is
+the weakest tier.
+
+None of these four tiers states whether the compound worked. Tier describes
+how strong the evidence is, not what it found. A compound can sit at Tier C
+because one good trial found nothing, which is a different situation from
+sitting at Tier C because nobody has run a second trial. Direction of
+evidence is recorded in its own field, and any user-facing statement about
+what the evidence found must draw on that field and never on the tier.
 
 Rule: the app must never render a recommendation string without a linked `evidence_tier` and `contributing_source_ids` — this is a hard technical requirement carried into `TECH_DOCS.md` §4, not a stylistic preference.
 
@@ -163,6 +202,17 @@ conflict even when one is null, so "agree in direction" is an imprecise
 test for that case. It changes no batch-1 assignment, because every
 affected parameter already fails restoration on another condition. It has
 not been adopted and must not be applied until it is.
+
+Deriving direction of evidence. A parameter's direction is derived from the
+effect directions recorded on the dose records of its contributing sources.
+If every contributing source recorded a positive effect, the parameter's
+direction is positive. If every contributing source recorded no effect, it
+is null. If the contributing sources disagree with one another, it is
+mixed, and a mixed direction must never be presented to a user as either a
+positive or a null finding. If any contributing source recorded a harmful
+effect, that takes precedence over every other value and the direction is
+negative regardless of what the other sources found: a harm signal is not
+averaged away by findings that did not look for harm.
 
 ---
 

@@ -78,13 +78,16 @@ SCORING_PARAMETER
 
 **SUPERSEDED 2026-07-29 — the four bullets above are no longer the derivation rule.** Tier derivation is now owned by `CLAIMS_COMPLIANCE.md` §4a, which originates it; the list above is retained only as the pre-§4a history and must not be used to assign a tier. The n-threshold that this note previously recorded as unset is settled there too. Do not restate or reinterpret §4a here — this file implements it.
 
-**Implementation status: NOT IMPLEMENTED.** No code, schema, migration or seed value has changed. Applying §4a needs, at minimum:
-- **Two new `scoring_parameters` fields.** One recording outcome proximity (the §4a Step 2 input) and one recording direction of evidence, which §4a requires be stored separately from the tier and never folded into it. Both are currently unrepresented: proximity exists only as prose inside `evidence_tier_rationale`, and direction exists only per-source on `dose_records.effect_direction`, not at the parameter level the formula reads.
-- **A Drizzle migration** adding those two columns, additive and guarded in the same style as `0001_assessment_sessions` so it is safe to re-run on every Render deploy.
-- **Re-derivation of the 7 existing `evidence_tier` values** from §4a rather than from founder judgment, applied as an idempotent correction script under `src/db/corrections/` (the pattern used for the batch-1 sign-off), not a hand edit and not a re-seed.
-- **Production verification, not inference from a merge.** Three of the 7 values move, which changes real sub-scores and therefore the composite SEI of any stack containing NMN or NR — §4a records which three and why.
+**Implementation status: PART ONE IN CODE, PART TWO OUTSTANDING.** Split deliberately, because only Part Two moves a score.
 
-Until that lands, the live database and `seed-data.ts` remain on the pre-§4a values, and `CLAIMS_COMPLIANCE.md` §4a is the only place the current rule is written down.
+**Part One — landed 2026-07-30. Records the §4a inputs; moves no score.**
+- **Two new `scoring_parameters` columns**, both **NULLABLE**: `outcome_proximity` (enum `outcome_proximity`: `clinical_outcome` · `surrogate_biomarker` · `performance_or_self_report`, the §4a Step 2 buckets) and `direction_of_evidence` (enum `evidence_direction`: the three `effect_direction` values plus `mixed`). `evidence_direction` is a **new** enum, not an extension of `effect_direction`, which is untouched: a single dose record cannot be `mixed`, a parameter aggregating several sources can.
+- **Migration `0002_evidence_tier_inputs`** — additive only, `CREATE TYPE` inside `duplicate_object` guards and `ADD COLUMN IF NOT EXISTS`, so it is safe on every Render deploy like `0001`.
+- **Backfill script** `src/db/corrections/2026-07-30-tier-inputs.ts` (`npm run db:tier-inputs`), idempotent, absolute-value writes. It also fills the three founder-resolved sample sizes. It reads the tier spread before and after and **aborts if any tier value would move**. Not yet run against production.
+- **Direction is derived, never hand-assigned** — `src/db/derive-direction.ts` is the single implementation of §4a's derivation paragraph, used by both the backfill and the test that checks the stored value.
+- **Nothing reads either column.** No change to `scoring-engine/`; sub-scores and composite SEI are byte-for-byte what they were.
+
+**Part Two — still owed.** Re-derive the 7 `evidence_tier` values from §4a (the columns above are its inputs), as a second idempotent correction script; update the tripwire test in `src/db/tier-inputs.test.ts`, which asserts the current spread and is **designed to fail** when the tiers move; and verify in production rather than infer from a merge. §4a records which three parameters change and why.
 
 **User-side tables** (not detailed here — standard shape): `USER_PROFILE` (goals ranked, budget, risk tolerance), `USER_STACK_ITEM` (compound_id, dose taken, delivery format, price paid, source: photo-scan, manual, or free-text LLM-extraction — see §1a), `USER_LAB_RESULT`, `USER_FEEDBACK` (outcome self-report, feeds personalization — see §3).
 
