@@ -17,6 +17,7 @@
     "db:counts": "tsx src/db/counts.ts",
     "db:correct:batch1": "tsx src/db/corrections/2026-07-20-batch1.ts",
     "db:signoff:batch1": "tsx src/db/corrections/2026-07-20-batch1-signoff.ts",
+    "db:tier-inputs": "tsx src/db/corrections/2026-07-30-tier-inputs.ts",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint . && node scripts/check-firewall.mjs",
     "firewall": "node scripts/check-firewall.mjs",

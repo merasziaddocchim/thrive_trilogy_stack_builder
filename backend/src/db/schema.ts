@@ -107,8 +107,31 @@ export const evidenceTierEnum = pgEnum('evidence_tier', [
   'D_preliminary',
 ]);
 
+// What the study actually measured — the CLAIMS_COMPLIANCE §4a Step 2 input. Three values,
+// exactly matching that step. NOT read by the scoring engine yet: §4a is written down but
+// its tier re-derivation is Part Two, so this column is recorded and asserted only.
+export const outcomeProximityEnum = pgEnum('outcome_proximity', [
+  'clinical_outcome',
+  'surrogate_biomarker',
+  'performance_or_self_report',
+]);
+
+// Direction of evidence AT THE PARAMETER level, derived from the effect directions of the
+// contributing sources per CLAIMS_COMPLIANCE §4a. Deliberately a SEPARATE enum from
+// `effect_direction`, which stays untouched: that one is a property of a single dose record
+// and can never be 'mixed', whereas a parameter aggregating several sources can. §4a requires
+// direction be stored apart from the tier and never rendered as one.
+export const evidenceDirectionEnum = pgEnum('evidence_direction', [
+  'positive',
+  'null_no_effect',
+  'negative',
+  'mixed',
+]);
+
 // Enum-derived TS types so the DB stays the single source of truth for these unions.
 export type EvidenceTier = (typeof evidenceTierEnum.enumValues)[number];
+export type OutcomeProximity = (typeof outcomeProximityEnum.enumValues)[number];
+export type EvidenceDirection = (typeof evidenceDirectionEnum.enumValues)[number];
 export type DeliveryFormat = (typeof deliveryFormatEnum.enumValues)[number];
 export type InteractionSeverity = (typeof interactionSeverityEnum.enumValues)[number];
 
@@ -222,6 +245,14 @@ export const scoringParameters = pgTable('scoring_parameters', {
   evidenceTierRationale: text('evidence_tier_rationale'),
   bioavailabilityAdjustmentFactor: real('bioavailability_adjustment_factor'),
   lastReviewedDate: timestamp('last_reviewed_date', { mode: 'date' }),
+
+  // CLAIMS_COMPLIANCE §4a inputs. NULLABLE by design: the columns are added and populated
+  // before anything reads them, so an un-backfilled row is a valid intermediate state rather
+  // than a deploy-breaking one. NOTHING IN scoring-engine/ READS THESE YET — §4a's tier
+  // re-derivation is Part Two. Until then `evidence_tier` above is still the 2026-07-20
+  // founder-judgment value and these two columns are recorded, tested, and otherwise inert.
+  outcomeProximity: outcomeProximityEnum('outcome_proximity'),
+  directionOfEvidence: evidenceDirectionEnum('direction_of_evidence'),
 });
 
 // =============================================================================

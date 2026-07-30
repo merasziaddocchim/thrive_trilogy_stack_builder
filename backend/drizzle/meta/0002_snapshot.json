@@ -1,6 +1,6 @@
 {
-  "id": "14d10e18-71d2-4ec3-9e4e-7f0d238c3aac",
-  "prevId": "00000000-0000-4000-8000-000000000000",
+  "id": "6801f175-95a9-49a9-90e1-5993b03dc1ba",
+  "prevId": "14d10e18-71d2-4ec3-9e4e-7f0d238c3aac",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -488,6 +488,20 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "outcome_proximity": {
+          "name": "outcome_proximity",
+          "type": "outcome_proximity",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "direction_of_evidence": {
+          "name": "direction_of_evidence",
+          "type": "evidence_direction",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -895,6 +909,16 @@
         "negative"
       ]
     },
+    "public.evidence_direction": {
+      "name": "evidence_direction",
+      "schema": "public",
+      "values": [
+        "positive",
+        "null_no_effect",
+        "negative",
+        "mixed"
+      ]
+    },
     "public.evidence_tier": {
       "name": "evidence_tier",
       "schema": "public",
@@ -941,6 +965,15 @@
         "tier_1_high_impact",
         "tier_2_peer_reviewed",
         "tier_3_preprint_or_low_impact"
+      ]
+    },
+    "public.outcome_proximity": {
+      "name": "outcome_proximity",
+      "schema": "public",
+      "values": [
+        "clinical_outcome",
+        "surrogate_biomarker",
+        "performance_or_self_report"
       ]
     },
     "public.population_match": {

@@ -153,7 +153,7 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
       'Yoshino J, et al. Resveratrol supplementation does not improve metabolic function in nonobese women with normal glucose tolerance. Cell Metab. 2012;16(5):658-664.',
     doiOrUrl: 'https://pubmed.ncbi.nlm.nih.gov/23102619/',
     studyType: 'RCT',
-    sampleSize: null,
+    sampleSize: 29, // Founder-resolved 2026-07-29: n=29 (was null).
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_1_high_impact',
     publicationDate: new Date('2012-11-07'),
@@ -195,7 +195,7 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
       'McRae MP. Betaine supplementation decreases plasma homocysteine in healthy adult participants: a meta-analysis. J Chiropr Med. 2013;12(1):20-25. doi:10.1016/j.jcm.2012.11.001 (5 RCTs, 2002-2010).',
     doiOrUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC3610948/',
     studyType: 'meta_analysis',
-    sampleSize: null,
+    sampleSize: 206, // Founder-resolved 2026-07-29: pooled n=206 across the 5 trials (was null).
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2013-02-01'),
@@ -210,7 +210,7 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
       'Hoffman JR, et al. Effect of betaine supplementation on power performance and fatigue. J Int Soc Sports Nutr. 2009;6:7.',
     doiOrUrl: 'https://doi.org/10.1186/1550-2783-6-7',
     studyType: 'RCT',
-    sampleSize: null,
+    sampleSize: 24, // Founder-resolved 2026-07-29: n=24 (was null).
     populationMatch: 'general_healthy_adult',
     journalTier: 'tier_2_peer_reviewed',
     publicationDate: new Date('2009-02-27'),
@@ -405,6 +405,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `Based on a single small human RCT (n=25) at 250 mg/day plus a single-dose safety/PK study; early-stage and not yet replicated at scale.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'surrogate_biomarker',
+    directionOfEvidence: 'positive',
   },
   {
     compoundId: C.nmn, goalTag: 'training_and_recovery',
@@ -414,6 +416,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `A single human RCT (n=48) reported improved aerobic capacity at 600-1200 mg/day over 6 weeks.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'performance_or_self_report',
+    directionOfEvidence: 'positive',
   },
   {
     compoundId: C.nr, goalTag: 'healthy_aging',
@@ -423,6 +427,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `A human RCT found 1000 mg/day well-tolerated and NAD+-elevating; a separate RCT at 2000 mg/day found no change in insulin sensitivity, so evidence is moderate and outcome-dependent.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'surrogate_biomarker',
+    directionOfEvidence: 'mixed',
   },
   {
     compoundId: C.resveratrol, goalTag: 'metabolic_health',
@@ -432,6 +438,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `Human trials are small and conflicting (a 150 mg/day trial reported metabolic changes; a 75 mg/day trial found none) and oral bioavailability is low; no dose-adequacy conclusion is drawn.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'surrogate_biomarker',
+    directionOfEvidence: 'mixed',
   },
   {
     compoundId: C.berberine, goalTag: 'metabolic_health',
@@ -441,6 +449,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `Supported by a meta-analysis of 27 randomised controlled trials plus a head-to-head human RCT; studied doses cluster around 900-1500 mg/day.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'clinical_outcome',
+    directionOfEvidence: 'positive',
   },
   {
     compoundId: C.tmg, goalTag: 'healthy_aging',
@@ -450,6 +460,8 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `A meta-analysis of randomised trials found betaine lowers plasma homocysteine (a methylation-metabolism marker); a surrogate endpoint, so rated moderate. Studied doses range 1500-6000 mg/day.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'surrogate_biomarker',
+    directionOfEvidence: 'positive',
   },
   {
     compoundId: C.tmg, goalTag: 'training_and_recovery',
@@ -459,5 +471,7 @@ export const SEED_SCORING_PARAMETERS: (typeof scoringParameters.$inferInsert)[] 
     evidenceTierRationale: `Human ergogenic data are limited and mixed (some strength measures improved, others unchanged) at ~2500 mg/day; preliminary.`,
     bioavailabilityAdjustmentFactor: 1.0,
     lastReviewedDate: REVIEWED_ON,
+    outcomeProximity: 'performance_or_self_report',
+    directionOfEvidence: 'positive',
   },
 ];
