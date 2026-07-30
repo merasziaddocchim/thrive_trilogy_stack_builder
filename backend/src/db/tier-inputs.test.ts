@@ -108,20 +108,18 @@ test('the three founder-resolved sample sizes are filled; Covarrubias 2021 stays
 });
 
 // ---- TRIPWIRE ---------------------------------------------------------------------------
-// *** THIS TEST IS EXPECTED TO FAIL IN PART TWO — DELIBERATELY. ***
+// PART TWO APPLIED (2026-07-30). This test previously asserted A x1 / B x4 / C x2 and was
+// commented as expected to fail here — it did, and this is the deliberate re-derivation of its
+// expected value rather than a weakening of it. §4a moved three parameters from B to C:
+// NR x healthy_aging, NMN x metabolic_health, NMN x training_and_recovery.
 //
-// Part One adds the §4a inputs and moves NO score, so the stored spread must still be exactly
-// what founder judgment produced on 2026-07-20: A x1 / B x4 / C x2.
-//
-// Part Two re-derives the tiers from §4a, which moves three parameters to C (NR x
-// healthy_aging, NMN x metabolic_health, NMN x training_and_recovery) and makes the spread
-// A x1 / B x1 / C x5. When that happens THIS TEST SHOULD FAIL, and the correct response is to
-// update these expected counts as part of that change — not to weaken the assertion. Its job
-// is to make an unintended tier change impossible to merge quietly in the meantime.
-test('TRIPWIRE: stored tier spread is still A x1 / B x4 / C x2 (expected to fail in Part Two)', () => {
+// It keeps doing its job in the new state: any further tier movement that is not itself a
+// considered §4a change now fails here. The stronger guarantee is the test below it, which
+// re-derives every tier from the rule rather than pinning a count.
+test('TRIPWIRE: stored tier spread is A x1 / B x1 / C x5 (was A x1 / B x4 / C x2 pre-§4a)', () => {
   const spread = SEED_SCORING_PARAMETERS.reduce<Record<string, number>>((acc, p) => {
     acc[p.evidenceTier as string] = (acc[p.evidenceTier as string] ?? 0) + 1;
     return acc;
   }, {});
-  assert.deepEqual(spread, { A_strong: 1, B_moderate: 4, C_limited: 2 });
+  assert.deepEqual(spread, { A_strong: 1, B_moderate: 1, C_limited: 5 });
 });

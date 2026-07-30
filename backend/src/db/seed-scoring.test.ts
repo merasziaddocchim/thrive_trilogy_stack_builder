@@ -66,9 +66,16 @@ test('real engine over seeded data: sub-scores are meaningfully differentiated',
   );
 
   const subs = result.subScores.map((s) => Math.round(s.subScore * 10) / 10);
-  // Expected from the formula: NMN 60, NR 80, Resveratrol 50, Berberine 100, TMG ~66.7.
+  // Expected from the formula, re-derived 2026-07-30 when §4a Part Two re-tiered the data:
+  //   NMN 60 (unchanged), NR 80 -> 60, Resveratrol 50 (unchanged), Berberine 100 (unchanged),
+  //   TMG ~66.7 (unchanged). Only NR moved: it was ceiling-limited at Tier B (80) with dose
+  //   appropriateness of 100, so dropping to Tier C drops the sub-score with it. NMN did NOT
+  //   move — it was already dose-limited at 60 under an 80 ceiling, so a 60 ceiling changes
+  //   nothing. Composite SEI 72 -> 66.
   assert.equal(subs.length, 5);
   const distinct = new Set(subs);
+  // 4, not 5: NMN and NR now coincide at 60 by different routes (NMN dose-limited, NR
+  // ceiling-limited). Still differentiated enough to prove both mechanisms bite.
   assert.ok(distinct.size >= 4, `expected differentiated sub-scores, got ${[...subs].join(', ')}`);
 
   // Berberine (well dosed, Tier A) should top the stack; the overdosed Tier-C resveratrol
@@ -77,11 +84,20 @@ test('real engine over seeded data: sub-scores are meaningfully differentiated',
   const berberine = byName.get('Berberine')!;
   const resveratrol = byName.get('Resveratrol')!;
   const nmn = byName.get('NMN (Nicotinamide Mononucleotide)')!;
+  const nr = byName.get('NR (Nicotinamide Riboside)')!;
+  const tmg = byName.get('TMG (Trimethylglycine)')!;
   assert.ok(berberine > resveratrol, 'Berberine (Tier A, in range) should outscore overdosed Tier-C resveratrol');
   assert.ok(berberine > nmn, 'Berberine should outscore underdosed NMN');
-  assert.equal(berberine, 100);
-  assert.equal(resveratrol, 50);
-  assert.equal(nmn, 60);
+  assert.equal(berberine, 100); // unchanged by §4a
+  assert.equal(resveratrol, 50); // unchanged by §4a
+  assert.equal(nmn, 60); // unchanged by §4a — dose-limited, see the note above
+  assert.equal(nr, 60); // WAS 80 — the one sub-score §4a moved
+  assert.equal(Math.round(tmg * 10) / 10, 66.7); // unchanged by §4a
+  // Pinned so the dollar-weighted composite cannot drift unnoticed either.
+  assert.equal(result.compositeScore, 66); // WAS 72
+  // Waste is a function of dose appropriateness and spend, never of tier — so it must NOT move.
+  assert.equal(result.waste.annualLow, 216);
+  assert.equal(result.waste.annualHigh, 360);
 });
 
 test('seeded scoring parameters all carry an evidence tier and non-empty sources (CLAIMS §4)', () => {
