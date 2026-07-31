@@ -106,7 +106,17 @@ test('report categorizes: Tier C Resveratrol (no range) → Stop, hedged, no dos
   const { report } = await assembleAssessment(withSpend, provider);
   const resv = report.stop.find((s) => s.compound === 'Resveratrol');
   assert.ok(resv);
-  assert.match(resv.reason, /Preliminary, non-human research/);
+  // Wording replaced 2026-07-31 (founder-approved). This line previously matched
+  // /Preliminary, non-human research/ — withdrawn because it was false (Resveratrol's two
+  // contributing sources are human RCTs) and because "Preliminary" is Tier D's public label
+  // on a Tier C row. Expected value re-derived to what the engine now renders, not relaxed.
+  assert.match(resv.reason, /has not been independently replicated/);
+  assert.match(resv.reason, /an optimal dose has not been established/);
+  // The properties this test's name actually claims, now asserted directly rather than by
+  // proxy through one specific sentence: hedged, no dose verdict, no tier label, not non-human.
+  assert.doesNotMatch(resv.reason, /\b(strong|moderate|limited|preliminary)\b/i);
+  assert.doesNotMatch(resv.reason, /non-human/i);
+  assert.doesNotMatch(resv.reason, /\b(below|above|within) the range\b/i);
 });
 
 test('every report claim object carries evidence_tier and non-empty source_ids (CLAIMS §4)', async () => {

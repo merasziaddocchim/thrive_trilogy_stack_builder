@@ -43,12 +43,28 @@ export function withinRangeNote(params: {
   );
 }
 
-/** Dose language for Tier C/D — heavily hedged, NO dose-adequacy verdict (CLAIMS §4/§9). */
-export function preliminaryDoseNote(compound: string, amount?: number, unit?: string): string {
-  const around = amount != null ? ` around ${amount}${unit ? ' ' + unit : ''}` : '';
+/**
+ * Dose language for Tier C/D — heavily hedged, NO dose-adequacy verdict (CLAIMS §4/§9).
+ *
+ * Wording replaced 2026-07-31 (founder-approved). The previous sentence began "Preliminary,
+ * non-human research on X..." and was false on every parameter it fired for: under §4a, Tier C
+ * means the human evidence is UNREPLICATED, explicitly not that it is animal-only — §4a says so
+ * in terms ("A Tier C rating does NOT mean the evidence is animal-only or poor quality"). Every
+ * C_limited parameter in batch 1 is backed by human controlled trials. It also rendered
+ * "Preliminary", Tier D's public label (CLAIMS §4), on Tier C rows.
+ *
+ * `amount` is REQUIRED: the approved wording has no variant for a missing dose, and the only
+ * caller reaches this after the scoring gate, which drops any item whose labelDoseMg is null.
+ * Typing it as required means "doses around undefined mg" cannot be constructed.
+ *
+ * `_unit` is retained so the existing call site is untouched, but is deliberately unused: the
+ * approved wording fixes the unit as mg, which is correct by construction because `labelDoseMg`
+ * has already been normalised to milligrams by toMg() before it reaches here.
+ */
+export function preliminaryDoseNote(compound: string, amount: number, _unit?: string): string {
   return (
-    `Preliminary, non-human research on ${compound} has used doses${around}. ` +
-    `Human clinical data on optimal dosing is not yet available.`
+    `Studies of ${compound} have used doses around ${amount} mg. ` +
+    `That evidence has not been independently replicated, so an optimal dose has not been established.`
   );
 }
 
