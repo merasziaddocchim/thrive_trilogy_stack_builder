@@ -43,6 +43,7 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     deliveryFormat: 'sublingual',
     monthlyPrice: 45,
     confidence: 'high',
+    doseState: 'explicit',
   },
   {
     clientId: 'x2',
@@ -53,6 +54,7 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     deliveryFormat: 'standard_capsule',
     monthlyPrice: null,
     confidence: 'high',
+    doseState: 'explicit',
   },
   {
     clientId: 'x3',
@@ -64,7 +66,11 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     dose: null,
     deliveryFormat: 'liposomal',
     monthlyPrice: null,
-    confidence: 'low',
+    // Recognized compound, missing dose — two SEPARATE facts now (§4b). "1 scoop" is a
+    // count, not a dose, and not knowing the dose says nothing about the match, so this
+    // row is no longer demoted to 'low'.
+    confidence: 'high',
+    doseState: 'missing',
   },
   {
     clientId: 'x4',
@@ -75,6 +81,9 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     deliveryFormat: 'standard_capsule',
     monthlyPrice: null,
     confidence: 'high',
+    // "TMG 1000" — a bare number resolved through TMG's stored default unit. The Confirm
+    // screen must disclose the inference and keep it editable (§4b).
+    doseState: 'assumed',
   },
   {
     clientId: 'x5',
@@ -85,6 +94,7 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     deliveryFormat: 'standard_capsule',
     monthlyPrice: null,
     confidence: 'high',
+    doseState: 'explicit',
   },
   {
     clientId: 'x6',
@@ -94,7 +104,8 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     dose: null,
     deliveryFormat: null,
     monthlyPrice: null,
-    confidence: 'low',
+    confidence: 'high',
+    doseState: 'missing',
   },
   {
     clientId: 'x7',
@@ -107,6 +118,7 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
     deliveryFormat: null,
     monthlyPrice: null,
     confidence: 'unmatched',
+    doseState: 'missing',
   },
 ];
 
@@ -115,12 +127,12 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
 export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
   sufficient_for_scoring: true,
   recognized_compounds: [
-    { compound_id: 'cmp_nmn', canonical_name: 'NMN (Nicotinamide Mononucleotide)', evidence_tier: 'B' },
-    { compound_id: 'cmp_nr', canonical_name: 'NR (Nicotinamide Riboside)', evidence_tier: 'B' },
-    { compound_id: 'cmp_resveratrol', canonical_name: 'Resveratrol', evidence_tier: 'C' },
-    { compound_id: 'cmp_tmg', canonical_name: 'TMG (Trimethylglycine)', evidence_tier: 'B' },
-    { compound_id: 'cmp_berberine', canonical_name: 'Berberine', evidence_tier: 'A' },
-    { compound_id: 'cmp_spermidine', canonical_name: 'Spermidine', evidence_tier: 'C' },
+    { compound_id: 'cmp_nmn', canonical_name: 'NMN (Nicotinamide Mononucleotide)', evidence_tier: 'B', outcome_mismatch_note: null },
+    { compound_id: 'cmp_nr', canonical_name: 'NR (Nicotinamide Riboside)', evidence_tier: 'B', outcome_mismatch_note: null },
+    { compound_id: 'cmp_resveratrol', canonical_name: 'Resveratrol', evidence_tier: 'C', outcome_mismatch_note: null },
+    { compound_id: 'cmp_tmg', canonical_name: 'TMG (Trimethylglycine)', evidence_tier: 'B', outcome_mismatch_note: null },
+    { compound_id: 'cmp_berberine', canonical_name: 'Berberine', evidence_tier: 'A', outcome_mismatch_note: null },
+    { compound_id: 'cmp_spermidine', canonical_name: 'Spermidine', evidence_tier: 'C', outcome_mismatch_note: null },
   ],
   evidence_tier_summary: { A: 1, B: 3, C: 2, D: 0 },
   overlap_flags: [
@@ -135,6 +147,7 @@ export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
     {
       compound: 'NMN',
       evidence_tier: 'B',
+      outcome_mismatch_note: null,
       user_dose: { amount: 250, unit: 'mg' },
       studied_range: { low: 300, high: 500, unit: 'mg' },
       percent_delta: -17, // below studied range
@@ -143,6 +156,7 @@ export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
     {
       compound: 'Berberine',
       evidence_tier: 'A',
+      outcome_mismatch_note: null,
       user_dose: { amount: 1000, unit: 'mg' },
       studied_range: { low: 900, high: 1500, unit: 'mg' },
       percent_delta: 0, // within range
@@ -157,10 +171,10 @@ export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
 export const FIXTURE_PREVIEW_STATE_B: PreviewResponse = {
   sufficient_for_scoring: false,
   recognized_compounds: [
-    { compound_id: 'cmp_nmn', canonical_name: 'NMN (Nicotinamide Mononucleotide)', evidence_tier: 'B' },
-    { compound_id: 'cmp_resveratrol', canonical_name: 'Resveratrol', evidence_tier: 'C' },
-    { compound_id: 'cmp_tmg', canonical_name: 'TMG (Trimethylglycine)', evidence_tier: 'B' },
-    { compound_id: 'cmp_spermidine', canonical_name: 'Spermidine', evidence_tier: 'C' },
+    { compound_id: 'cmp_nmn', canonical_name: 'NMN (Nicotinamide Mononucleotide)', evidence_tier: 'B', outcome_mismatch_note: null },
+    { compound_id: 'cmp_resveratrol', canonical_name: 'Resveratrol', evidence_tier: 'C', outcome_mismatch_note: null },
+    { compound_id: 'cmp_tmg', canonical_name: 'TMG (Trimethylglycine)', evidence_tier: 'B', outcome_mismatch_note: null },
+    { compound_id: 'cmp_spermidine', canonical_name: 'Spermidine', evidence_tier: 'C', outcome_mismatch_note: null },
   ],
   evidence_tier_summary: { A: 0, B: 2, C: 2, D: 0 },
   overlap_flags: [],
@@ -182,6 +196,7 @@ export const FIXTURE_REPORT: ReportResponse = {
         "You're taking 2 products that each contain a NAD+ precursor (NMN and NR). Combined, you're spending approximately $72/month on overlapping sources. NR and NMN feed the same salvage pathway — running both is redundant spend.",
       est_monthly_waste: 30,
       evidence_tier: 'B',
+      outcome_mismatch_note: null,
       tier_rationale: 'A single human RCT supports NR at this dose range.',
       last_reviewed: REV_DATE,
       reviewer_name: REV,
@@ -194,6 +209,7 @@ export const FIXTURE_REPORT: ReportResponse = {
         'Preliminary research on resveratrol has used a range of doses; human clinical data on optimal dosing is not yet available. At a liposomal "1 scoop" serving, the delivered dose could not be interpreted, so its contribution to your stack cannot be verified.',
       est_monthly_waste: 18,
       evidence_tier: 'C',
+      outcome_mismatch_note: null,
       tier_rationale: 'Observational and animal data with mechanistic plausibility; not yet confirmed in human trials.',
       last_reviewed: REV_DATE,
       reviewer_name: REV,
@@ -208,6 +224,7 @@ export const FIXTURE_REPORT: ReportResponse = {
         'Your current intake of 1,000 mg/day sits within the range used in human research (900–1,500 mg). Evidence is strong for this compound.',
       monthly_cost: 22,
       evidence_tier: 'A',
+      outcome_mismatch_note: null,
       tier_rationale: 'Supported by a meta-analysis of 27 randomized controlled human trials.',
       last_reviewed: REV_DATE,
       reviewer_name: REV,
@@ -220,6 +237,7 @@ export const FIXTURE_REPORT: ReportResponse = {
         'Your intake of 1,000 mg is within the studied range. TMG supports methylation, relevant if you also take NMN.',
       monthly_cost: 9,
       evidence_tier: 'B',
+      outcome_mismatch_note: null,
       tier_rationale: 'A clinical trial found effects on homocysteine at this dose range.',
       last_reviewed: REV_DATE,
       reviewer_name: REV,

@@ -10,6 +10,7 @@
 //
 // Compliance: nothing here emits user-facing claim text; it only produces structured data.
 import type { Extractor, RawCandidate, DeliveryFormat } from './types.js';
+import { normalizeUnit } from './units.js';
 
 const DELIVERY_KEYWORDS: Array<[RegExp, DeliveryFormat]> = [
   [/liposom/i, 'liposomal'],
@@ -21,6 +22,19 @@ const DELIVERY_KEYWORDS: Array<[RegExp, DeliveryFormat]> = [
 
 // A dose like "250mg", "1 g", "500 mcg", "5000 IU". First match on the line wins.
 const DOSE_RE = /(\d+(?:\.\d+)?)\s*(mg|mcg|µg|g|iu)\b/i;
+// A dose with NO unit — "NMN 250", the single most common way users type a stack. Captured as
+// its own state (`unitlessAmount`) rather than folded into `dose`, because the extractor runs
+// BEFORE compound matching and therefore cannot know which unit applies: that is resolved in
+// parseIntake from the matched compound's `default_unit` (CLAIMS_COMPLIANCE §4b).
+//
+// `\b` on both sides means a digit welded to letters is NOT a bare dose — "D3", "B12", "CoQ10"
+// have no word boundary between the letter and the digit, so they are left alone.
+const BARE_NUMBER_RE = /\b(\d+(?:\.\d+)?)\b/;
+// A COUNT of dosage forms — "1 scoop", "2 capsules", "3 softgels". A count is not a dose: how
+// much is in a scoop is exactly what we don't know. Same nouns the COMMENTARY_WORDS stripper
+// below already treats as non-name tokens.
+const COUNT_RE =
+  /\b\d+(?:\.\d+)?\s*(?:scoops?|caps?|capsules?|tabs?|tablets?|softgels?|pills?|servings?|drops?|sprays?|pumps?|gummies|gummy|sachets?|sticks?)\b/gi;
 // A "2x/day" or "twice a day" multiplier, so "500mg 2x day" resolves to a daily 1000mg.
 const TWICE_RE = /(?:2x|2 x|twice)\b/i;
 const THRICE_RE = /(?:3x|3 x|three times|thrice)\b/i;
@@ -129,15 +143,46 @@ export class HeuristicExtractor implements Extractor {
       .filter((t) => t.length >= 2 && !COMMENTARY_WORDS.has(t));
   }
 
+  /** Apply a "2x/day" or "3x/day" multiplier so a per-serving figure becomes a daily one. */
+  private perDay(amount: number, line: string): number {
+    if (TWICE_RE.test(line)) return amount * 2;
+    if (THRICE_RE.test(line)) return amount * 3;
+    return amount;
+  }
+
+  /**
+   * The unitless quantity on a line, or null. Only consulted when DOSE_RE found nothing, so a
+   * line that states its unit never reaches here.
+   *
+   * Everything that is a number but NOT a dose is removed first, because each of these would
+   * otherwise be resolved into a dose that the user never gave:
+   *   • a price      — "$45"       would become 45 mg
+   *   • a frequency  — "2x/day"    would become 2 mg
+   *   • a COUNT      — "1 scoop"   would become 1 mg
+   * The count case is the one that matters most: a serving count is the commonest way to write
+   * a dose you don't know ("1 scoop", "2 capsules"), so reading it as a quantity would turn
+   * "I don't know my dose" into a confident, and absurd, 1 mg.
+   */
+  private bareAmount(line: string): number | null {
+    const stripped = line
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/\$\s?\d+(?:\.\d+)?(\s*\/?\s*mo(?:nth)?)?/gi, ' ')
+      .replace(/\b\d+\s*x\b|\btwice\b|\bthree times\b|\bthrice\b/gi, ' ')
+      .replace(COUNT_RE, ' ');
+    const m = stripped.match(BARE_NUMBER_RE);
+    return m ? Number(m[1]) : null;
+  }
+
   private parseLine(line: string): RawCandidate {
     let dose: RawCandidate['dose'] = null;
+    let unitlessAmount: number | null = null;
     const doseMatch = line.match(DOSE_RE);
     if (doseMatch) {
-      let amount = Number(doseMatch[1]);
       const unit = doseMatch[2].toLowerCase().replace('µg', 'mcg');
-      if (TWICE_RE.test(line)) amount *= 2;
-      else if (THRICE_RE.test(line)) amount *= 3;
-      dose = { amount, unit };
+      dose = { amount: this.perDay(Number(doseMatch[1]), line), unit };
+    } else {
+      const bare = this.bareAmount(line);
+      if (bare != null) unitlessAmount = this.perDay(bare, line);
     }
 
     let monthlyPrice: number | null = null;
@@ -154,7 +199,7 @@ export class HeuristicExtractor implements Extractor {
 
     // Name guess: strip parentheticals (brand/format notes), dose, price, and frequency
     // fragments, leaving roughly the compound name.
-    const nameGuess = line
+    let nameGuess = line
       .replace(/\([^)]*\)/g, ' ')
       .replace(DOSE_RE, ' ')
       .replace(/\$\s?\d+(?:\.\d+)?(\s*\/?\s*mo(?:nth)?)?/gi, ' ')
@@ -163,7 +208,15 @@ export class HeuristicExtractor implements Extractor {
       .replace(/\s+/g, ' ')
       .trim();
 
-    return { rawText: line, nameGuess, dose, deliveryFormat, monthlyPrice };
+    // A bare number we took as a quantity must not also be read as part of the name: without
+    // this, "NMN 250" is matched as the phrase "NMN 250". It matched anyway, but only because
+    // similarity() rewards token containment — leaving the digits in makes the match depend on
+    // that, and removing them is what makes it a match on the name itself.
+    if (unitlessAmount != null) {
+      nameGuess = nameGuess.replace(BARE_NUMBER_RE, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    return { rawText: line, nameGuess, dose, unitlessAmount, deliveryFormat, monthlyPrice };
   }
 }
 
@@ -173,8 +226,11 @@ export type Complete = (prompt: string) => Promise<string>;
 export const EXTRACTION_PROMPT_PREFIX = [
   'Extract each supplement or compound the user lists from the text below.',
   'Return ONLY a JSON array; each element: {"rawText","nameGuess","dose":{"amount","unit"}|null,',
+  '"unitlessAmount":number|null,',
   '"deliveryFormat":("standard_capsule"|"liposomal"|"sublingual"|"powder"|"injectable")|null,',
-  '"monthlyPrice":number|null}. Do not infer values that are not present. Text:',
+  '"monthlyPrice":number|null}. Do not infer values that are not present.',
+  'If the user gave a number with no unit, put it in unitlessAmount and set dose to null.',
+  'Never guess a unit. Text:',
 ].join(' ');
 
 export class LlmExtractor implements Extractor {
@@ -203,13 +259,20 @@ function extractJsonArray(s: string): string {
 }
 
 function normalizeCandidate(c: RawCandidate): RawCandidate {
+  // An amount whose unit the model omitted or invented is NOT a dose. This used to read
+  // `String(c.dose.unit ?? 'mg')` — a global mg fallback in the parser, the exact thing
+  // CLAIMS_COMPLIANCE §4b forbids, and unreviewable because it happened inside a JSON
+  // normalizer. Such an amount is now demoted to `unitlessAmount`, where it can only become a
+  // dose via the matched compound's stored default_unit, and only with the inference disclosed.
+  const amount = typeof c.dose?.amount === 'number' ? c.dose.amount : null;
+  const unit = normalizeUnit(c.dose?.unit);
+  const bare = typeof c.unitlessAmount === 'number' ? c.unitlessAmount : null;
+
   return {
     rawText: String(c.rawText ?? ''),
     nameGuess: String(c.nameGuess ?? ''),
-    dose:
-      c.dose && typeof c.dose.amount === 'number'
-        ? { amount: c.dose.amount, unit: String(c.dose.unit ?? 'mg') }
-        : null,
+    dose: amount != null && unit != null ? { amount, unit } : null,
+    unitlessAmount: amount != null && unit == null ? amount : bare,
     deliveryFormat: c.deliveryFormat ?? null,
     monthlyPrice: typeof c.monthlyPrice === 'number' ? c.monthlyPrice : null,
   };

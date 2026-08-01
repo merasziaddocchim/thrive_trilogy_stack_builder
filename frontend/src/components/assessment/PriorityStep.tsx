@@ -4,17 +4,7 @@
 import { StepShell } from './StepShell';
 import { ChoiceButton } from './Choice';
 import type { AuditState } from './audit-state';
-
-const OPTIONS = [
-  'Healthy aging',
-  'Daily energy',
-  'Cognitive performance',
-  'Metabolic health',
-  'Training and recovery',
-  'Sleep quality',
-  'Simplifying my stack',
-  'Not sure yet',
-];
+import { PRIORITY_OPTIONS } from '@/lib/goals';
 
 export function PriorityStep({
   state,
@@ -37,9 +27,15 @@ export function PriorityStep({
       continueDisabled={!state.priority}
     >
       <div className="space-y-2.5">
-        {OPTIONS.map((o) => (
-          <ChoiceButton key={o} selected={state.priority === o} onClick={() => patch({ priority: o })}>
-            {o}
+        {/* The label is what the user reads; the tag travels with it so the payload can send
+            the value the database actually matches on. Display order is unchanged. */}
+        {PRIORITY_OPTIONS.map((o) => (
+          <ChoiceButton
+            key={o.label}
+            selected={state.priority?.label === o.label}
+            onClick={() => patch({ priority: { label: o.label, tag: o.tag } })}
+          >
+            {o.label}
           </ChoiceButton>
         ))}
       </div>

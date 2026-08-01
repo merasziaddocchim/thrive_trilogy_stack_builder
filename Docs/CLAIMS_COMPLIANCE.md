@@ -216,6 +216,56 @@ averaged away by findings that did not look for harm.
 
 ---
 
+## 4b. Unit inference disclosure (originated 2026-07-31)
+
+The intake parser may infer a dose unit when a user enters a bare number
+following a recognized compound. It may do so only from a default unit stored
+on that compound's record, derived from the human-reviewed evidence database,
+and never from a global constant, a product label, a brand catalogue, or any
+affiliate source.
+
+Where no default unit is stored for the compound, no unit is inferred and the
+dose remains unparsed.
+
+Every inferred unit must be displayed to the user on the Confirm screen,
+stating the value as entered and the unit applied, and must remain editable
+before scoring. An inferred unit that is not shown to the user must not be
+scored.
+
+Compound-match confidence and dose completeness are separate states and must
+be presented separately. The absence of a dose is not evidence of an uncertain
+compound match and must not be rendered as one.
+
+---
+
+## 4c. Outcome matching disclosure (originated 2026-08-01)
+
+A user's stated priority goal selects which compound-outcome scoring parameter
+is used to score each item in their stack. A compound may carry parameters for
+several outcomes, or for none matching the user's stated priority.
+
+Where a parameter exists for the user's stated priority, it is used and no
+disclosure is required.
+
+Where no parameter exists for the user's stated priority, the parameter with
+the highest Evidence Tier is used, ties broken by outcome name in ascending
+alphabetical order, so that the selection is deterministic and reproducible.
+The selection must never depend on database row order.
+
+Any finding scored against an outcome other than the user's stated priority
+must say so on the surface where it appears, naming both the outcome the user
+chose and the outcome the finding was measured against. A finding presented
+without that statement asserts a relevance it does not have: an Evidence Tier
+earned for metabolic health is not evidence for training and recovery, and the
+dose range attached to that parameter is the range studied for that outcome,
+not for the user's.
+
+Priority selection determines both the Evidence Tier shown and the dose range
+used to compute dosing accuracy. Both derive from the same parameter, and this
+disclosure covers both.
+
+---
+
 ## 5. DSHEA / FDA structure-function boundary
 
 Source: 21 U.S.C. § 343(r)(6); 21 CFR 101.93(f)–(g); FDA Small Entity Compliance Guide on Structure/Function Claims.

@@ -14,7 +14,12 @@ import { Button, Card, Eyebrow, FixtureTag } from '@/components/ui/primitives';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 import { TierBadge } from '@/components/ui/EvidenceTier';
 import { IconLayers, IconAlert, IconArrowRight } from '@/components/ui/Icon';
-import { TERMS } from '@/lib/constants';
+import {
+  TERMS,
+  PREVIEW_DOSES_MISSING_HEADING,
+  PREVIEW_DOSES_MISSING_BODY,
+  PREVIEW_DOSES_MISSING_BUTTON,
+} from '@/lib/constants';
 
 const TIER_ORDER: EvidenceTier[] = ['A', 'B', 'C', 'D'];
 
@@ -104,6 +109,9 @@ export function PreviewStep({
   }
 
   const stateA = data.sufficient_for_scoring;
+  // Which input is actually missing. Read from the state the user has in hand, since the
+  // Preview response reports only that scoring was blocked, not by what.
+  const dosesMissing = state.extracted.some((i) => (i.canonicalName || i.compoundId) && !i.dose);
 
   return (
     <main className="mx-auto max-w-xl px-4 py-8 sm:py-12">
@@ -152,10 +160,17 @@ export function PreviewStep({
           {data.recognized_compounds.map((c) => (
             <li
               key={c.compound_id}
-              className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3"
+              className="rounded-lg border border-border bg-surface px-4 py-3"
             >
-              <span className="font-600 text-headline">{c.canonical_name}</span>
-              <TierBadge tier={c.evidence_tier} />
+              <div className="flex items-center justify-between">
+                <span className="font-600 text-headline">{c.canonical_name}</span>
+                <TierBadge tier={c.evidence_tier} />
+              </div>
+              {/* CLAIMS_COMPLIANCE §4c: a tier established for a different outcome must say so
+                  on the surface where it appears. Backend-supplied; null when it matched. */}
+              {c.outcome_mismatch_note && (
+                <p className="mt-1.5 text-xs text-muted">{c.outcome_mismatch_note}</p>
+              )}
             </li>
           ))}
         </ul>
@@ -200,6 +215,9 @@ export function PreviewStep({
                   <span className="font-700 text-headline">{d.compound}</span>
                   <TierBadge tier={d.evidence_tier} />
                 </div>
+                {d.outcome_mismatch_note && (
+                  <p className="mt-1.5 text-xs text-muted">{d.outcome_mismatch_note}</p>
+                )}
                 <p className="mt-1 text-sm text-body">
                   {d.percent_delta === 0
                     ? `Your current intake of ${d.user_dose.amount} ${d.user_dose.unit} is within the range used in human research (${d.studied_range.low}–${d.studied_range.high} ${d.studied_range.unit}), based on ${d.source_short_name}.`
@@ -211,8 +229,23 @@ export function PreviewStep({
         </section>
       )}
 
-      {/* ---------- STATE B: insufficient — nudge, NOT a fabricated number ---------- */}
-      {!stateA && (
+      {/* ---------- STATE B: insufficient — nudge, NOT a fabricated number ----------
+          The card must name the input that is ACTUALLY missing. A user who had already chosen
+          "$120–$250 / month" two screens earlier was told to "Add monthly spend", because the
+          single State-B card was worded for spend regardless of why scoring was blocked. Doses
+          are checked first: an item with no dose cannot be scored at any spend. */}
+      {!stateA && dosesMissing && (
+        <Card className="mt-8 border-accent bg-accent-soft">
+          <p className="font-700 text-headline">{PREVIEW_DOSES_MISSING_HEADING}</p>
+          <p className="mt-2 text-sm text-body">{PREVIEW_DOSES_MISSING_BODY}</p>
+          <Button onClick={onBack} variant="secondary" className="mt-4">
+            {PREVIEW_DOSES_MISSING_BUTTON}
+          </Button>
+        </Card>
+      )}
+
+      {/* Unchanged spend-worded card. Fires ONLY when monthly spend is genuinely absent. */}
+      {!stateA && !dosesMissing && (
         <Card className="mt-8 border-accent bg-accent-soft">
           <p className="font-700 text-headline">
             Add monthly spend to unlock your {TERMS.sei} and {TERMS.annualWaste}

@@ -24,7 +24,9 @@ import {
   redundancyFlag,
   recognizedSummary,
   tierDisclosure,
+  outcomeMismatchNote,
 } from './claim-templates.js';
+import * as templates from './claim-templates.js';
 import { SEED_SCORING_PARAMETERS, SEED_SOURCES, SEED_COMPOUNDS } from '../db/seed-data.js';
 
 /**
@@ -62,6 +64,15 @@ const RENDERED: Array<{ name: string; text: string }> = [
   },
   { name: 'recognizedSummary', text: recognizedSummary(3) },
   {
+    name: 'outcomeMismatchNote',
+    // Rendered in its firing state; its non-firing state is asserted separately below.
+    text: outcomeMismatchNote({
+      compound: 'Berberine',
+      chosenGoalTag: 'training_and_recovery',
+      selectedGoalTag: 'metabolic_health',
+    }) as string,
+  },
+  {
     name: 'tierDisclosure',
     // rationale is DATA, not template text — audited separately in db/tier-inputs.test.ts.
     text: tierDisclosure({
@@ -74,8 +85,17 @@ const RENDERED: Array<{ name: string; text: string }> = [
 ];
 
 test('every exported template is covered by these guards', () => {
-  // Guards are only worth what they cover. If a template is added, render it above.
-  assert.equal(RENDERED.length, 6);
+  // Guards are only worth what they cover. This used to assert `RENDERED.length === 6` — a
+  // count of the array against itself, which cannot notice a NEW template being added. It is
+  // now derived from the module's actual exports, so an unguarded template fails here.
+  // `tierLetter` is excluded by name: it returns a letter, not a sentence.
+  const NOT_A_TEMPLATE = new Set(['tierLetter']);
+  const exported = Object.entries(templates)
+    .filter(([name, v]) => typeof v === 'function' && !NOT_A_TEMPLATE.has(name))
+    .map(([name]) => name)
+    .sort();
+  const covered = RENDERED.map((r) => r.name).sort();
+  assert.deepEqual(covered, exported, 'every exported template must be rendered in RENDERED');
   for (const r of RENDERED) assert.ok(r.text.length > 0, `${r.name} rendered empty`);
 });
 
@@ -197,4 +217,42 @@ test('GUARD 2 catches the exact sentence that shipped, and all 5 rows it fired o
       `${p.compoundId}|${p.goalTag} should have at least one human source`,
     );
   }
+});
+
+// ---- §4b: the outcome-mismatch disclosure fires exactly when it should --------------------
+test('the outcome-mismatch disclosure names both outcomes, as display labels', () => {
+  const note = outcomeMismatchNote({
+    compound: 'Berberine',
+    chosenGoalTag: 'training_and_recovery',
+    selectedGoalTag: 'metabolic_health',
+  });
+  assert.ok(note);
+  assert.match(note, /training and recovery/); // the outcome the user chose
+  assert.match(note, /metabolic health/); // the outcome it was measured against
+  assert.match(note, /Berberine/);
+  // §4b requires display labels. A raw tag leaking through would read as a database identifier.
+  assert.doesNotMatch(note, /_/);
+});
+
+test('ANTI-VACUITY: the disclosure stays ABSENT on an exact outcome match', () => {
+  // The guard above only means something if the sentence can also NOT render. A disclosure that
+  // always fires is noise, and worse, it would be false: claiming we have "no evidence for
+  // Berberine on metabolic health" on the very parameter established for metabolic health.
+  assert.equal(
+    outcomeMismatchNote({
+      compound: 'Berberine',
+      chosenGoalTag: 'metabolic_health',
+      selectedGoalTag: 'metabolic_health',
+    }),
+    null,
+  );
+  // No stated priority means there is nothing to mismatch against.
+  assert.equal(
+    outcomeMismatchNote({
+      compound: 'Berberine',
+      chosenGoalTag: null,
+      selectedGoalTag: 'metabolic_health',
+    }),
+    null,
+  );
 });

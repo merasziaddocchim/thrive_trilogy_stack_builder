@@ -168,6 +168,22 @@ export const compounds = pgTable('compounds', {
   category: compoundCategoryEnum('category').notNull(),
   // Mechanism-level only — never benefit-level (CLAIMS_COMPLIANCE.md §5).
   mechanismSummary: text('mechanism_summary'),
+
+  // The unit this compound is dosed in throughout the clinical literature, used to resolve a
+  // bare number a user types ("NMN 250") into a dose (CLAIMS_COMPLIANCE §4b). Derived from the
+  // human-reviewed evidence database ONLY — never from a product label, brand catalogue, or
+  // affiliate source, which §4b forbids outright.
+  //
+  // NULLABLE, AND THE NULL IS LOAD-BEARING: where no default unit is stored, NO unit is
+  // inferred and the dose stays unparsed. There is deliberately no global fallback constant.
+  // Batch 1 is entirely mg; batch 2 introduces IU- and mcg-dosed compounds, where assuming mg
+  // is a 1000x error, so "we don't know" must remain representable.
+  //
+  // `text`, not a pgEnum: the accepted set is validated in application code
+  // (intake-parser/units.ts) against the units the extractor can already parse, and a text
+  // column lets batch 2 add a unit without an ALTER TYPE migration. Mirrors the existing
+  // `user_lab_results.unit` column, which is also text.
+  defaultUnit: text('default_unit'),
 });
 
 export const doseRecords = pgTable('dose_records', {

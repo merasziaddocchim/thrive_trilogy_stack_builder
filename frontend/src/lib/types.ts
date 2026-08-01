@@ -1,6 +1,7 @@
 // Types mirroring the API contract in TECH_DOCS §6 (and the intake-parser plan in §1a).
 // The eventual real backend must satisfy these shapes so swapping the mock API for the
 // live one is a drop-in change, not a rebuild (prompt §10.7).
+import type { GoalTag } from './goals';
 
 export type EvidenceTier = 'A' | 'B' | 'C' | 'D';
 
@@ -9,6 +10,15 @@ export type EvidenceTier = 'A' | 'B' | 'C' | 'D';
 // fuzzy/semantic-matches against compounds.canonical_name / aliases. Each match
 // carries a confidence; low-confidence matches are surfaced for user confirmation.
 export type MatchConfidence = 'high' | 'low' | 'unmatched';
+
+/**
+ * How complete the dose is — INDEPENDENT of MatchConfidence (CLAIMS_COMPLIANCE §4b).
+ * Mirrors backend/src/intake-parser/types.ts.
+ *   explicit — the user supplied a unit.
+ *   assumed  — a bare number resolved via the compound's stored default unit. Must be shown.
+ *   missing  — no number, or no default unit available. Nothing is invented.
+ */
+export type DoseState = 'explicit' | 'assumed' | 'missing';
 
 export interface ExtractedItem {
   /** Client-side id for list editing; not a DB id. */
@@ -23,7 +33,10 @@ export interface ExtractedItem {
   deliveryFormat: DeliveryFormat | null;
   /** Approx price paid per month, if the user supplied it. */
   monthlyPrice: number | null;
+  /** Whether the compound was recognized. Says nothing about the dose. */
   confidence: MatchConfidence;
+  /** Whether the dose is complete. Says nothing about the match. */
+  doseState: DoseState;
   /** True when the user (not the extractor) created or edited this row. */
   userEdited?: boolean;
 }
@@ -45,7 +58,8 @@ export interface AssessmentPayload {
     monthly_price: number | null;
   }>;
   user_profile: {
-    priority_goal: string | null;
+    /** A canonical goal tag (lib/goals.ts) or null — NEVER a display label. */
+    priority_goal: GoalTag | null;
     routine: { diet: string | null; activity: string | null; sleep: string | null };
     monthly_spend: { low: number; high: number } | null;
     audit_focus: string | null;
@@ -58,6 +72,8 @@ export interface RecognizedCompound {
   compound_id: string;
   canonical_name: string;
   evidence_tier: EvidenceTier;
+  /** CLAIMS_COMPLIANCE §4c disclosure, or null when the outcome matched. */
+  outcome_mismatch_note: string | null;
 }
 
 export interface OverlapFlag {
@@ -91,6 +107,8 @@ export interface DoseComparison {
   studied_range: { low: number; high: number; unit: string };
   percent_delta: number; // signed; negative = below studied range
   source_short_name: string;
+  /** CLAIMS_COMPLIANCE §4c disclosure, or null when the outcome matched. */
+  outcome_mismatch_note: string | null;
 }
 
 // ---- GET /assessment/{id}/report (post email-capture) -----------------------
@@ -100,6 +118,8 @@ export interface EvidenceMeta {
   last_reviewed: string; // ISO date
   reviewer_name: string;
   source_ids: string[];
+  /** CLAIMS_COMPLIANCE §4c disclosure, or null when the outcome matched. */
+  outcome_mismatch_note: string | null;
 }
 
 // ---- Article cross-links (firewalled article-engine output) -----------------

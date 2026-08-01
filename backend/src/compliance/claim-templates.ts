@@ -3,6 +3,7 @@
 // API renders about a compound comes from one of these functions. Tier-appropriate hedging
 // is baked in (CLAIMS §4): Tier C/D never state a dose-adequacy verdict.
 import type { EvidenceTier } from '../db/schema.js';
+import { goalLabel } from '../db/goals.js';
 
 /** Public single-letter tier used in API responses and copy. */
 export type TierLetter = 'A' | 'B' | 'C' | 'D';
@@ -66,6 +67,27 @@ export function preliminaryDoseNote(compound: string, amount: number, _unit?: st
     `Studies of ${compound} have used doses around ${amount} mg. ` +
     `That evidence has not been independently replicated, so an optimal dose has not been established.`
   );
+}
+
+/**
+ * Outcome-mismatch disclosure (CLAIMS_COMPLIANCE §4b). Rendered on every surface that shows a
+ * finding scored against an outcome other than the one the user chose.
+ *
+ * Both outcomes render as DISPLAY LABELS via goalLabel(), never as raw goal_tags — §4b
+ * requires the sentence to name the outcomes as the user would recognize them, and
+ * "training_and_recovery" is not that.
+ *
+ * Returns null when the outcomes match, so the caller cannot accidentally render an empty or
+ * self-referential disclosure: "no evidence for X on healthy aging ... measured against healthy
+ * aging instead" would be false. `claim-templates.test.ts` pins that it stays absent.
+ */
+export function outcomeMismatchNote(params: {
+  compound: string;
+  chosenGoalTag: string | null;
+  selectedGoalTag: string;
+}): string | null {
+  if (params.chosenGoalTag == null || params.chosenGoalTag === params.selectedGoalTag) return null;
+  return `Our reviewed database has no evidence for ${params.compound} on ${goalLabel(params.chosenGoalTag)}. Its Evidence Tier and dose range below are measured against ${goalLabel(params.selectedGoalTag)} instead.`;
 }
 
 /** Redundancy flag (CLAIMS §9). */

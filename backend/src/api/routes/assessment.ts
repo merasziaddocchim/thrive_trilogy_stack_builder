@@ -4,6 +4,8 @@ import { createAssessmentSession, getAssessmentSession } from '../services/sessi
 import { assembleAssessment, type StoredStackItem } from '../services/assessment-service.js';
 import { dbEvidenceProvider } from '../services/repository.js';
 import { ClaimComplianceError } from '../../compliance/claim-guard.js';
+import { GOAL_TAGS, isGoalTag } from '../../db/goals.js';
+import { normalizeUnit } from '../../intake-parser/index.js';
 
 // API contract from TECH_DOCS §6. Zod validates request bodies (the repo's locked validator).
 export const assessmentRouter = Router();
@@ -27,18 +29,46 @@ const stackItemSchema = z.object({
 const assessmentSchema = z.object({
   stack_items: z.array(stackItemSchema),
   user_profile: z
-    .object({ priority_goal: z.string().nullable().optional() })
+    .object({
+      // A CANONICAL GOAL TAG (db/goals.ts) or null — never a display label. Validated rather
+      // than accepted-and-ignored: this field used to be `z.string()`, so the frontend's
+      // 'Healthy aging' was stored verbatim, never matched any `goal_tag`, and every user was
+      // silently scored against an arbitrary parameter row. An unknown value is now a 400.
+      //
+      // Null is legitimate and distinct from invalid: "Not sure yet" and "Simplifying my
+      // stack" are Priority-screen choices that name no outcome.
+      priority_goal: z
+        .string()
+        .refine(isGoalTag, {
+          message: `priority_goal must be one of: ${GOAL_TAGS.join(', ')}`,
+        })
+        .nullable()
+        .optional(),
+    })
     .partial()
     .optional(),
 });
 
-/** Normalize a dose to milligrams (the unit the scoring engine works in). */
-function toMg(dose: { amount: number; unit: string } | null | undefined): number | null {
+/**
+ * Normalize a dose to milligrams (the unit the scoring engine works in), or null when it
+ * cannot be expressed in milligrams.
+ *
+ * `iu` RETURNS NULL and the item goes to confirmation unscored. International Units are a
+ * measure of biological activity, not mass: the mg equivalent differs per substance (and per
+ * isomer), so there is no conversion to apply here. This previously fell through to
+ * `return dose.amount`, silently scoring "5000 IU" as 5000 mg — a claim about a dose the user
+ * never gave. An unconvertible dose is missing data, and missing data must stay missing.
+ *
+ * Anything else unrecognized is treated the same way, for the same reason: the old trailing
+ * `return dose.amount` made every unknown unit mean milligrams by default.
+ */
+export function toMg(dose: { amount: number; unit: string } | null | undefined): number | null {
   if (!dose) return null;
-  const u = dose.unit.toLowerCase();
+  const u = normalizeUnit(dose.unit);
+  if (u === 'mg') return dose.amount;
   if (u === 'g') return dose.amount * 1000;
-  if (u === 'mcg' || u === 'µg') return dose.amount / 1000;
-  return dose.amount; // mg or unknown → treat as mg
+  if (u === 'mcg') return dose.amount / 1000;
+  return null; // 'iu' or unrecognized → not expressible in mg; do not guess.
 }
 
 // POST /assessment -> { assessment_id }
@@ -56,7 +86,10 @@ assessmentRouter.post('/', async (req, res) => {
   try {
     const assessmentId = await createAssessmentSession({
       stackItems,
-      goalTag: parsed.data.user_profile?.priority_goal ?? 'general',
+      // No stated outcome priority stays NULL. It used to default to the string 'general',
+      // which is not a goal_tag, matched nothing, and was indistinguishable downstream from a
+      // real goal that simply had no parameter row.
+      goalTag: parsed.data.user_profile?.priority_goal ?? null,
     });
     return res.status(201).json({ assessment_id: assessmentId });
   } catch {

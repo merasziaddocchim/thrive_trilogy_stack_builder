@@ -235,12 +235,23 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
 ];
 
 // ---- LAYER 2: COMPOUNDS (mechanism-level summaries only) ---------------------
+// `defaultUnit` is the unit each compound is dosed in throughout the human-reviewed literature
+// behind these records (CLAIMS_COMPLIANCE §4b). All five of batch 1 are milligram-dosed, which
+// is corroborated inside this very file: every SEED_DOSE_RECORDS entry below states its dose in
+// `studiedDoseMinMg`/`studiedDoseMaxMg`, and every SEED_SCORING_PARAMETERS range in
+// `recommendedRangeLowMg`/`recommendedRangeHighMg`. No value here comes from a product label,
+// a brand catalogue, or an affiliate source — §4b forbids that outright.
+//
+// A compound with no literature-established unit must be left NULL rather than defaulted to
+// 'mg'. Batch 2 brings IU- and mcg-dosed compounds, where a blanket mg assumption is a 1000x
+// error; the parser treats NULL as "do not infer" and leaves the dose unparsed.
 export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
   {
     compoundId: C.nmn,
     canonicalName: 'NMN (Nicotinamide Mononucleotide)',
     aliases: ['NMN', 'Nicotinamide Mononucleotide', 'β-Nicotinamide Mononucleotide'],
     category: 'nad_precursor',
+    defaultUnit: 'mg',
     mechanismSummary:
       'A NAD+ precursor in the salvage pathway; converted to NAD+ by nicotinamide mononucleotide adenylyltransferase (NMNAT). NAD+ is a redox coenzyme and a substrate for sirtuins, PARPs and CD38.',
   },
@@ -249,6 +260,7 @@ export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
     canonicalName: 'NR (Nicotinamide Riboside)',
     aliases: ['NR', 'Nicotinamide Riboside', 'Niagen', 'Tru Niagen'],
     category: 'nad_precursor',
+    defaultUnit: 'mg',
     mechanismSummary:
       'A NAD+ precursor phosphorylated by nicotinamide riboside kinases (NRK1/2) to NMN, then converted to NAD+ via the salvage pathway.',
   },
@@ -257,6 +269,7 @@ export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
     canonicalName: 'Resveratrol',
     aliases: ['trans-resveratrol', 'resVida'],
     category: 'longevity_compound',
+    defaultUnit: 'mg',
     mechanismSummary:
       'A polyphenolic stilbene reported to modulate SIRT1 and AMPK signalling in preclinical models. Oral bioavailability is low owing to rapid conjugation and metabolism.',
   },
@@ -265,6 +278,7 @@ export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
     canonicalName: 'Berberine',
     aliases: ['berberine HCl', 'berberine hydrochloride'],
     category: 'longevity_compound',
+    defaultUnit: 'mg',
     mechanismSummary:
       'An isoquinoline alkaloid that activates AMP-activated protein kinase (AMPK) and influences hepatic glucose and lipid metabolism in preclinical and clinical studies.',
   },
@@ -273,6 +287,7 @@ export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
     canonicalName: 'TMG (Trimethylglycine)',
     aliases: ['TMG', 'Trimethylglycine', 'Betaine', 'Betaine anhydrous'],
     category: 'methylation',
+    defaultUnit: 'mg',
     mechanismSummary:
       'A methyl donor in the betaine–homocysteine methyltransferase (BHMT) reaction, remethylating homocysteine to methionine within one-carbon (methylation) metabolism.',
   },

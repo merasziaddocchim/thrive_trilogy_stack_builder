@@ -16,7 +16,9 @@ export function buildAssessmentPayload(state: AuditState): AssessmentPayload {
         monthly_price: i.monthlyPrice,
       })),
     user_profile: {
-      priority_goal: state.priority,
+      // The TAG, not the label. Sending 'Healthy aging' here is what made every
+      // assessment miss its goal_tag and fall through to an arbitrary parameter row.
+      priority_goal: state.priority?.tag ?? null,
       routine: state.routine,
       monthly_spend: state.spend,
       audit_focus: state.auditFocus,
