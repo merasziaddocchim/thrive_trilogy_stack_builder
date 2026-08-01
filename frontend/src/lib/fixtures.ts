@@ -203,11 +203,22 @@ export const FIXTURE_REPORT: ReportResponse = {
       source_ids: ['src_nr_rct_2018', 'src_nad_salvage_review'],
       learn_more: { title: 'NMN vs NR: Which NAD+ Precursor Actually Wins?', href: `${BLOG}/nmn-vs-nr-nad-precursor/` },
     },
+  ],
+  // §4d. Resveratrol moved here from `stop` on 2026-08-01: it is Tier C with no interpretable
+  // dose, and §4d says Tier C alone is never grounds for Stop. The row is RELOCATED verbatim —
+  // the only edit is the money field name, which §4d requires (an Adjust row carries the user's
+  // cost, not a waste figure, because the section says the compound is worth keeping).
+  // FLAGGED, NOT FIXED: this row's `reason` is old freehand fixture copy predating the
+  // approved templates, and still says "Preliminary research ... human clinical data on
+  // optimal dosing is not yet available" — the sentence pattern PR #29 withdrew from the live
+  // template. Fixture-only, never served by the backend, and rewriting it would be authoring
+  // claims copy.
+  adjust: [
     {
       compound: 'Resveratrol',
       reason:
         'Preliminary research on resveratrol has used a range of doses; human clinical data on optimal dosing is not yet available. At a liposomal "1 scoop" serving, the delivered dose could not be interpreted, so its contribution to your stack cannot be verified.',
-      est_monthly_waste: 18,
+      monthly_cost: 18,
       evidence_tier: 'C',
       outcome_mismatch_note: null,
       tier_rationale: 'Observational and animal data with mechanistic plausibility; not yet confirmed in human trials.',

@@ -6,6 +6,7 @@
 // The "Start" section (affiliate products, Tier 1/2/3) is rendered separately by StartSection.
 import { useState } from 'react';
 import type { ArticleLink, ReportResponse } from '@/lib/types';
+import { SECTION_DESCRIPTIONS, SECTION_EMPTY_STATES } from '@/lib/constants';
 import { TierBadge, TierDisclosure } from '@/components/ui/EvidenceTier';
 
 // "Learn more" — an EDUCATIONAL article only (mechanism/dosing/delivery explainers). Safe in a
@@ -27,19 +28,18 @@ function LearnMore({ article }: { article: ArticleLink }) {
   );
 }
 
-type SectionKey = 'Stop' | 'Keep';
+// CLAIMS_COMPLIANCE §4d. Stop / Adjust / Keep, rendered in that order — the same order §4d
+// evaluates them in, so what a reader sees top-to-bottom matches how the placement was decided.
+type SectionKey = 'Stop' | 'Adjust' | 'Keep';
 
-const SECTION_STYLE: Record<SectionKey, { border: string; chip: string; blurb: string }> = {
-  Stop: {
-    border: 'border-l-stop',
-    chip: 'bg-stop-soft text-stop',
-    blurb: 'Redundant, underdosed, or unverifiable — where your spend isn’t working.',
-  },
-  Keep: {
-    border: 'border-l-keep',
-    chip: 'bg-keep-soft text-keep',
-    blurb: 'Within studied ranges and supported by evidence.',
-  },
+// Descriptions and empty-state sentences are founder-approved copy, held in constants.ts.
+// Stop's used to read "Redundant, underdosed, or unverifiable — where your spend isn't
+// working." That sentence was the bug in words: underdosing is not a reason to stop, and it
+// sat above compounds the evidence fully supports.
+const SECTION_STYLE: Record<SectionKey, { border: string; chip: string }> = {
+  Stop: { border: 'border-l-stop', chip: 'bg-stop-soft text-stop' },
+  Adjust: { border: 'border-l-adjust', chip: 'bg-adjust-soft text-adjust' },
+  Keep: { border: 'border-l-keep', chip: 'bg-keep-soft text-keep' },
 };
 
 function ExpandableRow({
@@ -126,9 +126,11 @@ function ExpandableRow({
 
 function Section({
   title,
+  isEmpty,
   children,
 }: {
   title: SectionKey;
+  isEmpty: boolean;
   children: React.ReactNode;
 }) {
   const s = SECTION_STYLE[title];
@@ -136,9 +138,17 @@ function Section({
     <section className={`rounded-lg border border-border border-l-4 bg-surface p-4 ${s.border}`}>
       <div className="flex items-center gap-2">
         <h3 className={`rounded-pill px-2.5 py-1 text-sm font-700 ${s.chip}`}>{title}</h3>
-        <p className="text-sm text-muted">{s.blurb}</p>
+        <p className="text-sm text-muted">{SECTION_DESCRIPTIONS[title]}</p>
       </div>
-      <ul className="mt-3 space-y-2">{children}</ul>
+      {/* §4d: "A section containing no items must state that plainly rather than rendering an
+          empty heading. An empty Stop section is a finding in its own right and must read as
+          one." Before this, a zero-item section rendered a heading over an empty list — which
+          is how the live report showed "Keep" with nothing under it. */}
+      {isEmpty ? (
+        <p className="mt-3 text-sm text-body">{SECTION_EMPTY_STATES[title]}</p>
+      ) : (
+        <ul className="mt-3 space-y-2">{children}</ul>
+      )}
     </section>
   );
 }
@@ -146,7 +156,7 @@ function Section({
 export function StopKeepStart({ report }: { report: ReportResponse }) {
   return (
     <div className="mt-6 space-y-4">
-      <Section title="Stop">
+      <Section title="Stop" isEmpty={report.stop.length === 0}>
         {report.stop.map((r) => (
           <ExpandableRow
             key={r.compound}
@@ -165,7 +175,27 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
         ))}
       </Section>
 
-      <Section title="Keep">
+      {/* Adjust sits BETWEEN Stop and Keep — §4d's order. */}
+      <Section title="Adjust" isEmpty={report.adjust.length === 0}>
+        {report.adjust.map((r) => (
+          <ExpandableRow
+            key={r.compound}
+            name={r.compound}
+            amount={r.monthly_cost}
+            amountLabel="mo"
+            reason={r.reason}
+            tier={r.evidence_tier}
+            rationale={r.tier_rationale}
+            lastReviewed={r.last_reviewed}
+            reviewer={r.reviewer_name}
+            sourceIds={r.source_ids}
+            learnMore={r.learn_more}
+            outcomeMismatchNote={r.outcome_mismatch_note}
+          />
+        ))}
+      </Section>
+
+      <Section title="Keep" isEmpty={report.keep.length === 0}>
         {report.keep.map((r) => (
           <ExpandableRow
             key={r.compound}

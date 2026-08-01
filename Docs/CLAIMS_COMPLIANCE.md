@@ -266,6 +266,52 @@ disclosure covers both.
 
 ---
 
+## 4d. Finding routing (originated 2026-08-01)
+
+Every scored item in a Stack Report is placed in exactly one action section.
+The section a finding appears in is a recommendation about the user's
+spending and their regimen, and is therefore a claim in its own right,
+independent of the sentence rendered inside it.
+
+Sections are evaluated in this order, and the first matching rule places the
+item.
+
+Stop. The spend is not buying the user anything. An item is placed here when
+it duplicates another item resolving to the same compound and is not the
+best-dosed of those duplicates; when its Evidence Tier is D; or when its
+recorded direction of evidence is null or negative, meaning an adequate
+study looked and found no effect, or found harm. An absent direction of
+evidence means the value has not been derived and is never grounds for Stop.
+
+Adjust. The dose needs the user's attention. An item is placed here when its
+dose falls outside the range used in human research, or when no studied dose
+range exists for it and the dose therefore cannot be checked against
+research. Any item placed in Adjust must state the finding that put it
+there, regardless of its Evidence Tier: a section that names an action must
+show its reason.
+
+Keep. The dose falls inside the studied range and the evidence supports the
+compound.
+
+An Evidence Tier of C is not by itself grounds for Stop. Tier C means the
+evidence has not been independently confirmed; it does not mean the compound
+does not work, and section 4 states so explicitly. The evidence ceiling
+already lowers the Spend Efficiency Index for a Tier C item, and routing it
+to Stop as well would penalise the same fact twice and tell the user to
+abandon a compound the reviewed evidence does not contradict.
+
+No section may render a prescriptive dose. A finding may state the user's
+dose, the range used in human research, and the distance between them. It
+may not instruct the user to take a specific amount. The section name
+carries the action and the sentence carries the evidence. Recommending a
+dose is clinical advice and this product does not give it.
+
+A section containing no items must state that plainly rather than rendering
+an empty heading. An empty Stop section is a finding in its own right and
+must read as one.
+
+---
+
 ## 5. DSHEA / FDA structure-function boundary
 
 Source: 21 U.S.C. § 343(r)(6); 21 CFR 101.93(f)–(g); FDA Small Entity Compliance Guide on Structure/Function Claims.

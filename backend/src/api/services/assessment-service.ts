@@ -25,7 +25,7 @@ import { buildStartSection, type RecognizedForStart } from '../../affiliate-engi
 // Same seam for article cross-links: the article-engine is firewalled from scoring, and this
 // orchestrator composes its output with the scored report. Articles never feed the score.
 import { buildArticleLinks, type RecognizedForArticles } from '../../article-engine/index.js';
-import type { EvidenceTier } from '../../db/schema.js';
+import type { EvidenceTier, EvidenceDirection } from '../../db/schema.js';
 
 /** A user's stack item as captured/confirmed (mirrors user_stack_items). */
 export interface StoredStackItem {
@@ -51,6 +51,13 @@ export interface ResolvedEvidence {
   canonicalName: string;
   /** The goal_tag of the parameter actually selected — which may not be the user's (§4b). */
   goalTag: string;
+  /**
+   * §4d routing input. NULL means NOT YET DERIVED — never "an adequate study found no
+   * effect", which is the enum value `null_no_effect`. The column existed and was populated
+   * from 2026-07-30 but nothing read it: repository.ts selected the row and dropped this
+   * field, so a direction of null_no_effect or negative could not reach a routing decision.
+   */
+  directionOfEvidence: EvidenceDirection | null;
   rangeLowMg: number | null;
   rangeHighMg: number | null;
   /** For the user's delivery format; defaults to 1 when unknown. */
@@ -165,6 +172,7 @@ export async function assembleAssessment(
       sourceShortName: ev.sourceShortName,
       percentDelta: percentDelta(s.sub.effectiveDoseMg, s.item.rangeLowMg, s.item.rangeHighMg),
       outcomeMismatchNote: mismatchFor(ev),
+      directionOfEvidence: ev.directionOfEvidence,
     };
   });
 

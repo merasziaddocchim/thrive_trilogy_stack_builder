@@ -25,6 +25,7 @@ import {
   recognizedSummary,
   tierDisclosure,
   outcomeMismatchNote,
+  noStudiedRangeNote,
 } from './claim-templates.js';
 import * as templates from './claim-templates.js';
 import { SEED_SCORING_PARAMETERS, SEED_SOURCES, SEED_COMPOUNDS } from '../db/seed-data.js';
@@ -63,6 +64,7 @@ const RENDERED: Array<{ name: string; text: string }> = [
     text: redundancyFlag({ productCount: 2, sharedIngredient: 'NMN', monthlyCost: 60 }),
   },
   { name: 'recognizedSummary', text: recognizedSummary(3) },
+  { name: 'noStudiedRangeNote', text: noStudiedRangeNote('Spermidine') },
   {
     name: 'outcomeMismatchNote',
     // Rendered in its firing state; its non-firing state is asserted separately below.

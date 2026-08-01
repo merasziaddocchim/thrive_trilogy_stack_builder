@@ -168,6 +168,20 @@ export interface StopRow extends EvidenceMeta {
   learn_more?: ArticleLink;
 }
 
+/**
+ * CLAIMS_COMPLIANCE §4d — the compound is supported, the amount is not the amount studied.
+ * Carries `monthly_cost`, not a waste figure: the section says the compound is worth keeping,
+ * so labelling its spend "waste" on the row would contradict the section it sits in. The
+ * shortfall still counts toward Estimated Annual Waste, shown at the top of the report.
+ */
+export interface AdjustRow extends EvidenceMeta {
+  compound: string;
+  reason: string;
+  monthly_cost: number;
+  /** Educational further-reading link. Never a roundup (CLAIMS_COMPLIANCE §6). */
+  learn_more?: ArticleLink;
+}
+
 export interface KeepRow extends EvidenceMeta {
   compound: string;
   note: string;
@@ -217,6 +231,8 @@ export interface ReportResponse {
   composite_score: number; // Spend Efficiency Index, 0–100
   safety_flag: boolean | null;
   stop: StopRow[];
+  /** §4d, rendered BETWEEN Stop and Keep. */
+  adjust: AdjustRow[];
   keep: KeepRow[];
   /** Legacy per-compound start rows (unused; superseded by start_section). */
   start: StartRow[];

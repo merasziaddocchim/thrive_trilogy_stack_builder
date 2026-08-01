@@ -156,3 +156,32 @@ export const PREVIEW_DOSES_MISSING_HEADING =
 export const PREVIEW_DOSES_MISSING_BODY =
   'We recognized your compounds and their evidence tiers above. To turn that into a score and a dollar figure, we need a dose for each item — with a unit, like 500 mg.';
 export const PREVIEW_DOSES_MISSING_BUTTON = 'Add doses';
+
+
+// =============================================================================
+// APPROVED COPY — Stack Report action sections (CLAIMS_COMPLIANCE §4d).
+//
+// Founder-authored, inserted verbatim. §4d added Adjust between Stop and Keep because the old
+// two-section split forced a false choice: a live stack of NMN 250 mg, TMG 1000 mg and
+// Berberine 500 mg put ALL THREE in Stop — including Berberine, the strongest evidence in the
+// database, underdosed rather than unsupported — and left Keep an empty heading.
+//
+// The EMPTY sentences are not filler. §4d: "A section containing no items must state that
+// plainly rather than rendering an empty heading. An empty Stop section is a finding in its own
+// right and must read as one." An empty Stop is good news and has to read as good news.
+//
+// Keep's description is unchanged from the original build and is repeated here only so all
+// four live in one place; do not edit it.
+// =============================================================================
+export const SECTION_DESCRIPTIONS = {
+  Stop: 'Duplicate spend, and compounds the reviewed evidence doesn\'t support.',
+  Adjust:
+    'The right compound at the wrong dose. Worth keeping; the amount needs changing.',
+  Keep: 'Within studied ranges and supported by evidence.',
+} as const;
+
+export const SECTION_EMPTY_STATES = {
+  Stop: 'Nothing in your stack looks like wasted spend.',
+  Adjust: 'Every dose we could check sits inside its studied range.',
+  Keep: 'Nothing in your stack is currently inside its studied range.',
+} as const;

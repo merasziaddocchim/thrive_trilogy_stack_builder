@@ -65,6 +65,9 @@ export const dbEvidenceProvider: EvidenceProvider = {
         // The outcome this evidence was actually established for — not necessarily the one the
         // user asked about. Carried up so the mismatch can be disclosed (§4b).
         goalTag: p.goalTag,
+        // §4d routing input. Carried through as-is, INCLUDING null: an absent direction means
+        // "not yet derived" and must stay distinguishable from the `null_no_effect` value.
+        directionOfEvidence: p.directionOfEvidence,
         rangeLowMg: p.recommendedRangeLowMg,
         rangeHighMg: p.recommendedRangeHighMg,
         bioavailabilityAdjustmentFactor: p.bioavailabilityAdjustmentFactor ?? 1,
