@@ -110,13 +110,10 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       )}
 
       {empty ? (
-        // FLAGGED, NOT FIXED: the sentence below still lists "Stop, Keep, and Start" and now
-        // omits Adjust. It is user-facing copy, which the founder originates — rewriting it
-        // here would be authoring a claim string. Reported rather than changed.
         <div className="mt-8 rounded-lg border border-border bg-surface p-8 text-center">
           <p className="font-700 text-headline">No findings to show yet</p>
           <p className="mt-2 text-sm text-body">
-            Once your stack is scored, your Stop, Keep, and Start sections appear here.
+            Once your stack is scored, your Stop, Adjust, Keep, and Start sections appear here.
           </p>
           <Button href="/assessment" variant="secondary" className="mt-5">
             Start an audit
