@@ -40,6 +40,12 @@ export interface CompoundContext {
   sourceShortName: string;
   /** Signed % of effective dose vs studied range (negative = below). 0 when within/unknown. */
   percentDelta: number;
+  /**
+   * CLAIMS_COMPLIANCE §4b disclosure, or null when the outcome matched. Computed once in
+   * assessment-service (the only place that knows the user's stated goal) and carried here so
+   * every surface renders the identical sentence rather than each deriving its own.
+   */
+  outcomeMismatchNote: string | null;
 }
 
 export interface OverlapGroup {
@@ -56,6 +62,12 @@ export interface RecognizedCompound {
   compound_id: string;
   canonical_name: string;
   evidence_tier: TierLetter;
+  /**
+   * §4b: null unless this compound's Evidence Tier was established for an outcome other than
+   * the user's stated priority. The tier badge is one of the two things §4b names, so the
+   * disclosure has to travel with it.
+   */
+  outcome_mismatch_note: string | null;
 }
 
 export interface PreviewResponse {
@@ -73,6 +85,8 @@ export interface PreviewResponse {
     studied_range: { low: number; high: number; unit: string };
     percent_delta: number;
     source_short_name: string;
+    /** §4b: the dose range is the other of the two things the disclosure covers. */
+    outcome_mismatch_note: string | null;
   }>;
 }
 
@@ -113,6 +127,7 @@ export function buildPreview(
           studied_range: { low: c.input.rangeLowMg as number, high: c.input.rangeHighMg as number, unit: 'mg' },
           percent_delta: c.percentDelta,
           source_short_name: c.sourceShortName,
+          outcome_mismatch_note: c.outcomeMismatchNote,
         }))
     : [];
 
@@ -153,6 +168,8 @@ interface EvidenceMeta {
   last_reviewed: string;
   reviewer_name: string;
   source_ids: string[];
+  /** §4b disclosure for this row, or null when the outcome matched. */
+  outcome_mismatch_note: string | null;
 }
 
 /** Educational "further reading" link on a Stop/Keep row. Never a roundup (CLAIMS §6). */
@@ -179,6 +196,7 @@ function meta(c: CompoundContext): EvidenceMeta {
     last_reviewed: c.lastReviewed,
     reviewer_name: c.reviewerName,
     source_ids: c.input.contributingSourceIds,
+    outcome_mismatch_note: c.outcomeMismatchNote,
   };
   // CLAIMS §4 hard gate: refuse to emit a claim object missing tier or sources.
   assertClaimCompliant({ evidenceTier: c.input.evidenceTier, sourceIds: c.input.contributingSourceIds }, c.input.canonicalName);

@@ -11,6 +11,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { EvidenceProvider, ResolvedEvidence } from './assessment-service.js';
 import type { StackInteraction } from '../../scoring-engine/index.js';
 import type { CompoundRef } from '../../intake-parser/index.js';
+import { selectParameter } from '../../db/goals.js';
 
 // Reviewer identity for E-E-A-T attribution (mirrors the frontend REVIEWER constant).
 const REVIEWER_NAME = 'Ziad Meras';
@@ -31,7 +32,12 @@ export const dbEvidenceProvider: EvidenceProvider = {
     const params = await db
       .select()
       .from(scoringParameters)
-      .where(inArray(scoringParameters.compoundId, compoundIds));
+      .where(inArray(scoringParameters.compoundId, compoundIds))
+      // The ORDER BY does not decide the selection — selectParameter() is order-independent and
+      // db/select-parameter.test.ts proves it across every permutation. It is here so the query
+      // itself is deterministic, because an unordered SELECT is what let row order silently
+      // decide a user's Evidence Tier before 2026-08-01.
+      .orderBy(scoringParameters.compoundId, scoringParameters.goalTag);
 
     const compoundRows = await db
       .select()
@@ -41,9 +47,10 @@ export const dbEvidenceProvider: EvidenceProvider = {
 
     for (const id of compoundIds) {
       const forCompound = params.filter((p) => p.compoundId === id);
-      if (forCompound.length === 0) continue;
-      // Prefer a parameter row matching the user's goal; otherwise take the first available.
-      const p = forCompound.find((r) => r.goalTag === goalTag) ?? forCompound[0];
+      // CLAIMS_COMPLIANCE §4b: exact goal match, else highest Evidence Tier, ties by goal_tag
+      // ascending. Never "whichever row came back first".
+      const p = selectParameter(forCompound, goalTag);
+      if (p == null) continue;
 
       // A readable short source name for dose-comparison copy: first contributing citation.
       let sourceShortName = 'reviewed research';
@@ -55,6 +62,9 @@ export const dbEvidenceProvider: EvidenceProvider = {
 
       map.set(id, {
         canonicalName: nameById.get(id) ?? 'Unknown compound',
+        // The outcome this evidence was actually established for — not necessarily the one the
+        // user asked about. Carried up so the mismatch can be disclosed (§4b).
+        goalTag: p.goalTag,
         rangeLowMg: p.recommendedRangeLowMg,
         rangeHighMg: p.recommendedRangeHighMg,
         bioavailabilityAdjustmentFactor: p.bioavailabilityAdjustmentFactor ?? 1,
@@ -101,6 +111,9 @@ export async function loadCompoundRefs(): Promise<CompoundRef[]> {
     compoundId: c.compoundId,
     canonicalName: c.canonicalName,
     aliases: c.aliases ?? [],
+    // Null stays null: a compound with no literature-established unit must not have one
+    // inferred (CLAIMS_COMPLIANCE §4b).
+    defaultUnit: c.defaultUnit,
   }));
 }
 

@@ -2,6 +2,7 @@
 // only (prompt §8): stack/health-adjacent detail must not outlive the session, so we
 // deliberately avoid localStorage for this data. No scoring here — UI state only.
 import type { ExtractedItem, DeliveryFormat } from '@/lib/types';
+import type { GoalTag } from '@/lib/goals';
 
 export type StepKey =
   | 'capture'
@@ -30,7 +31,12 @@ export interface AuditState {
   rawText: string;
   extracted: ExtractedItem[];
   reviewedExtraction: boolean; // true once the user has seen the Confirm screen
-  priority: string | null;
+  /**
+   * The user's priority as BOTH the label they read and the tag the database matches.
+   * Storing only the label is what made the backend fall back to an arbitrary parameter row
+   * for every user; `tag` is null for the options that name no outcome (see PRIORITY_OPTIONS).
+   */
+  priority: { label: string; tag: GoalTag | null } | null;
   routine: { diet: string | null; activity: string | null; sleep: string | null };
   spend: { low: number; high: number } | null;
   auditFocus: string | null;

@@ -18,7 +18,7 @@ import {
   type RecognizedCompound,
   type ReportResponse,
 } from './report-builder.js';
-import { tierLetter } from '../../compliance/claim-templates.js';
+import { tierLetter, outcomeMismatchNote } from '../../compliance/claim-templates.js';
 // The affiliate-engine is firewalled from scoring; the orchestrator (this file) is the seam that
 // composes scoring output with the affiliate Start section — affiliate never feeds the score.
 import { buildStartSection, type RecognizedForStart } from '../../affiliate-engine/index.js';
@@ -37,12 +37,20 @@ export interface StoredStackItem {
 
 export interface StoredIntake {
   stackItems: StoredStackItem[];
-  goalTag: string;
+  /**
+   * The user's stated priority as a CANONICAL GOAL TAG (db/goals.ts), never a display label.
+   * Null when the user stated no outcome priority — "Not sure yet" and "Simplifying my stack"
+   * are choices on the Priority screen but are not outcomes, so they carry no tag and there is
+   * no stated priority for a finding to mismatch.
+   */
+  goalTag: string | null;
 }
 
 /** Evidence resolved from scoring_parameters (+ compound) for one compound/goal pair. */
 export interface ResolvedEvidence {
   canonicalName: string;
+  /** The goal_tag of the parameter actually selected — which may not be the user's (§4b). */
+  goalTag: string;
   rangeLowMg: number | null;
   rangeHighMg: number | null;
   /** For the user's delivery format; defaults to 1 when unknown. */
@@ -57,7 +65,7 @@ export interface ResolvedEvidence {
 
 export interface EvidenceProvider {
   /** Resolve evidence for each compound; missing compounds are simply absent from the map. */
-  resolve(compoundIds: string[], goalTag: string): Promise<Map<string, ResolvedEvidence>>;
+  resolve(compoundIds: string[], goalTag: string | null): Promise<Map<string, ResolvedEvidence>>;
   /** Interactions among the given compounds (from interaction_records). */
   interactions(compoundIds: string[]): Promise<StackInteraction[]>;
 }
@@ -84,6 +92,16 @@ export async function assembleAssessment(
     .filter((id): id is string => id != null);
   const evidence = await provider.resolve(compoundIds, intake.goalTag);
 
+  // CLAIMS_COMPLIANCE §4b. Computed here because this is the only layer that knows BOTH the
+  // user's stated priority and which parameter the provider actually selected; every surface
+  // below then renders the same sentence instead of re-deriving it.
+  const mismatchFor = (ev: ResolvedEvidence): string | null =>
+    outcomeMismatchNote({
+      compound: ev.canonicalName,
+      chosenGoalTag: intake.goalTag,
+      selectedGoalTag: ev.goalTag,
+    });
+
   // Recognized = every matched compound we have evidence for, WHETHER OR NOT a dose was
   // given (deduped). This is what the Preview lists as "recognized" and is deliberately
   // separate from whether we can SCORE the compound (which also needs a dose). Without this
@@ -98,6 +116,7 @@ export async function assembleAssessment(
       compound_id: item.compoundId,
       canonical_name: ev.canonicalName,
       evidence_tier: tierLetter(ev.evidenceTier),
+      outcome_mismatch_note: mismatchFor(ev),
     });
   }
   const recognized = [...recognizedMap.values()];
@@ -145,6 +164,7 @@ export async function assembleAssessment(
       reviewerName: ev.reviewerName,
       sourceShortName: ev.sourceShortName,
       percentDelta: percentDelta(s.sub.effectiveDoseMg, s.item.rangeLowMg, s.item.rangeHighMg),
+      outcomeMismatchNote: mismatchFor(ev),
     };
   });
 

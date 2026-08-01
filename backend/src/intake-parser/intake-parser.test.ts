@@ -4,13 +4,15 @@ import { parseIntake, describeParser, matchCompound } from './index.js';
 import { HeuristicExtractor, LlmExtractor } from './extractor.js';
 import type { CompoundRef, ParsedItem } from './types.js';
 
+// `defaultUnit` mirrors SEED_COMPOUNDS: every batch-1 compound is milligram-dosed. It is what
+// lets a bare number resolve; a fixture without it exercises the "no default unit" path.
 const COMPOUNDS: CompoundRef[] = [
-  { compoundId: 'cmp_nmn', canonicalName: 'NMN (Nicotinamide Mononucleotide)', aliases: ['NMN', 'Nicotinamide Mononucleotide'] },
-  { compoundId: 'cmp_nr', canonicalName: 'NR (Nicotinamide Riboside)', aliases: ['NR', 'Nicotinamide Riboside', 'Tru Niagen', 'Niagen'] },
-  { compoundId: 'cmp_resveratrol', canonicalName: 'Resveratrol', aliases: ['trans-resveratrol'] },
-  { compoundId: 'cmp_tmg', canonicalName: 'TMG (Trimethylglycine)', aliases: ['TMG', 'Trimethylglycine', 'Betaine'] },
-  { compoundId: 'cmp_berberine', canonicalName: 'Berberine', aliases: ['berberine HCl'] },
-  { compoundId: 'cmp_spermidine', canonicalName: 'Spermidine', aliases: [] },
+  { compoundId: 'cmp_nmn', canonicalName: 'NMN (Nicotinamide Mononucleotide)', aliases: ['NMN', 'Nicotinamide Mononucleotide'], defaultUnit: 'mg' },
+  { compoundId: 'cmp_nr', canonicalName: 'NR (Nicotinamide Riboside)', aliases: ['NR', 'Nicotinamide Riboside', 'Tru Niagen', 'Niagen'], defaultUnit: 'mg' },
+  { compoundId: 'cmp_resveratrol', canonicalName: 'Resveratrol', aliases: ['trans-resveratrol'], defaultUnit: 'mg' },
+  { compoundId: 'cmp_tmg', canonicalName: 'TMG (Trimethylglycine)', aliases: ['TMG', 'Trimethylglycine', 'Betaine'], defaultUnit: 'mg' },
+  { compoundId: 'cmp_berberine', canonicalName: 'Berberine', aliases: ['berberine HCl'], defaultUnit: 'mg' },
+  { compoundId: 'cmp_spermidine', canonicalName: 'Spermidine', aliases: [], defaultUnit: 'mg' },
 ];
 
 const SAMPLE = `NMN 250mg (Renue by Science, sublingual) - about $45/mo
@@ -64,17 +66,76 @@ test('twice-a-day multiplier resolves the daily dose (500mg 2x → 1000mg)', asy
   assert.deepEqual(berb.dose, { amount: 1000, unit: 'mg' });
 });
 
-test('recognized compound but uninterpretable dose is downgraded to low confidence', async () => {
+// Expected values re-derived 2026-08-01 (CLAIMS_COMPLIANCE §4b), NOT relaxed. This test
+// previously asserted `confidence === 'low'` for a recognized compound with no usable dose,
+// pinning the downgrade at index.ts:42. §4b withdrew that behaviour outright: "The absence of
+// a dose is not evidence of an uncertain compound match and must not be rendered as one."
+// The test now asserts the stronger, two-axis contract it should always have asserted — the
+// match stays high AND the dose gap is still surfaced, on its own axis.
+test('a recognized compound with no usable dose keeps its match confidence and flags the dose', async () => {
   const items = await parseIntake(SAMPLE, COMPOUNDS);
   const resv = byRaw(items, 'resveratrol');
   assert.equal(resv.compoundId, 'cmp_resveratrol'); // name matched
-  assert.equal(resv.dose, null); // "1 scoop" is not an interpretable dose
-  assert.equal(resv.confidence, 'low'); // so the user is asked to confirm
+  assert.equal(resv.confidence, 'high'); // ...and matching is all confidence reports
+  // "1 scoop" is a COUNT, not a dose. It must not resolve — reading it as a quantity would
+  // turn "I don't know my dose" into 1 mg via the compound's default unit.
+  assert.equal(resv.dose, null);
+  assert.equal(resv.doseState, 'missing');
   assert.equal(resv.deliveryFormat, 'liposomal');
 
   const sperm = byRaw(items, 'spermidine');
   assert.equal(sperm.compoundId, 'cmp_spermidine');
-  assert.equal(sperm.confidence, 'low');
+  assert.equal(sperm.confidence, 'high');
+  assert.equal(sperm.doseState, 'missing'); // "not sure of the dose" carries no number
+});
+
+test('a bare number resolves through the compound default unit, and is marked assumed', async () => {
+  const items = await parseIntake(SAMPLE, COMPOUNDS);
+  const tmg = byRaw(items, 'TMG 1000');
+  assert.equal(tmg.compoundId, 'cmp_tmg');
+  assert.equal(tmg.confidence, 'high');
+  assert.deepEqual(tmg.dose, { amount: 1000, unit: 'mg' });
+  assert.equal(tmg.doseState, 'assumed');
+});
+
+test('with NO default unit on the compound, a bare number does not become a dose', async () => {
+  // The load-bearing null (CLAIMS_COMPLIANCE §4b): where no default unit is stored, no unit is
+  // inferred. This is what makes batch 2's IU- and mcg-dosed compounds safe — the alternative,
+  // a global mg fallback, is a 1000x error there.
+  const noUnit = COMPOUNDS.map((c) => ({ ...c, defaultUnit: null }));
+  const items = await parseIntake('TMG 1000', noUnit);
+  assert.equal(items[0].compoundId, 'cmp_tmg');
+  assert.equal(items[0].confidence, 'high'); // still recognized...
+  assert.equal(items[0].dose, null); // ...but no dose invented
+  assert.equal(items[0].doseState, 'missing');
+
+  // An unparseable stored unit is treated exactly like a missing one — never coerced to mg.
+  const junkUnit = COMPOUNDS.map((c) => ({ ...c, defaultUnit: 'sprinkles' }));
+  const junk = await parseIntake('TMG 1000', junkUnit);
+  assert.equal(junk[0].dose, null);
+  assert.equal(junk[0].doseState, 'missing');
+});
+
+test('an explicit unit is never overridden by the default unit', async () => {
+  const items = await parseIntake('NMN 250mg', COMPOUNDS);
+  assert.deepEqual(items[0].dose, { amount: 250, unit: 'mg' });
+  assert.equal(items[0].doseState, 'explicit');
+
+  // A non-mg explicit unit survives even though every fixture's default unit is mg.
+  const iu = await parseIntake('NMN 5000 IU', COMPOUNDS);
+  assert.deepEqual(iu[0].dose, { amount: 5000, unit: 'iu' });
+  assert.equal(iu[0].doseState, 'explicit');
+});
+
+test('numbers that are not doses are never resolved into one', async () => {
+  // Each of these has a number, and none of them is a dose. Before the bare-number path
+  // existed none could be misread; now each needs its own exclusion, so each gets a case.
+  for (const line of ['NMN $45', 'NMN 2x/day', 'NMN 1 scoop', 'NMN 2 capsules', 'NMN 3 gummies']) {
+    const [item] = await parseIntake(line, COMPOUNDS);
+    assert.equal(item.compoundId, 'cmp_nmn', `${line}: should still match NMN`);
+    assert.equal(item.dose, null, `${line}: must not produce a dose`);
+    assert.equal(item.doseState, 'missing', `${line}: must be flagged for a dose`);
+  }
 });
 
 test('a compound not in the database is surfaced as unmatched, not silently guessed', async () => {
@@ -85,15 +146,30 @@ test('a compound not in the database is surfaced as unmatched, not silently gues
   assert.equal(mag.confidence, 'unmatched');
 });
 
-test('the parsed set contains a realistic mix of high, low, and unmatched', async () => {
+// Re-derived 2026-08-01, and widened. The old version asserted a mix along ONE axis and
+// required `counts.low >= 1` — which only passed because a doseless item was being mislabelled
+// as an uncertain match. With the axes separated (§4b) the sample produces a mix along BOTH,
+// and asserting both is what the "realistic mix" claim in the name was always reaching for.
+test('the parsed set contains a realistic mix on both axes: match confidence AND dose state', async () => {
   const items = await parseIntake(SAMPLE, COMPOUNDS);
-  const counts = items.reduce(
-    (acc, i) => ({ ...acc, [i.confidence]: (acc[i.confidence] ?? 0) + 1 }),
-    {} as Record<string, number>,
-  );
-  assert.ok(counts.high >= 1, 'expected at least one high-confidence match');
-  assert.ok(counts.low >= 1, 'expected at least one low-confidence match');
-  assert.ok(counts.unmatched >= 1, 'expected at least one unmatched item');
+  const tally = <K extends string>(pick: (i: ParsedItem) => K): Record<string, number> =>
+    items.reduce((acc, i) => ({ ...acc, [pick(i)]: (acc[pick(i)] ?? 0) + 1 }), {} as Record<string, number>);
+
+  const byConfidence = tally((i) => i.confidence);
+  assert.ok(byConfidence.high >= 1, 'expected at least one recognized compound');
+  assert.ok(byConfidence.unmatched >= 1, 'expected at least one unrecognized compound');
+
+  const byDose = tally((i) => i.doseState);
+  assert.ok(byDose.explicit >= 1, 'expected at least one dose given with a unit');
+  assert.ok(byDose.assumed >= 1, 'expected at least one bare number resolved via default unit');
+  assert.ok(byDose.missing >= 1, 'expected at least one item still awaiting a dose');
+
+  // The point of separating them: no recognized compound is demoted for lacking a dose.
+  for (const i of items) {
+    if (i.doseState !== 'explicit' && i.compoundId != null) {
+      assert.equal(i.confidence, 'high', `${i.rawText}: matched, so confidence must not be reduced`);
+    }
+  }
 });
 
 // --- Regression: multi-compound input on a SINGLE comma-separated line (the reported bug) ---
@@ -114,12 +190,14 @@ test('regression: comma-separated compounds on one line all appear (NMN 500mg, B
   assert.equal(berb.confidence, 'high');
   assert.deepEqual(berb.dose, { amount: 500, unit: 'mg' });
 
-  // "TMG 500" has no unit → dose uninterpretable → recognized name but downgraded to low
-  // (flagged for the user), NOT dropped — the specific behavior the bug report called out.
+  // "TMG 500" has no unit. Re-derived 2026-08-01: it is no longer dropped OR demoted — the
+  // bare number now resolves through TMG's default unit and is marked `assumed`, and the match
+  // stays high because the match was never in doubt (CLAIMS_COMPLIANCE §4b).
   const tmg = byRaw(items, 'TMG');
   assert.equal(tmg.compoundId, 'cmp_tmg');
-  assert.equal(tmg.confidence, 'low');
-  assert.equal(tmg.dose, null);
+  assert.equal(tmg.confidence, 'high');
+  assert.deepEqual(tmg.dose, { amount: 500, unit: 'mg' });
+  assert.equal(tmg.doseState, 'assumed');
 });
 
 test('regression: comma-separated names with no doses still yield one item per compound', async () => {
@@ -204,7 +282,7 @@ test('LlmExtractor uses model output when it returns valid JSON', async () => {
     JSON.stringify([
       { rawText: 'Fisetin 100mg', nameGuess: 'Fisetin', dose: { amount: 100, unit: 'mg' }, deliveryFormat: null, monthlyPrice: null },
     ]);
-  const items = await parseIntake('Fisetin 100mg', [{ compoundId: 'cmp_fisetin', canonicalName: 'Fisetin', aliases: [] }], {
+  const items = await parseIntake('Fisetin 100mg', [{ compoundId: 'cmp_fisetin', canonicalName: 'Fisetin', aliases: [], defaultUnit: 'mg' }], {
     extractor: new LlmExtractor(complete),
   });
   assert.equal(items[0].compoundId, 'cmp_fisetin');

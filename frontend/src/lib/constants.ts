@@ -120,3 +120,39 @@ export const AI_ROLE_NOTE =
 export const INTAKE_METHOD_NOTE =
   'We read your free-text entry and match it to compounds using automated text-matching (not an AI model). ' +
   'You\'re confirming those matches now, before anything is scored.';
+
+// =============================================================================
+// APPROVED COPY — Confirm screen and Preview card (CLAIMS_COMPLIANCE §4b).
+//
+// Founder-authored, inserted verbatim. These are the sentences that replace two defects the
+// live 2026-07-31 session exposed:
+//   • a recognized compound with no dose was badged "Low confidence — please check", which
+//     said the MATCH was doubtful when only the dose was missing;
+//   • the Preview asked for monthly spend when the missing input was a dose.
+// Do not reword, shorten, or re-punctuate. Copy is originated by the founder, recorded in
+// CLAIMS_COMPLIANCE, and referenced here — never the other way round.
+// =============================================================================
+
+/** Shown wherever a bare number was resolved through the compound's stored default unit.
+ *  §4b: an inferred unit that is not shown to the user must not be scored. */
+export function unitInferredNote(raw: string, unit: string): string {
+  return 'Read "{raw}" as {unit} — edit if that\'s wrong.'
+    .replace('{raw}', raw)
+    .replace('{unit}', unit);
+}
+
+/** Neutral badge + body for a recognized compound awaiting a dose. NOT warning-styled: the
+ *  match is not in doubt, only the dose. */
+export const CONFIRM_NO_DOSE_BADGE = 'Add a dose';
+export const CONFIRM_NO_DOSE_BODY =
+  'No dose entered. We can still show your evidence tier, but not whether your dose is in range.';
+
+/** Badge for a match that genuinely is uncertain — the only case that keeps warning styling. */
+export const CONFIRM_UNCERTAIN_BADGE = 'Not sure about this match';
+
+/** Preview State B, doses missing but spend present. */
+export const PREVIEW_DOSES_MISSING_HEADING =
+  'Add a dose to unlock your Spend Efficiency Index and Estimated Annual Waste';
+export const PREVIEW_DOSES_MISSING_BODY =
+  'We recognized your compounds and their evidence tiers above. To turn that into a score and a dollar figure, we need a dose for each item — with a unit, like 500 mg.';
+export const PREVIEW_DOSES_MISSING_BUTTON = 'Add doses';

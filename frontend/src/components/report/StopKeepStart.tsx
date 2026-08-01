@@ -53,6 +53,7 @@ function ExpandableRow({
   reviewer,
   sourceIds,
   learnMore,
+  outcomeMismatchNote,
   extra,
 }: {
   name: string;
@@ -65,6 +66,7 @@ function ExpandableRow({
   reviewer: string;
   sourceIds: string[];
   learnMore?: ArticleLink;
+  outcomeMismatchNote: string | null;
   extra?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -89,6 +91,13 @@ function ExpandableRow({
           <TierBadge tier={tier} />
         </span>
       </button>
+
+      {/* CLAIMS_COMPLIANCE §4c: this row's Evidence Tier and dose range were established for a
+          different outcome than the user chose. Rendered unconditionally with the row, not
+          hidden behind the expander — a disclosure the reader must open is not on the surface. */}
+      {outcomeMismatchNote && (
+        <p className="px-4 pb-3 -mt-1 text-xs text-muted">{outcomeMismatchNote}</p>
+      )}
 
       {/* Outside the button (valid HTML, independently focusable), still adjacent to the row. */}
       {learnMore && (
@@ -151,6 +160,7 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
             reviewer={r.reviewer_name}
             sourceIds={r.source_ids}
             learnMore={r.learn_more}
+            outcomeMismatchNote={r.outcome_mismatch_note}
           />
         ))}
       </Section>
@@ -169,6 +179,7 @@ export function StopKeepStart({ report }: { report: ReportResponse }) {
             reviewer={r.reviewer_name}
             sourceIds={r.source_ids}
             learnMore={r.learn_more}
+            outcomeMismatchNote={r.outcome_mismatch_note}
           />
         ))}
       </Section>
