@@ -3,23 +3,28 @@
 // claim-guard (CLAIMS §4) before it leaves here, and all finding text comes from the §9
 // claim templates (never freehand).
 //
-// FLAGGED — categorization heuristic: the Stop/Keep/Start split is product logic that the
-// governing docs describe by intent ("Stop = redundant/underdosed/unverifiable") but do not
-// specify as an exact rule. The rule below is a reasonable first implementation, marked for
-// founder review. "Start" (new-compound suggestions + affiliate links) is intentionally
-// EMPTY here: it is the job of the separate recommendation/affiliate layer (firewalled from
-// scoring), which is not built yet.
+// SECTION ROUTING is no longer decided here. It is CLAIMS_COMPLIANCE §4d, implemented once in
+// compliance/finding-routing.ts, because which section a finding lands in is itself a claim.
+// The heuristic this file used to carry ("Stop = redundant/underdosed/unverifiable") was the
+// flagged placeholder §4d replaces: it had no Adjust, so an underdosed Tier A compound and a
+// well-dosed Tier C compound both landed in Stop. "Start" (new-compound suggestions +
+// affiliate links) remains intentionally EMPTY in the legacy `start` field: it is the job of
+// the separate recommendation/affiliate layer (firewalled from scoring), returned as
+// `start_section` and untouched by this change.
 import { assertClaimCompliant } from '../../compliance/claim-guard.js';
 import {
   tierLetter,
   doseComparison,
   withinRangeNote,
   preliminaryDoseNote,
+  noStudiedRangeNote,
   redundancyFlag,
   recognizedSummary,
   type TierLetter,
 } from '../../compliance/claim-templates.js';
+import { routeFinding, type FindingSection } from '../../compliance/finding-routing.js';
 import type { ScoredCompoundInput, CompoundSubScore, StackScoreResult } from '../../scoring-engine/index.js';
+import type { EvidenceDirection } from '../../db/schema.js';
 // Type-only import — the Start section is COMPUTED by the affiliate-engine in assessment-service
 // and passed in; report-builder only places it into the response shape (no affiliate logic here).
 import type { StartSection } from '../../affiliate-engine/index.js';
@@ -46,6 +51,11 @@ export interface CompoundContext {
    * every surface renders the identical sentence rather than each deriving its own.
    */
   outcomeMismatchNote: string | null;
+  /**
+   * §4d routing input. NULL means "not yet derived" and is never grounds for Stop — distinct
+   * from the enum value `null_no_effect`, which means a study looked and found nothing.
+   */
+  directionOfEvidence: EvidenceDirection | null;
 }
 
 export interface OverlapGroup {
@@ -179,6 +189,16 @@ export interface ReportResponse {
   composite_score: number;
   safety_flag: boolean | null;
   stop: Array<EvidenceMeta & LearnMore & { compound: string; reason: string; est_monthly_waste: number }>;
+  /**
+   * §4d: the compound is supported, the amount is not the amount that was studied. Rendered
+   * BETWEEN Stop and Keep.
+   *
+   * Carries `monthly_cost`, not `est_monthly_waste`. The section says the compound is worth
+   * keeping, so labelling its spend "waste" on the row would contradict the section it sits
+   * in. Nothing is hidden by this: an out-of-range dose still contributes its shortfall to
+   * Estimated Annual Waste, which the report shows at the top.
+   */
+  adjust: Array<EvidenceMeta & LearnMore & { compound: string; reason: string; monthly_cost: number }>;
   keep: Array<EvidenceMeta & LearnMore & { compound: string; note: string; monthly_cost: number }>;
   /** Legacy per-compound "start" suggestions (unused; superseded by start_section). */
   start: Array<EvidenceMeta & { compound: string; reason: string; affiliate_link?: null }>;
@@ -203,20 +223,44 @@ function meta(c: CompoundContext): EvidenceMeta {
   return m;
 }
 
-function reasonFor(c: CompoundContext): string {
+/**
+ * The sentence rendered on a row, given the section §4d placed it in.
+ *
+ * THE SECTION IS AN INPUT, deliberately. §4d: "Any item placed in Adjust must state the
+ * finding that put it there, regardless of its Evidence Tier: a section that names an action
+ * must show its reason." Gating the dose comparison on Tier A/B — the previous behaviour —
+ * would put a Tier C item under a heading that names an action while saying nothing about what
+ * to adjust. The studied range is what was studied; the tier says how much confidence to place
+ * in the finding, not whether the range exists.
+ *
+ * No branch here instructs a dose. Every sentence states the user's dose, the studied range,
+ * and the distance between them, which is the §4d boundary between evidence and prescription.
+ */
+function reasonFor(c: CompoundContext, section: FindingSection): string {
   const tier = tierLetter(c.input.evidenceTier);
-  if (isTierAB(tier) && c.input.rangeLowMg != null && c.input.rangeHighMg != null) {
+  const hasRange = c.input.rangeLowMg != null && c.input.rangeHighMg != null;
+
+  if (!hasRange) {
+    // Nothing to compare against. On an Adjust row §4d requires that be said outright; in the
+    // other sections the pre-existing hedged note still applies.
+    return section === 'adjust'
+      ? noStudiedRangeNote(c.input.canonicalName)
+      : preliminaryDoseNote(c.input.canonicalName, c.input.labelDoseMg, 'mg');
+  }
+
+  if (section === 'adjust' || isTierAB(tier)) {
     return doseComparison({
       compound: c.input.canonicalName,
       amount: c.input.labelDoseMg,
       unit: 'mg',
       percent: c.percentDelta,
-      rangeLow: c.input.rangeLowMg,
-      rangeHigh: c.input.rangeHighMg,
+      rangeLow: c.input.rangeLowMg as number,
+      rangeHigh: c.input.rangeHighMg as number,
       sourceShortName: c.sourceShortName,
     });
   }
-  // Tier C/D or no interpretable range → hedged, no dose-adequacy verdict.
+
+  // Tier C/D outside Adjust → hedged, no dose-adequacy verdict.
   return preliminaryDoseNote(c.input.canonicalName, c.input.labelDoseMg, 'mg');
 }
 
@@ -227,6 +271,7 @@ export function buildReport(
   articleLinks: ArticleLinks,
 ): ReportResponse {
   const stop: ReportResponse['stop'] = [];
+  const adjust: ReportResponse['adjust'] = [];
   const keep: ReportResponse['keep'] = [];
 
   // Educational link for this compound's row, if the founder's mapping has one. Educational
@@ -238,19 +283,35 @@ export function buildReport(
   };
 
   for (const c of contexts) {
-    const tier = tierLetter(c.input.evidenceTier);
-    const wellDosed = c.sub.withinStudiedRange === true;
-    const verifiable = isTierAB(tier) && c.input.rangeLowMg != null;
+    // ONE decision, made in one place (CLAIMS_COMPLIANCE §4d). This loop no longer decides
+    // anything about placement — it only builds the row for whichever section §4d names.
+    const section = routeFinding({
+      evidenceTier: c.input.evidenceTier,
+      isRedundant: c.isRedundant,
+      directionOfEvidence: c.directionOfEvidence,
+      withinStudiedRange: c.sub.withinStudiedRange,
+    });
 
-    if (c.isRedundant) {
+    if (section === 'stop') {
+      // A redundant copy wastes its whole cost; anything else Stopped wastes the portion its
+      // dosing shortfall accounts for. Unchanged from the previous implementation.
+      const wasted = c.isRedundant ? c.input.dollarsSpent : c.input.dollarsSpent * ((100 - c.sub.dosingAccuracy) / 100);
       stop.push({
         compound: c.input.canonicalName,
-        reason: reasonFor(c),
-        est_monthly_waste: round2(c.input.dollarsSpent),
+        reason: reasonFor(c, section),
+        est_monthly_waste: round2(wasted),
         ...meta(c),
         ...learnMoreFor(c.input.compoundId),
       });
-    } else if (wellDosed && verifiable) {
+    } else if (section === 'adjust') {
+      adjust.push({
+        compound: c.input.canonicalName,
+        reason: reasonFor(c, section),
+        monthly_cost: round2(c.input.dollarsSpent),
+        ...meta(c),
+        ...learnMoreFor(c.input.compoundId),
+      });
+    } else {
       keep.push({
         compound: c.input.canonicalName,
         note:
@@ -262,18 +323,8 @@ export function buildReport(
                 rangeLow: c.input.rangeLowMg,
                 rangeHigh: c.input.rangeHighMg,
               })
-            : reasonFor(c),
+            : reasonFor(c, section),
         monthly_cost: round2(c.input.dollarsSpent),
-        ...meta(c),
-        ...learnMoreFor(c.input.compoundId),
-      });
-    } else {
-      // Underdosed/overdosed, or unverifiable (Tier C/D / no range) → Stop.
-      const shortfall = (100 - c.sub.dosingAccuracy) / 100;
-      stop.push({
-        compound: c.input.canonicalName,
-        reason: reasonFor(c),
-        est_monthly_waste: round2(c.input.dollarsSpent * shortfall),
         ...meta(c),
         ...learnMoreFor(c.input.compoundId),
       });
@@ -284,6 +335,7 @@ export function buildReport(
     composite_score: result.compositeScore,
     safety_flag: result.safetyFlag,
     stop,
+    adjust,
     keep,
     start: [], // legacy field retained for the §6 contract; superseded by start_section.
     start_section: startSection, // from the firewalled affiliate-engine (see assessment-service).

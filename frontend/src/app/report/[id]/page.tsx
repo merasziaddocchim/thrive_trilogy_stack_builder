@@ -63,15 +63,21 @@ export default function ReportPage({ params }: { params: { id: string } }) {
     );
   }
 
+  // EVERY action section must be counted here. `report.start` is the LEGACY field and is
+  // hardcoded `[]` by the backend (the real Start is `start_section`), so it contributes
+  // nothing to this test — which means adding Adjust without adding it here would have made a
+  // report whose only findings are in Adjust render "No findings to show yet" while holding
+  // findings. That is the whole failure mode of the empty state: claiming there is nothing to
+  // say when there is.
   const empty =
-    report.stop.length === 0 && report.keep.length === 0 && report.start.length === 0;
+    report.stop.length === 0 && report.adjust.length === 0 && report.keep.length === 0;
 
   // "Last reviewed" reflects the ACTUAL evidence review date carried by this report's compounds
   // (the DB `last_reviewed_date` set by the batch-1 sign-off, PR #12) — the max across all rows,
   // so it tracks re-reviews automatically and never goes stale independently. Falls back to the
   // shared REVIEWER date only when no row carries one (e.g. an empty report). ISO dates compare
   // lexicographically, so string max is date max.
-  const reviewDates = [...report.stop, ...report.keep, ...report.start]
+  const reviewDates = [...report.stop, ...report.adjust, ...report.keep, ...report.start]
     .map((r) => r.last_reviewed)
     .filter((d): d is string => Boolean(d));
   const lastReviewed = reviewDates.length
@@ -107,7 +113,7 @@ export default function ReportPage({ params }: { params: { id: string } }) {
         <div className="mt-8 rounded-lg border border-border bg-surface p-8 text-center">
           <p className="font-700 text-headline">No findings to show yet</p>
           <p className="mt-2 text-sm text-body">
-            Once your stack is scored, your Stop, Keep, and Start sections appear here.
+            Once your stack is scored, your Stop, Adjust, Keep, and Start sections appear here.
           </p>
           <Button href="/assessment" variant="secondary" className="mt-5">
             Start an audit

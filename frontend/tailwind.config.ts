@@ -24,8 +24,9 @@ const config: Config = {
         headline: 'var(--headline)',
         body: 'var(--body)',
         muted: 'var(--muted)',
-        // Stop / Keep / Start structural wayfinding.
+        // Stop / Adjust / Keep / Start structural wayfinding.
         stop: { DEFAULT: 'var(--stop)', soft: 'var(--stop-soft)' },
+        adjust: { DEFAULT: 'var(--adjust)', soft: 'var(--adjust-soft)' },
         keep: { DEFAULT: 'var(--keep)', soft: 'var(--keep-soft)' },
         start: { DEFAULT: 'var(--start)', soft: 'var(--start-soft)' },
         // Evidence tiers.

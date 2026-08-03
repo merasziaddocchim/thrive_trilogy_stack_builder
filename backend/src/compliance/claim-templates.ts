@@ -90,6 +90,18 @@ export function outcomeMismatchNote(params: {
   return `Our reviewed database has no evidence for ${params.compound} on ${goalLabel(params.chosenGoalTag)}. Its Evidence Tier and dose range below are measured against ${goalLabel(params.selectedGoalTag)} instead.`;
 }
 
+/**
+ * No studied dose range exists for this compound (CLAIMS_COMPLIANCE §4d). Rendered on an
+ * Adjust row, where §4d requires the item to "state the finding that put it there".
+ *
+ * It states what is missing on OUR side, not a shortcoming of the user's dose: there is
+ * nothing to compare against, which is different from a dose being wrong. No range means no
+ * distance to report, so this sentence carries no number and no verdict.
+ */
+export function noStudiedRangeNote(compound: string): string {
+  return `Our reviewed database has no studied dose range for ${compound}, so your dose could not be compared against research.`;
+}
+
 /** Redundancy flag (CLAIMS §9). */
 export function redundancyFlag(params: {
   productCount: number;

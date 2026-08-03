@@ -37,6 +37,11 @@
   --keep-soft: oklch(0.955 0.04 155);
   --start: oklch(0.553 0.208 263);            /* royal blue */
   --start-soft: oklch(0.955 0.028 263);
+  /* Adjust — same amber as tier C, under its OWN semantic name. A section colour must not be
+     an alias of an Evidence Tier token: they change for different reasons, and an Adjust row
+     is frequently Tier A. */
+  --adjust: oklch(0.5 0.11 75);
+  --adjust-soft: oklch(0.96 0.045 85);
 
   /* --- Evidence Tier chips (A strong → D preliminary) ---------------------- */
   --tier-a: oklch(0.46 0.13 155);             /* green */
