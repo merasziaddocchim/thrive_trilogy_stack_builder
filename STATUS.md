@@ -1,7 +1,7 @@
 # STATUS.md — Thrive Trilogy Stack Optimizer
 **Master memory file.** Read this first, in any new session, before doing anything else. This is the single source of truth for *where things stand* — not what the product does (that's the three governance docs below) but what's actually built, deployed, and decided so far.
 
-**Owner:** Ziad Meras. **Last updated:** July 29, 2026 (documentation-accuracy pass — see §7).
+**Owner:** Ziad Meras. **Last updated:** August 4, 2026 (terminology reconciliation — see §7).
 
 > Keep this file current. Every time a real decision gets made or infrastructure changes, add a line here before moving on — that's the entire point of this file existing.
 
@@ -11,7 +11,7 @@
 
 ## 1. What this project is (one paragraph)
 
-A web app that audits a user's supplement/peptide stack against a reviewed evidence database, producing a composite **Spend Efficiency Index (SEI)** score and a Stop/Keep/Start report — showing what's redundant, underdosed, or unsupported by evidence, in dollar terms. Built as an extension of Thrive Trilogy's existing credentialed, citation-first content brand. Full product/technical/legal detail lives in the three governance docs, not repeated here.
+A web app that audits a user's supplement/peptide stack against a reviewed evidence database, producing a composite **Spend Efficiency Index (SEI)** score and a Stop/Adjust/Keep/Start report — showing what's redundant, underdosed, or unsupported by evidence, in dollar terms. Built as an extension of Thrive Trilogy's existing credentialed, citation-first content brand. Full product/technical/legal detail lives in the three governance docs, not repeated here.
 
 ## 2. The three governing documents
 
@@ -21,11 +21,11 @@ These are the actual source of truth for *what the product does and how*. This f
 |---|---|---|
 | `TECH_DOCS.md` | Data architecture, scoring formula, tech stack, API contracts, SEO/mobile strategy | `Docs/TECH_DOCS.md` in repo |
 | `CLAIMS_COMPLIANCE.md` | What claims are legally/ethically defensible (YMYL, FTC, DSHEA), approved phrasing, evidence-tier language rules | `Docs/CLAIMS_COMPLIANCE.md` in repo |
-| `BRAND_GUIDELINES.md` | Voice, naming (SEI, Stack Report, Stop/Keep/Start), visual identity, disclosure placement | `Docs/BRAND_GUIDELINES.md` in repo |
+| `BRAND_GUIDELINES.md` | Voice, naming (SEI, Stack Report, Stop/Adjust/Keep/Start), visual identity, disclosure placement | `Docs/BRAND_GUIDELINES.md` in repo |
 
 Two founder-supplied data files sit alongside them as versioned sources of truth for their own domain — code transcribes them verbatim and never re-derives their contents: `Docs/affiliate-products-structured.md` (Start-section products) and `Docs/article-linking-structured.md` (Report article cross-links).
 
-**Locked terminology (do not vary):** Spend Efficiency Index (SEI) · Stack Report · Stop / Keep / Start · Preview · Evidence Tier (A/B/C/D) · Estimated Annual Waste.
+**Locked terminology (do not vary):** Spend Efficiency Index (SEI) · Stack Report · Stop / Adjust / Keep / Start · Preview · Evidence Tier (A/B/C/D) · Estimated Annual Waste.
 
 ## 3. Confirmed tech stack
 

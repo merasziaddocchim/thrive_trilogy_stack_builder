@@ -12,7 +12,7 @@ Next.js (App Router) frontend for the Thrive Trilogy Stack Optimizer, deployed t
 
 ## Naming (BRAND_GUIDELINES §3, locked)
 - Composite score → **Spend Efficiency Index (SEI)**
-- Report → **Stack Report**, sections **Stop / Keep / Start** (exact casing)
+- Report → **Stack Report**, sections **Stop / Adjust / Keep / Start** (exact casing)
 - Free teaser → **Preview**
 
 ## Local development
@@ -26,7 +26,7 @@ npm run dev                  # http://localhost:3000
 - Design tokens in `tailwind.config.ts` are ESTIMATES from BRAND_GUIDELINES §4 -
   confirm exact hex/font-family against live CSS before finalizing (still open, STATUS §9).
 - The full V1 UI is built and deployed: assessment flow with the "Confirm What We Found"
-  step, Preview, Stack Report (SEI, Stop/Keep/Start, Start section, related reading),
+  step, Preview, Stack Report (SEI, Stop/Adjust/Keep/Start, Start section, related reading),
   methodology, homepage FAQ + FAQPage JSON-LD, and the 12 legal/utility routes. Scoring
   itself is computed by the backend - this app renders it.
 - `lib/data.ts` is live-first: it calls the real backend and only falls back to
