@@ -4,6 +4,7 @@ import './globals.css';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { OrganizationSchema } from '@/components/seo/StructuredData';
+import { Analytics } from '@vercel/analytics/next';
 
 // Typography (BRAND_GUIDELINES §4): bold high-contrast editorial serif for display +
 // a warm rounded sans (distinctly rounder than Inter) for body/UI. Self-hosted via
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />
+        <Analytics />
       </body>
     </html>
   );
