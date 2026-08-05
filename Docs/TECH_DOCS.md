@@ -7,7 +7,7 @@
 
 ## 0. Product summary
 
-A web app that audits a user's supplement/peptide stack against a reviewed evidence database, producing (a) a composite **Stack Score** and dollar-denominated waste estimate, and (b) a Stop/Keep/Start report. Core differentiators: inventory-aware (not just "what to buy"), evidence-tier-gated scoring (can't fake a high score with weak evidence), and a firewall between the score and affiliate monetization. Built as an extension of Thrive Trilogy's existing credentialed, citation-first content identity.
+A web app that audits a user's supplement/peptide stack against a reviewed evidence database, producing (a) a composite **Stack Score** and dollar-denominated waste estimate, and (b) a Stop/Adjust/Keep/Start report. Core differentiators: inventory-aware (not just "what to buy"), evidence-tier-gated scoring (can't fake a high score with weak evidence), and a firewall between the score and affiliate monetization. Built as an extension of Thrive Trilogy's existing credentialed, citation-first content identity.
 
 ---
 
@@ -245,6 +245,7 @@ This pipeline **is** the claim in CLAIMS_COMPLIANCE.md §7 ("extracted by AI, ve
 - **Hard constraint:** claim copy generation must draw from the template bank in CLAIMS_COMPLIANCE.md §9 — no freehand LLM-generated claim sentences ship without going through the escalation path (CLAIMS_COMPLIANCE.md §11).
 - Disclaimer component (CLAIMS_COMPLIANCE.md §5 language) renders adjacent to every report section, not just once in a footer.
 - **Hard constraint (added 2026-07-24 after a production bug):** every outbound link to thrivetrilogy.com — affiliate `/go/` redirects and article links alike — MUST be constructed by the single shared utility `backend/src/shared/blog-url.ts` (`blogUrl()`), never written as a bare relative path. The app is served from `app.thrivetrilogy.com` while the blog and all `/go/` redirects live on the root domain, so a relative href resolves against the app and 404s silently — it is valid TypeScript, valid HTML, and invisible to the build. All 23 affiliate links shipped this way (see `STATUS.md` §7/§10). One utility, not one per engine: the same rule implemented separately in two modules is how affiliate-engine ended up wrong while article-engine was right. Enforced by regression tests in `affiliate-engine.test.ts` and `article-engine.test.ts`.
+- The Stack Report renders four action sections in a fixed order: Stop, Adjust, Keep, Start. Section assignment is computed by the routing rule originated in CLAIMS_COMPLIANCE section 4d and implemented as a pure function in backend/src/compliance/finding-routing.ts. It sits under compliance/ rather than scoring-engine/ because section 4d makes the section itself a claim. A section holding no items renders its stated empty-section sentence rather than an empty heading.
 
 ---
 
@@ -282,6 +283,7 @@ GET /assessment/{id}/preview   (free tier — no email required)
 GET /assessment/{id}/report   (post email-capture)
   → { composite_score: number, safety_flag: boolean|null,
       stop: [{compound, reason, evidence_tier, source_ids[], est_monthly_waste}],
+      adjust: [{compound, reason, evidence_tier, source_ids[], monthly_cost}],
       keep: [{compound, evidence_tier, source_ids[]}],
       start: [{compound, reason, evidence_tier, source_ids[], affiliate_link?}],
       total_estimated_annual_waste: {low, high},
@@ -290,7 +292,7 @@ GET /assessment/{id}/report   (post email-capture)
         start_roundups: [{compound_id, compound, articles: [{title, href}]}],   # Start ONLY
         hubs: [{title, href, relevance}],                                       # general only
         learn_more: {compound_id: {title, href}} } }                            # educational
-  # every object in stop/keep/start MUST include evidence_tier + source_ids — enforced
+  # every object in stop/adjust/keep/start MUST include evidence_tier + source_ids — enforced
   # per §4; API layer rejects/logs any internally-generated object missing these fields
   # stop/keep rows may also carry an optional `learn_more` educational link (never a roundup).
   # article_links comes from the firewalled article-engine (§4); hrefs are ABSOLUTE on

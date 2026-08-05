@@ -39,12 +39,14 @@ Use these terms consistently across UI, marketing copy, and code (component/vari
 | Concept | Locked public name | Notes |
 |---|---|---|
 | The composite 0–100 score | **Spend Efficiency Index** (SEI) | Never shorten inconsistently — "SEI" is fine as a repeated-reference shorthand once defined on-page |
-| Full unlocked report | **Stack Report** | Contains Stop / Keep / Start sections |
-| Report sections | **Stop / Keep / Start** | Exact casing, exact words — don't vary ("Remove/Continue/Add" etc.) |
+| Full unlocked report | **Stack Report** | Contains Stop / Adjust / Keep / Start sections |
+| Report sections | **Stop / Adjust / Keep / Start** | Exact casing, exact words — don't vary ("Remove/Continue/Add" etc.) |
 | The free pre-email teaser | **Preview** (not "free trial," not "sample") | |
 | Evidence quality label | **Evidence Tier** (A/B/C/D) | Matches `TECH_DOCS.md` exactly — never invent a parallel label like "confidence score" |
 | Dollar estimate | **Estimated Annual Waste** | Always paired with a range (low–high), never a single false-precision number, per `TECH_DOCS.md` §2 |
 | The underlying database | Internal only — never named/exposed as a product feature name to users | Avoid inventing a cute internal-engine brand name (see §10 — "V8 Engine" is exactly what to avoid) |
+
+Adjust names a dose problem, not a compound problem. An item in Adjust is one whose amount sits outside the range used in human research, and nothing in that section may read as a reason to stop taking it. The section name carries the action and the sentence carries the evidence, so no sentence in Adjust may instruct a specific amount.
 
 ---
 
@@ -76,7 +78,7 @@ The homepage identity above is built for editorial marketing pages. The **Stack 
 
 **Decided: density = balanced (not maximal, not minimal).** Concretely:
 - Show the SEI prominently as the anchor number (large, high-contrast, likely using the same bold serif or a numeric-optimized weight of it — test both)
-- Stop/Keep/Start sections get clear visual separation (not just headers — distinct card treatment per section, e.g. a subtle left-border or icon color coding) so a user can scan structure before reading detail
+- Stop/Adjust/Keep/Start sections get clear visual separation (not just headers — distinct card treatment per section, e.g. a subtle left-border or icon color coding) so a user can scan structure before reading detail
 - Each compound row shows: name, dollar amount, evidence tier — visible without a click; full citation/mechanism detail available on expand/tap, not dumped inline (this is "balanced," not "dense" — dense would show citations inline by default)
 - Numbers get consistent alignment and a tabular/monospaced-adjacent treatment where feasible so figures are easy to scan and compare — this is the one place borrowing a "fintech" convention makes sense even though the base type system is editorial
 - Avoid the homepage's generous marketing whitespace on these screens — tighten vertical rhythm so more of the report is visible without scrolling, without crossing into cramped
