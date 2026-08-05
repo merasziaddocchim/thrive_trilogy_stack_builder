@@ -39,13 +39,6 @@ function Block({ block }: { block: LegalBlock }) {
           ))}
         </ul>
       )}
-      {block.note && (
-        // Founder-review flag — visibly marked so it is never mistaken for final copy.
-        <p className="mt-4 rounded-lg border border-tier-c bg-tier-c-soft p-3 text-sm text-tier-c">
-          <span className="font-700">Flagged for review: </span>
-          {block.note}
-        </p>
-      )}
     </div>
   );
 }
@@ -64,14 +57,6 @@ export default function LegalPage({ params }: { params: { slug: string } }) {
         / {page.title}
       </p>
       <h1 className="mt-4 text-2xl font-700 text-headline">{page.title}</h1>
-
-      {/* Draft banner — this is engineering draft copy, not final legal text. */}
-      <div className="mt-4 rounded-lg border border-border bg-surface-subtle p-4 text-sm text-body">
-        <span className="font-700 text-headline">Draft for founder review.</span> This copy was
-        adapted from thrivetrilogy.com for what this app actually collects and does
-        (CLAIMS_COMPLIANCE §5a). It is not final legal text and has not been reviewed by an
-        attorney. Sections flagged in amber need specific facts confirmed before launch.
-      </div>
 
       {doc ? (
         <>
