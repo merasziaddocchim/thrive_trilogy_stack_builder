@@ -115,7 +115,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        heading: 'Types of cookies',
+        heading: 'Cookies: what is set, and by whom',
         bullets: [
           'Essential: this app sets no cookies. The assessment flow keeps your answers in your browser session storage, which your browser clears when you close the tab.',
           'Analytics: Vercel Web Analytics is active on this app. It sets no cookies and writes nothing to your device — visitors are counted using a temporary identifier generated on our server, which resets each day.',
@@ -129,7 +129,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — still open (analytics status — none active, GA planned — is confirmed per CLAIMS_COMPLIANCE §5b): (1) when GA is added, decide its advertising-features configuration and list its cookie names/retention here before it goes live; (2) which affiliate/attribution cookies are actually set, if any. Do not claim cookies we do not set.',
+        note: 'Founder review — still open: (1) confirm which affiliate partners actually set cookies on their own domains, and name them here once known; (2) if any analytics or advertising technology beyond Vercel Web Analytics is ever added, list its cookies and retention here before it goes live, per CLAIMS_COMPLIANCE §5b. Do not claim cookies we do not set.',
       },
     ],
   },
@@ -208,7 +208,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — current state is accurate (no analytics active, per CLAIMS_COMPLIANCE §5b), but two items bind when Google Analytics is added: (1) DECISION — GA’s advertising-features configuration (Google Signals / ads personalization on or off), which determines whether this page’s posture becomes "sharing"; (2) ENGINEERING — per §5b, GA must not be tagged into the app without a functional on-page opt-out (actually stopping the GA data flow) plus a GPC-honoring decision shipping in the same change (logged in TECH_DOCS §8). Also confirm whether a dedicated opt-out request form is needed.',
+        note: 'Founder review — still open: (1) whether a dedicated opt-out request form is needed, or whether the email channel above is sufficient; (2) per CLAIMS_COMPLIANCE §5b, any technology added later that sets a persistent identifier on the visitor device or discloses personal information for cross-context behavioral advertising must ship with a functional on-page opt-out and a GPC-honoring decision in the same change; (3) for Google Analytics specifically, if it is ever added, its advertising-features configuration (Google Signals / ads personalization on or off) would determine whether the posture on this page becomes "sharing".',
       },
     ],
   },
@@ -326,7 +326,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         ],
       },
       {
-        note: 'Founder review — still open on this page (retention, the intake processor, analytics status, and email facts above are confirmed per CLAIMS_COMPLIANCE §5b): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) when Google Analytics is added, decide its advertising-features configuration (Google Signals / ads personalization on or off) — that determines the "sharing" posture — and update this policy before it becomes active. Have a qualified privacy attorney review before launch.',
+        note: 'Founder review — still open on this page (retention, the intake processor, and the email facts above are confirmed per CLAIMS_COMPLIANCE §5b; the analytics facts were corrected on 2026-08-05 after Vercel Web Analytics was installed): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) if any further analytics or advertising technology is added, including Google Analytics, §5b requires this policy updated before it becomes active — and for Google Analytics its advertising-features configuration (Google Signals / ads personalization on or off) would need deciding, since that determines the "sharing" posture. Have a qualified privacy attorney review these pages.',
       },
     ],
   },
