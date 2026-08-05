@@ -117,9 +117,9 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'Types of cookies',
         bullets: [
-          'Essential: needed for the site to function and to remember basic preferences.',
-          'Analytics: none currently active. We plan to add Google Analytics in the future; this page will list its specific cookies and retention periods before it becomes active.',
-          'Affiliate/attribution: set by partners when you follow a paid link, so a referral can be credited.',
+          'Essential: this app sets no cookies. The assessment flow keeps your answers in your browser session storage, which your browser clears when you close the tab.',
+          'Analytics: Vercel Web Analytics is active on this app. It sets no cookies and writes nothing to your device — visitors are counted using a temporary identifier generated on our server, which resets each day.',
+          'Affiliate/attribution: when you follow a paid link, the partner site may set cookies on their own domain so a referral can be credited. Those are set by them, under their policy, not by us.',
         ],
       },
       {
@@ -192,7 +192,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'We do not sell or currently share your personal information',
         paragraphs: [
-          'We do not sell your personal information for money. As of the last-reviewed date below, no analytics or advertising technology is active on this app, so no "sharing" of personal information for cross-context behavioral advertising is occurring. We plan to add Google Analytics in the future; analytics configured with advertising features can count as "sharing" under these laws, so before it becomes active we will update this page and ship a working opt-out control in the same release.',
+          'We do not sell your personal information for money. Vercel Web Analytics is active on this app; it sets no cookies, writes nothing to your device, and records only anonymous, aggregated data that cannot identify you. No personal information is disclosed for cross-context behavioral advertising, so no "sharing" under these laws is occurring. If we ever add a technology that changes this, we will update this page and ship a working opt-out control before it becomes active.',
         ],
       },
       {
@@ -315,7 +315,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'Analytics and sharing',
         paragraphs: [
-          'As of the last-reviewed date below, no analytics tool is active on this app — nothing is collecting data about your visit for analytics purposes. We plan to add Google Analytics in the future; before it becomes active, we will update this policy, our Cookie Policy, and our Do Not Sell or Share My Info page, and ship a working opt-out control at the same time.',
+          'Vercel Web Analytics is active on this app. It sets no cookies and writes nothing to your device. Visitors are counted using a temporary identifier generated on our server from the incoming request; it resets each day, so you cannot be recognized across days or across other websites. The data recorded is anonymous and aggregated — it is not tied to you, your name, or your IP address, and it cannot be used to reconstruct your browsing session. It is the only analytics tool on this app. If we add another, we will update this policy, our Cookie Policy, and our Do Not Sell or Share My Info page before it becomes active.',
           'We do not sell your personal information. We rely on service providers (for example, hosting) to operate the app; they may process information on our behalf under appropriate terms. See also our Cookie Policy.',
         ],
       },
