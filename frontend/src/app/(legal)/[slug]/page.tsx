@@ -87,7 +87,10 @@ export default function LegalPage({ params }: { params: { slug: string } }) {
       )}
 
       <p className="mt-10 border-t border-border pt-4 text-xs text-muted">
-        Last reviewed {REVIEWER.lastReviewed} by {REVIEWER.name}, {REVIEWER.credential}. Questions?
+        {/* legalLastReviewed, NOT lastReviewed — these pages date their operational facts
+            (analytics, cookies, retention), not the evidence review. See constants.ts. */}
+        Last reviewed {REVIEWER.legalLastReviewed} by {REVIEWER.name}, {REVIEWER.credential}.
+        Questions?
         See our{' '}
         <Link href="/contact" className="text-accent underline underline-offset-4">
           Contact

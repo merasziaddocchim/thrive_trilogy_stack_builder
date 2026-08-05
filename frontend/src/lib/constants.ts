@@ -90,10 +90,22 @@ export const LEGAL_PAGES: Array<{ slug: string; title: string }> = [
 // review completed 2026-07-20, PR #12). The Report page does NOT depend on this constant — it
 // derives its "Last reviewed" date from the live report's per-compound review dates (the DB
 // `last_reviewed_date` PR #12 set), so that footer can never go stale on its own.
+//
+// `legalLastReviewed` is a SEPARATE date for the legal/utility pages only
+// (`app/(legal)/[slug]/page.tsx`). Those pages state operational facts about what the app does
+// — analytics, cookies, retention — and several of them say "as of the last-reviewed date
+// below", which is only true if this date is at or after the most recent change to those facts.
+// Corrected 2026-08-05, when CLAIMS_COMPLIANCE §5b item 3 was rewritten for the Vercel Web
+// Analytics install (PR #32, 2026-08-04).
+//
+// It is NOT an evidence-review date. Do NOT use it on the homepage, methodology page, Report,
+// or SEO schema — those are evidence surfaces and must keep `lastReviewed`. Using this constant
+// on one of them would claim an evidence review that never happened.
 export const REVIEWER = {
   name: 'Ziad Meras',
   credential: 'M.Sc. Organic Chemistry',
   lastReviewed: '2026-07-20',
+  legalLastReviewed: '2026-08-05',
 } as const;
 
 // Single source of truth for the plain-language description of AI's role, reused on the Report
