@@ -1,25 +1,27 @@
-// =============================================================================
-// LEGAL / UTILITY PAGE COPY — DRAFT FOR FOUNDER REVIEW. NOT FINAL LEGAL TEXT.
-//
-// Adapted (NOT copied verbatim) from the equivalents on thrivetrilogy.com, per
-// CLAIMS_COMPLIANCE §5a: the app collects materially different data than the blog
-// (stack + health-assessment inputs — see TECH_DOCS §1 user-side tables), so each
-// page is rewritten for what THIS app actually collects and does.
-//
-// Operational facts stated below (retention, intake processor, analytics vendor,
-// email, DMCA agent, governing law, Reviews scope) are owned by CLAIMS_COMPLIANCE
-// §5b — this file states them, it never originates them. Anything still unconfirmed
-// (see each `note`) keeps its founder-review flag until closed there first.
-//
-// This is engineering draft content, not legal advice.
-// =============================================================================
+/**
+ * Source of record for the copy rendered on this app's legal and
+ * informational pages.
+ *
+ * Status: adapted from thrivetrilogy.com to describe what this app actually
+ * collects and does. The analytics and cookie statements were corrected in
+ * PR #34 (2026-08-05) and are accurate as of that date. This copy has NOT
+ * been reviewed by an attorney.
+ *
+ * CLAIMS_COMPLIANCE.md originates every fact stated here — section 5a for
+ * the legal pages, section 5b for the confirmed data-practice facts. Do not
+ * state anything on these pages that section 5a or 5b does not establish.
+ *
+ * Open items previously carried in a rendered `note` field now live as
+ * comments directly above the page object each belongs to. They are
+ * internal and must never be rendered to users.
+ */
+
+import { CONTACT_EMAIL, LEGAL_EMAIL } from './constants';
 
 export interface LegalBlock {
   heading?: string;
   paragraphs?: string[];
   bullets?: string[];
-  /** Founder-review flag — rendered as a visible callout, not shipped as final copy. */
-  note?: string;
 }
 
 export interface LegalDoc {
@@ -59,6 +61,8 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review: confirm the specific affiliate networks/programs in use (e.g. Amazon Associates, brand-direct programs) and name them here, and confirm this aligns with each program’s required disclosure language.
   'affiliate-disclosure': {
     intro: `Some links in ${APP} are affiliate links. This page explains what that means and, more importantly, why it never affects your results.`,
     blocks: [
@@ -81,13 +85,12 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
           'Links to educational or mechanism articles on thrivetrilogy.com (dosing protocols, bioavailability guides) are functionally citations, not product recommendations, and carry no commission. These may appear anywhere in a report without a paid-link disclosure.',
         ],
       },
-      {
-        note: 'Founder review: confirm the specific affiliate networks/programs in use (e.g. Amazon Associates, brand-direct programs) and name them here, and confirm this aligns with each program’s required disclosure language.',
-      },
     ],
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open: confirm whether a mailing address is required for any of the legal pages (DMCA and some privacy frameworks expect one). Contact addresses are settled per CLAIMS_COMPLIANCE section 5b item 5a — support@ for general contact, legal@ for privacy, Do Not Sell, and DMCA.
   contact: {
     intro: `We would like to hear from you — questions about a finding, a correction to the research, a privacy request, or anything else.`,
     blocks: [
@@ -96,15 +99,18 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'The fastest way to reach the Thrive Trilogy team is by email. For privacy or data requests (see our Privacy Policy and Do Not Sell or Share My Info page), please include enough detail for us to locate any information tied to your request.',
         ],
-        bullets: ['Email: support@thrivetrilogy.com', 'Response time: we aim to reply within a few business days.'],
-      },
-      {
-        note: 'Founder review — still open (the contact address, support@thrivetrilogy.com, is confirmed per CLAIMS_COMPLIANCE §5b and is the single address for general contact and DMCA): confirm whether a mailing address is required for any of the legal pages (DMCA and some privacy frameworks expect one).',
+        bullets: [
+        `General questions and product help: ${CONTACT_EMAIL}`,
+        `Privacy and data requests, Do Not Sell or Share, DMCA and other legal notices: ${LEGAL_EMAIL}`,
+        'Response time: we aim to reply within a few business days.',
+        ],
       },
     ],
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open: (1) confirm which affiliate partners actually set cookies on their own domains, and name them here once known; (2) if any analytics or advertising technology beyond Vercel Web Analytics is ever added, list its cookies and retention here before it goes live, per CLAIMS_COMPLIANCE §5b. Do not claim cookies we do not set.
   'cookie-policy': {
     intro: `This page explains how ${SITE} uses cookies and similar browser storage.`,
     blocks: [
@@ -127,9 +133,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'You can control or delete cookies through your browser settings. Blocking some cookies may affect how parts of the site work. See also our Do Not Sell or Share My Info page for advertising-related choices.',
         ],
-      },
-      {
-        note: 'Founder review — still open: (1) confirm which affiliate partners actually set cookies on their own domains, and name them here once known; (2) if any analytics or advertising technology beyond Vercel Web Analytics is ever added, list its cookies and retention here before it goes live, per CLAIMS_COMPLIANCE §5b. Do not claim cookies we do not set.',
       },
     ],
   },
@@ -160,6 +163,8 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open (agent name and email are confirmed per CLAIMS_COMPLIANCE section 5b item 5 — Ziad Meras, legal@thrivetrilogy.com): add the agent's mailing address (a physical address is generally required), and confirm registration with the U.S. Copyright Office DMCA agent directory. If registration goes ahead, the registered address must match what this page publishes.
   'dmca-policy': {
     intro: `Thrive Trilogy respects intellectual property rights and responds to valid notices of claimed infringement under the Digital Millennium Copyright Act (DMCA).`,
     blocks: [
@@ -177,15 +182,14 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       },
       {
         heading: 'Designated agent',
-        bullets: ['Name: Ziad Meras', 'Email: support@thrivetrilogy.com'],
-      },
-      {
-        note: 'Founder review — still open (agent name and email are confirmed per CLAIMS_COMPLIANCE §5b): add the agent’s mailing address (a physical address is generally required), and confirm registration with the U.S. Copyright Office’s DMCA agent directory.',
+        bullets: ['Name: Ziad Meras', `Email: ${LEGAL_EMAIL}`],
       },
     ],
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open: (1) whether a dedicated opt-out request form is needed, or whether the email channel above is sufficient; (2) per CLAIMS_COMPLIANCE §5b, any technology added later that sets a persistent identifier on the visitor device or discloses personal information for cross-context behavioral advertising must ship with a functional on-page opt-out and a GPC-honoring decision in the same change; (3) for Google Analytics specifically, if it is ever added, its advertising-features configuration (Google Signals / ads personalization on or off) would determine whether the posture on this page becomes "sharing".
   'do-not-sell': {
     intro: `This page describes your choices about the "sale" or "sharing" of your personal information under California’s CCPA/CPRA and similar state laws.`,
     blocks: [
@@ -198,7 +202,7 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
       {
         heading: 'How to opt out',
         paragraphs: [
-          'You can register an opt-out preference at any time by emailing us (support@thrivetrilogy.com — see the Contact page) with the subject "Do Not Sell or Share"; we will honor it if and when any sharing-classified technology becomes active. We will not discriminate against you for exercising these rights.',
+          `You can register an opt-out preference at any time by emailing ${LEGAL_EMAIL} with the subject "Do Not Sell or Share"; we will honor it if and when any sharing-classified technology becomes active. We will not discriminate against you for exercising these rights.`,
         ],
       },
       {
@@ -206,9 +210,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'The stack and lifestyle information you enter is used to produce your report — not to build an advertising profile. We never receive the name of any medication or diagnosis, because the app does not ask for it.',
         ],
-      },
-      {
-        note: 'Founder review — still open: (1) whether a dedicated opt-out request form is needed, or whether the email channel above is sufficient; (2) per CLAIMS_COMPLIANCE §5b, any technology added later that sets a persistent identifier on the visitor device or discloses personal information for cross-context behavioral advertising must ship with a functional on-page opt-out and a GPC-honoring decision in the same change; (3) for Google Analytics specifically, if it is ever added, its advertising-features configuration (Google Signals / ads personalization on or off) would determine whether the posture on this page becomes "sharing".',
       },
     ],
   },
@@ -279,6 +280,8 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open on this page (retention, the intake processor, and the email facts above are confirmed per CLAIMS_COMPLIANCE §5b; the analytics facts were corrected on 2026-08-05 after Vercel Web Analytics was installed): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) if any further analytics or advertising technology is added, including Google Analytics, §5b requires this policy updated before it becomes active — and for Google Analytics its advertising-features configuration (Google Signals / ads personalization on or off) would need deciding, since that determines the "sharing" posture. Have a qualified privacy attorney review these pages.
   'privacy-policy': {
     intro: `This policy explains what ${APP} collects, how we use it, and your choices. It is written for this app specifically — the app collects different information than the thrivetrilogy.com blog, so this is not a copy of the blog’s policy.`,
     blocks: [
@@ -325,13 +328,12 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
           'Depending on where you live, you may have rights to access, correct, or delete your personal information, and to opt out of certain sharing. Contact us to exercise these rights. This service is not directed to children.',
         ],
       },
-      {
-        note: 'Founder review — still open on this page (retention, the intake processor, and the email facts above are confirmed per CLAIMS_COMPLIANCE §5b; the analytics facts were corrected on 2026-08-05 after Vercel Web Analytics was installed): (1) whether lab results and outcome feedback (supported by the data schema, TECH_DOCS §1, but not collected in V1) will be collected later; (2) the email delivery provider, once the report-delivery feature ships; (3) legal basis / disclosures required for your target regions (GDPR/UK if applicable); (4) if any further analytics or advertising technology is added, including Google Analytics, §5b requires this policy updated before it becomes active — and for Google Analytics its advertising-features configuration (Google Signals / ads personalization on or off) would need deciding, since that determines the "sharing" posture. Have a qualified privacy attorney review these pages.',
-      },
     ],
   },
 
   // -------------------------------------------------------------------------
+  // OPEN ITEM (internal — never rendered):
+  // Founder review — still open (governing law is confirmed as Delaware per CLAIMS_COMPLIANCE §5b): set the dispute-resolution terms (courts vs. arbitration, venue), any account/subscription terms if a paywall returns, and have an attorney confirm the liability and warranty language.
   terms: {
     intro: `These Terms govern your use of ${APP}. By using the app you agree to them. This tool is an informational comparison/audit tool, not a content-only site and not a medical service.`,
     blocks: [
@@ -364,9 +366,6 @@ export const LEGAL_CONTENT: Record<string, LegalDoc> = {
         paragraphs: [
           'These Terms are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws principles.',
         ],
-      },
-      {
-        note: 'Founder review — still open (governing law is confirmed as Delaware per CLAIMS_COMPLIANCE §5b): set the dispute-resolution terms (courts vs. arbitration, venue), any account/subscription terms if a paywall returns, and have an attorney confirm the liability and warranty language.',
       },
     ],
   },

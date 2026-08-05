@@ -84,6 +84,16 @@ export const LEGAL_PAGES: Array<{ slug: string; title: string }> = [
   { slug: 'reviews', title: 'Reviews' },
 ];
 
+/**
+ * Published contact addresses. Defined once so the two cannot drift apart.
+ * Their purposes are fixed by CLAIMS_COMPLIANCE section 5b item 5a — do not
+ * repurpose either without amending that item first.
+ * merasziad@thrivetrilogy.com is deliberately absent and must not be
+ * published on any page.
+ */
+export const CONTACT_EMAIL = 'support@thrivetrilogy.com';
+export const LEGAL_EMAIL = 'legal@thrivetrilogy.com';
+
 // Author / reviewer identity (E-E-A-T; BRAND_GUIDELINES §9, CLAIMS_COMPLIANCE §2).
 // `lastReviewed` is the fallback / non-report review date shown on the methodology, homepage,
 // legal, and SEO-schema surfaces; keep it in step with the latest evidence review (batch-1
