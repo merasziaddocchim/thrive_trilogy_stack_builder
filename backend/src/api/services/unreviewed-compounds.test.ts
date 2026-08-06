@@ -22,6 +22,7 @@ import {
   type UnreviewedCompound,
 } from './assessment-service.js';
 import { buildStartSection } from '../../affiliate-engine/index.js';
+import { recognizedSummaryWithUnreviewed } from '../../compliance/claim-templates.js';
 import { TIER2_ITEMS } from '../../affiliate-engine/catalog.js';
 
 const NMN: ResolvedEvidence = {
@@ -153,26 +154,78 @@ test('ANTI-VACUITY: the coverage sentence does NOT render when nothing is exclud
   assert.equal(report.coverage_note, null);
 });
 
-// ---- the headline count ------------------------------------------------------------------
-test('§4e: the headline counts unreviewed compounds and stops claiming every one has a tier', async () => {
-  const { preview } = await assembleAssessment(mixedStack, provider);
-  assert.equal(
-    preview.headline_finding,
-    'We recognized 2 compounds in your stack. 1 are matched to an evidence tier; the rest have not been reviewed yet.',
-  );
-  assert.ok(!/matched each to an evidence tier/.test(preview.headline_finding));
-});
+// ---- the headline: three mutually exclusive states -----------------------------------------
+// Each test asserts its own sentence AND that the other two do not render, so a branch that
+// silently falls through to a neighbouring state fails here.
+const H_ALL = /and matched each to an evidence tier/;
+const H_MIXED = /We have matched an evidence tier to \d+ of them/;
+const H_NONE = /but none has been reviewed yet/;
 
-test('ANTI-VACUITY: the original headline still renders when everything is reviewed', async () => {
-  const allScored: StoredIntake = {
-    goalTag: 'healthy_aging',
-    stackItems: [mixedStack.stackItems[0]],
-  };
-  const { preview } = await assembleAssessment(allScored, provider);
+const stackOf = (...items: StoredIntake['stackItems']): StoredIntake => ({
+  goalTag: 'healthy_aging',
+  stackItems: items,
+});
+const REVIEWED_ITEM = mixedStack.stackItems[0];
+const CREATINE = mixedStack.stackItems[1];
+const QUERCETIN = {
+  compoundId: 'cmp_quercetin', labelDoseMg: 500, deliveryFormat: 'standard_capsule' as const, pricePaid: 15,
+};
+
+test('headline state 1 — every recognized compound has a tier', async () => {
+  const { preview } = await assembleAssessment(stackOf(REVIEWED_ITEM), provider);
   assert.equal(
     preview.headline_finding,
     'We recognized 1 compound in your stack and matched each to an evidence tier.',
   );
+  assert.ok(!H_MIXED.test(preview.headline_finding), 'the mixed sentence must not render');
+  assert.ok(!H_NONE.test(preview.headline_finding), 'the none-reviewed sentence must not render');
+});
+
+test('headline state 2 — some reviewed, some not', async () => {
+  const { preview } = await assembleAssessment(mixedStack, provider);
+  assert.equal(
+    preview.headline_finding,
+    'We recognized 2 compounds in your stack. We have matched an evidence tier to 1 of them; the rest have not been reviewed yet.',
+  );
+  assert.ok(!H_ALL.test(preview.headline_finding), 'the all-reviewed sentence must not render');
+  assert.ok(!H_NONE.test(preview.headline_finding), 'the none-reviewed sentence must not render');
+});
+
+test('headline state 3 — nothing reviewed gets its own sentence', async () => {
+  const { preview } = await assembleAssessment(stackOf(CREATINE, QUERCETIN), provider);
+  assert.equal(
+    preview.headline_finding,
+    'We recognized 2 compounds in your stack, but none has been reviewed yet — so nothing here is scored.',
+  );
+  assert.ok(!H_ALL.test(preview.headline_finding));
+  assert.ok(!H_MIXED.test(preview.headline_finding), 'the mixed sentence must not render');
+});
+
+test('ANTI-VACUITY: state 3 used to render the mixed sentence with a zero in it', async () => {
+  // Before the third variant existed, a wholly unreviewed stack fell into the mixed branch and
+  // rendered "...0 are matched to an evidence tier; the rest have not been reviewed yet",
+  // which implies some were. Proves state 3 is a real branch and not a rename of state 2.
+  const withdrawn = recognizedSummaryWithUnreviewed({ total: 2, reviewed: 0 });
+  assert.match(withdrawn, /to 0 of them/);
+  const { preview } = await assembleAssessment(stackOf(CREATINE, QUERCETIN), provider);
+  assert.notEqual(preview.headline_finding, withdrawn);
+});
+
+test('pluralization: one compound renders "1 compound", not "1 compounds"', async () => {
+  // The original sentence shipped this bug and state 3 would have inherited it.
+  const one = await assembleAssessment(stackOf(REVIEWED_ITEM), provider);
+  assert.match(one.preview.headline_finding, /recognized 1 compound in your stack/);
+  assert.ok(!/1 compounds/.test(one.preview.headline_finding));
+
+  const oneUnreviewed = await assembleAssessment(stackOf(CREATINE), provider);
+  assert.match(oneUnreviewed.preview.headline_finding, /recognized 1 compound in your stack/);
+  assert.ok(!/1 compounds/.test(oneUnreviewed.preview.headline_finding));
+});
+
+test('ANTI-VACUITY: the plural form is still used above one', async () => {
+  // A helper hardcoded to "compound" would pass the singular test above.
+  const two = await assembleAssessment(stackOf(CREATINE, QUERCETIN), provider);
+  assert.match(two.preview.headline_finding, /recognized 2 compounds in your stack/);
 });
 
 // ---- a stack that is entirely unreviewed -------------------------------------------------

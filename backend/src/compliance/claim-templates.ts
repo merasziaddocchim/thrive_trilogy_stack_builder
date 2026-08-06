@@ -124,7 +124,17 @@ export function redundancyFlag(params: {
  * Founder-approved copy, inserted verbatim. Do not reword.
  */
 export function recognizedSummaryWithUnreviewed(params: { total: number; reviewed: number }): string {
-  return `We recognized ${params.total} compounds in your stack. ${params.reviewed} are matched to an evidence tier; the rest have not been reviewed yet.`;
+  return `We recognized ${params.total} compounds in your stack. We have matched an evidence tier to ${params.reviewed} of them; the rest have not been reviewed yet.`;
+}
+
+/**
+ * §4e state 3: nothing in the stack has been reviewed. Needs its own sentence because the
+ * mixed-state one above says "the rest have not been reviewed yet", which implies some were —
+ * and before this existed, a wholly unreviewed stack rendered "0 are matched to an evidence
+ * tier; the rest have not been reviewed yet". Founder-approved copy, verbatim.
+ */
+export function recognizedSummaryNoneReviewed(n: number): string {
+  return `We recognized ${n} ${pluralCompounds(n)} in your stack, but none has been reviewed yet — so nothing here is scored.`;
 }
 
 /**
@@ -156,8 +166,17 @@ export const NOT_YET_REVIEWED_DESCRIPTION =
   'We recognize these compounds, but our evidence review hasn\'t reached them yet — so they aren\'t scored.';
 
 /** Neutral recognized-count statement for a State-B preview (no fabricated numbers). */
-export function recognizedSummary(count: number): string {
-  return `We recognized ${count} ${count === 1 ? 'compound' : 'compounds'} in your stack and matched each to an evidence tier.`;
+/**
+ * "1 compound" / "2 compounds". A bare count in subject position reads wrong at one, and the
+ * original headline shipped that bug: a single-compound stack rendered "We recognized 1
+ * compounds in your stack". Kept to the one word these sentences need — this is not a
+ * general pluralization utility and should not grow into one.
+ */
+export function pluralCompounds(n: number): string {
+  return n === 1 ? 'compound' : 'compounds';
+}
+export function recognizedSummary(n: number): string {
+  return `We recognized ${n} ${pluralCompounds(n)} in your stack and matched each to an evidence tier.`;
 }
 
 /** Evidence-tier disclosure line, always appended where a tier is shown (CLAIMS §9). */

@@ -29,6 +29,8 @@ import {
 } from './claim-templates.js';
 import {
   recognizedSummaryWithUnreviewed,
+  recognizedSummaryNoneReviewed,
+  pluralCompounds,
   coverageSentence,
   coverageSentenceFor,
 } from './claim-templates.js';
@@ -82,6 +84,16 @@ const RENDERED: Array<{ name: string; text: string }> = [
   {
     name: 'recognizedSummaryWithUnreviewed',
     text: recognizedSummaryWithUnreviewed({ total: 3, reviewed: 1 }),
+  },
+  {
+    name: 'recognizedSummaryNoneReviewed',
+    text: recognizedSummaryNoneReviewed(2),
+  },
+  {
+    // Not a sentence, but it IS an exported function and the coverage guard is derived from
+    // exports. Rendering it here keeps the guard honest rather than adding a name exemption.
+    name: 'pluralCompounds',
+    text: pluralCompounds(2),
   },
   {
     name: 'coverageSentence',

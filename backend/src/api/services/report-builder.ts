@@ -15,6 +15,7 @@ import { assertClaimCompliant } from '../../compliance/claim-guard.js';
 import {
   tierLetter,
   recognizedSummaryWithUnreviewed,
+  recognizedSummaryNoneReviewed,
   coverageSentenceFor,
   NOT_YET_REVIEWED_HEADING,
   NOT_YET_REVIEWED_DESCRIPTION,
@@ -170,9 +171,22 @@ export function buildPreview(
   // §4e: recognizedSummary() ends "and matched each to an evidence tier", which is false as
   // soon as one recognized compound has none. Count the tiers actually present rather than
   // assuming every recognized compound has one.
+  // Three mutually exclusive states, each with its own sentence:
+  //   all reviewed  -> "...and matched each to an evidence tier"
+  //   some reviewed -> "...we have matched an evidence tier to N of them; the rest have not..."
+  //   none reviewed -> "...but none has been reviewed yet — so nothing here is scored"
+  // The middle sentence cannot cover the third: "the rest have not been reviewed" implies some
+  // were, and it previously rendered "0 are matched to an evidence tier" for a stack where
+  // nothing was. Its own copy says "compounds" unconditionally, which is safe because that
+  // state needs at least one of each and so is never singular.
   const reviewedCount = recognized.filter((r) => r.evidence_tier != null).length;
-  const anyUnreviewed = reviewedCount < recognized.length;
   const costedOverlap = overlaps.find((o) => o.approxMonthlyCost > 0);
+  const recognizedHeadline = (): string => {
+    if (recognized.length === 0) return recognizedSummary(0);
+    if (reviewedCount === recognized.length) return recognizedSummary(recognized.length);
+    if (reviewedCount === 0) return recognizedSummaryNoneReviewed(recognized.length);
+    return recognizedSummaryWithUnreviewed({ total: recognized.length, reviewed: reviewedCount });
+  };
   const headline =
     costedOverlap != null
       ? redundancyFlag({
@@ -180,9 +194,7 @@ export function buildPreview(
           sharedIngredient: costedOverlap.sharedIngredient,
           monthlyCost: costedOverlap.approxMonthlyCost,
         })
-      : anyUnreviewed
-        ? recognizedSummaryWithUnreviewed({ total: recognized.length, reviewed: reviewedCount })
-        : recognizedSummary(recognized.length);
+      : recognizedHeadline();
 
   return {
     sufficient_for_scoring: sufficient,
