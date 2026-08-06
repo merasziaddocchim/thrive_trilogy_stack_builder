@@ -35,6 +35,51 @@ const C = {
   tmg: 'c0000000-0000-4000-8000-000000000005',
 } as const;
 
+// Batch 2 — registry expansion, 2026-08-05 (CLAIMS_COMPLIANCE §4e). RECOGNITION ONLY: these
+// compounds have a row and an alias list and NOTHING else. No source, no dose record, no
+// scoring parameter, and deliberately no mechanismSummary — §4e says recognition "carries no
+// statement about the compound", and a mechanism summary is a statement. They exist so a user
+// typing "creatine" is told we recognise it and have not reviewed it, instead of being told it
+// is not recognised, which reads as the app being broken.
+const C2 = {
+  vitaminD3: 'c0000000-0000-4000-8000-000000000006',
+  magnesium: 'c0000000-0000-4000-8000-000000000007',
+  omega3: 'c0000000-0000-4000-8000-000000000008',
+  creatine: 'c0000000-0000-4000-8000-000000000009',
+  collagen: 'c0000000-0000-4000-8000-000000000010',
+  curcumin: 'c0000000-0000-4000-8000-000000000011',
+  coq10: 'c0000000-0000-4000-8000-000000000012',
+  ashwagandha: 'c0000000-0000-4000-8000-000000000013',
+  melatonin: 'c0000000-0000-4000-8000-000000000014',
+  zinc: 'c0000000-0000-4000-8000-000000000015',
+  vitaminC: 'c0000000-0000-4000-8000-000000000016',
+  greenTeaExtract: 'c0000000-0000-4000-8000-000000000017',
+  nadPlus: 'c0000000-0000-4000-8000-000000000018',
+  quercetin: 'c0000000-0000-4000-8000-000000000019',
+  glutathione: 'c0000000-0000-4000-8000-000000000020',
+  alphaLipoicAcid: 'c0000000-0000-4000-8000-000000000021',
+  astaxanthin: 'c0000000-0000-4000-8000-000000000022',
+  lTheanine: 'c0000000-0000-4000-8000-000000000023',
+  glycine: 'c0000000-0000-4000-8000-000000000024',
+  taurine: 'c0000000-0000-4000-8000-000000000025',
+  vitaminK2: 'c0000000-0000-4000-8000-000000000026',
+  vitaminB12: 'c0000000-0000-4000-8000-000000000027',
+  selenium: 'c0000000-0000-4000-8000-000000000028',
+  spermidine: 'c0000000-0000-4000-8000-000000000029',
+  fisetin: 'c0000000-0000-4000-8000-000000000030',
+  urolithinA: 'c0000000-0000-4000-8000-000000000031',
+  caAkg: 'c0000000-0000-4000-8000-000000000032',
+  pqq: 'c0000000-0000-4000-8000-000000000033',
+  sulforaphane: 'c0000000-0000-4000-8000-000000000034',
+  apigenin: 'c0000000-0000-4000-8000-000000000035',
+  trigonelline: 'c0000000-0000-4000-8000-000000000036',
+  nmnh: 'c0000000-0000-4000-8000-000000000037',
+  hyaluronicAcid: 'c0000000-0000-4000-8000-000000000038',
+  citicoline: 'c0000000-0000-4000-8000-000000000039',
+  phosphatidylserine: 'c0000000-0000-4000-8000-000000000040',
+  nac: 'c0000000-0000-4000-8000-000000000041',
+} as const;
+
 const S = {
   yoshino2021: '50000000-0000-4000-8000-000000000001',
   liao2021: '50000000-0000-4000-8000-000000000002',
@@ -51,6 +96,10 @@ const S = {
 } as const;
 
 export const SEED_COMPOUND_IDS = C;
+/** Batch-2 (recognition-only) compound ids. Separate from C so it stays obvious which
+ *  compounds carry evidence: everything the affiliate and article catalogues key off is in
+ *  C, and nothing in C2 may be added to those catalogues while it is unreviewed (§4e). */
+export const BATCH2_COMPOUND_IDS = C2;
 export const SEED_SOURCE_IDS = S;
 
 const VERIFIED = 'Existence + metadata verified via web search 2026-07-13; DOI not fetched directly (resolver blocked).';
@@ -245,6 +294,308 @@ export const SEED_SOURCES: (typeof sources.$inferInsert)[] = [
 // A compound with no literature-established unit must be left NULL rather than defaulted to
 // 'mg'. Batch 2 brings IU- and mcg-dosed compounds, where a blanket mg assumption is a 1000x
 // error; the parser treats NULL as "do not infer" and leaves the dose unparsed.
+// ---- BATCH 2: RECOGNITION ONLY (CLAIMS_COMPLIANCE §4e) ----------------------
+// A row and an alias list, and nothing else. No source, no dose record, no scoring
+// parameter — so every compound here has no Evidence Tier, no studied range and no direction
+// of evidence. That is the state §4e governs, not an omission to be filled in later by a
+// default. `mechanismSummary` is NULL throughout for the same reason: §4e says recognition
+// "carries no statement about the compound", and a mechanism summary is a statement.
+//
+// Exported separately from SEED_COMPOUNDS (which spreads it below) so the founder-run
+// script db/corrections/2026-08-05-add-compounds.ts inserts exactly this set, and so it stays
+// obvious which compounds carry evidence: the affiliate and article catalogues key off
+// SEED_COMPOUND_IDS, and nothing here may be added to them while it is unreviewed.
+export const BATCH2_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
+  {
+    compoundId: C2.vitaminD3,
+    canonicalName: 'Vitamin D3',
+    aliases: ['cholecalciferol', 'vitamin D', 'D3'],
+    category: 'micronutrient',
+    defaultUnit: 'iu',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.magnesium,
+    canonicalName: 'Magnesium',
+    aliases: ['magnesium glycinate', 'magnesium threonate', 'magnesium citrate', 'mag glycinate'],
+    category: 'micronutrient',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.omega3,
+    canonicalName: 'Omega-3',
+    aliases: ['fish oil', 'EPA', 'DHA', 'krill oil'],
+    category: 'fatty_acid',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.creatine,
+    canonicalName: 'Creatine',
+    aliases: ['creatine monohydrate'],
+    category: 'amino_acid',
+    defaultUnit: 'g',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.collagen,
+    canonicalName: 'Collagen',
+    aliases: ['collagen peptides', 'hydrolyzed collagen'],
+    category: 'structural_compound',
+    defaultUnit: 'g',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.curcumin,
+    canonicalName: 'Curcumin',
+    aliases: ['turmeric', 'curcuminoids'],
+    category: 'botanical_extract',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.coq10,
+    canonicalName: 'CoQ10',
+    aliases: ['coenzyme Q10', 'ubiquinol', 'ubiquinone'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.ashwagandha,
+    canonicalName: 'Ashwagandha',
+    aliases: ['KSM-66', 'withania'],
+    category: 'botanical_extract',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.melatonin,
+    canonicalName: 'Melatonin',
+    aliases: [],
+    category: 'hormone',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.zinc,
+    canonicalName: 'Zinc',
+    aliases: [],
+    category: 'micronutrient',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.vitaminC,
+    canonicalName: 'Vitamin C',
+    aliases: ['ascorbic acid'],
+    category: 'micronutrient',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.greenTeaExtract,
+    canonicalName: 'Green tea extract',
+    aliases: ['EGCG'],
+    category: 'botanical_extract',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.nadPlus,
+    canonicalName: 'NAD+',
+    aliases: ['NAD'],
+    category: 'nad_precursor',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.quercetin,
+    canonicalName: 'Quercetin',
+    aliases: [],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.glutathione,
+    canonicalName: 'Glutathione',
+    aliases: ['L-glutathione', 'liposomal glutathione'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.alphaLipoicAcid,
+    canonicalName: 'Alpha-lipoic acid',
+    aliases: ['R-ALA', 'lipoic acid'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.astaxanthin,
+    canonicalName: 'Astaxanthin',
+    aliases: [],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.lTheanine,
+    canonicalName: 'L-theanine',
+    aliases: ['theanine'],
+    category: 'amino_acid',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.glycine,
+    canonicalName: 'Glycine',
+    aliases: [],
+    category: 'amino_acid',
+    defaultUnit: 'g',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.taurine,
+    canonicalName: 'Taurine',
+    aliases: [],
+    category: 'amino_acid',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.vitaminK2,
+    canonicalName: 'Vitamin K2',
+    aliases: ['MK-7', 'menaquinone'],
+    category: 'micronutrient',
+    defaultUnit: 'mcg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.vitaminB12,
+    canonicalName: 'Vitamin B12',
+    aliases: ['methylcobalamin', 'cobalamin'],
+    category: 'micronutrient',
+    defaultUnit: 'mcg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.selenium,
+    canonicalName: 'Selenium',
+    aliases: [],
+    category: 'micronutrient',
+    defaultUnit: 'mcg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.spermidine,
+    canonicalName: 'Spermidine',
+    aliases: [],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.fisetin,
+    canonicalName: 'Fisetin',
+    aliases: [],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.urolithinA,
+    canonicalName: 'Urolithin A',
+    aliases: ['Mitopure'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.caAkg,
+    canonicalName: 'Ca-AKG',
+    aliases: ['calcium alpha-ketoglutarate', 'alpha-ketoglutarate'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.pqq,
+    canonicalName: 'PQQ',
+    aliases: ['pyrroloquinoline quinone'],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.sulforaphane,
+    canonicalName: 'Sulforaphane',
+    aliases: ['broccoli sprout extract'],
+    category: 'botanical_extract',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.apigenin,
+    canonicalName: 'Apigenin',
+    aliases: [],
+    category: 'longevity_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.trigonelline,
+    canonicalName: 'Trigonelline',
+    aliases: [],
+    category: 'nad_precursor',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.nmnh,
+    canonicalName: 'NMNH',
+    aliases: ['reduced NMN'],
+    category: 'nad_precursor',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.hyaluronicAcid,
+    canonicalName: 'Hyaluronic acid',
+    aliases: [],
+    category: 'structural_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.citicoline,
+    canonicalName: 'Citicoline',
+    aliases: ['CDP-choline'],
+    category: 'structural_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.phosphatidylserine,
+    canonicalName: 'Phosphatidylserine',
+    aliases: ['PS'],
+    category: 'structural_compound',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+  {
+    compoundId: C2.nac,
+    canonicalName: 'N-acetylcysteine',
+    aliases: ['NAC', 'N-acetyl cysteine'],
+    category: 'amino_acid',
+    defaultUnit: 'mg',
+    mechanismSummary: null,
+  },
+];
+
 export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
   {
     compoundId: C.nmn,
@@ -291,6 +642,7 @@ export const SEED_COMPOUNDS: (typeof compounds.$inferInsert)[] = [
     mechanismSummary:
       'A methyl donor in the betaine–homocysteine methyltransferase (BHMT) reaction, remethylating homocysteine to methionine within one-carbon (methylation) metabolism.',
   },
+  ...BATCH2_COMPOUNDS,
 ];
 
 // ---- LAYER 2: DOSE RECORDS (>=2 per compound; includes genuine null results) -

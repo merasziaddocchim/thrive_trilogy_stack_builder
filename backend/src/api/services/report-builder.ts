@@ -14,6 +14,10 @@
 import { assertClaimCompliant } from '../../compliance/claim-guard.js';
 import {
   tierLetter,
+  recognizedSummaryWithUnreviewed,
+  coverageSentenceFor,
+  NOT_YET_REVIEWED_HEADING,
+  NOT_YET_REVIEWED_DESCRIPTION,
   doseComparison,
   withinRangeNote,
   preliminaryDoseNote,
@@ -71,7 +75,14 @@ export interface OverlapGroup {
 export interface RecognizedCompound {
   compound_id: string;
   canonical_name: string;
-  evidence_tier: TierLetter;
+  /**
+   * NULL for a recognized-but-unreviewed compound (CLAIMS_COMPLIANCE §4e): it has no scoring
+   * parameter, therefore no Evidence Tier, and §4e forbids giving it "a default or placeholder
+   * grade of any kind". The null is why this is `TierLetter | null` rather than a letter with a
+   * fallback — a fallback is exactly what §4e prohibits, and a nullable type makes every
+   * consumer confront it. `tierSummary()` skips these; the UI renders "Not yet reviewed".
+   */
+  evidence_tier: TierLetter | null;
   /**
    * §4b: null unless this compound's Evidence Tier was established for an outcome other than
    * the user's stated priority. The tier badge is one of the two things §4b names, so the
@@ -86,6 +97,12 @@ export interface PreviewResponse {
   evidence_tier_summary: Record<TierLetter, number>;
   overlap_flags: Array<{ shared_ingredient: string; product_count: number; approx_monthly_cost: number | null }>;
   spend_efficiency_index: number | null;
+  /**
+   * CLAIMS_COMPLIANCE §4e: how many of the user's compounds the Spend Efficiency Index covers.
+   * NULL when it covers all of them — §4e requires the statement only where a compound is
+   * EXCLUDED, and stating "covers 2 of the 2" would raise a doubt that does not exist.
+   */
+  coverage_note: string | null;
   estimated_annual_waste: { low: number; high: number } | null;
   headline_finding: string;
   dose_comparisons: Array<{
@@ -100,9 +117,16 @@ export interface PreviewResponse {
   }>;
 }
 
+// §4e: an unreviewed compound "must not be assigned a tier". It therefore counts toward NO
+// bucket here — not a fifth one, and certainly not D, which is a reviewed verdict meaning the
+// evidence is preliminary. The two are different claims: D says we looked, null says we have
+// not. Summing them would tell a user their creatine was judged and found weak.
 function tierSummary(recognized: RecognizedCompound[]): Record<TierLetter, number> {
   const summary: Record<TierLetter, number> = { A: 0, B: 0, C: 0, D: 0 };
-  for (const r of recognized) summary[r.evidence_tier] += 1;
+  for (const r of recognized) {
+    if (r.evidence_tier == null) continue;
+    summary[r.evidence_tier] += 1;
+  }
   return summary;
 }
 
@@ -117,7 +141,7 @@ export function buildPreview(
   contexts: CompoundContext[],
   result: StackScoreResult,
   overlaps: OverlapGroup[],
-  opts: { sufficientForScoring: boolean },
+  opts: { sufficientForScoring: boolean; coverage: { scored: number; total: number } },
 ): PreviewResponse {
   const sufficient = opts.sufficientForScoring;
 
@@ -143,6 +167,11 @@ export function buildPreview(
 
   // Headline must be a §9 template. Prefer a redundancy finding when one exists and its cost
   // is known; otherwise a neutral recognized-count statement (never a fabricated number).
+  // §4e: recognizedSummary() ends "and matched each to an evidence tier", which is false as
+  // soon as one recognized compound has none. Count the tiers actually present rather than
+  // assuming every recognized compound has one.
+  const reviewedCount = recognized.filter((r) => r.evidence_tier != null).length;
+  const anyUnreviewed = reviewedCount < recognized.length;
   const costedOverlap = overlaps.find((o) => o.approxMonthlyCost > 0);
   const headline =
     costedOverlap != null
@@ -151,7 +180,9 @@ export function buildPreview(
           sharedIngredient: costedOverlap.sharedIngredient,
           monthlyCost: costedOverlap.approxMonthlyCost,
         })
-      : recognizedSummary(recognized.length);
+      : anyUnreviewed
+        ? recognizedSummaryWithUnreviewed({ total: recognized.length, reviewed: reviewedCount })
+        : recognizedSummary(recognized.length);
 
   return {
     sufficient_for_scoring: sufficient,
@@ -163,6 +194,10 @@ export function buildPreview(
       approx_monthly_cost: o.approxMonthlyCost,
     })),
     spend_efficiency_index: sufficient ? result.compositeScore : null,
+    // §4e. Null whenever the score already covers everything, so the sentence never appears on
+    // a fully scored stack. Also null when there is no score at all — a coverage claim about a
+    // number that was not rendered would be meaningless.
+    coverage_note: sufficient ? coverageSentenceFor(opts.coverage) : null,
     estimated_annual_waste: sufficient
       ? { low: result.waste.annualLow, high: result.waste.annualHigh }
       : null,
@@ -206,7 +241,24 @@ export interface ReportResponse {
   start_section: StartSection;
   /** Article cross-links (firewalled article-engine output). Roundups are Start-only. */
   article_links: ArticleLinks;
+  /**
+   * CLAIMS_COMPLIANCE §4e — compounds the registry recognises and the evidence review has not
+   * reached. A PLAIN LIST, deliberately not a fourth action section: Stop, Adjust and Keep each
+   * assert something about the evidence, and §4e is explicit that "absence of review is not a
+   * finding, and must never be rendered as one". Carries a name and nothing else — no tier, no
+   * range, no direction, no cost — because there is nothing else to carry.
+   *
+   * `heading` and `description` travel with the data so the wording is founder-approved copy
+   * held in one place (claim-templates) rather than retyped in a component.
+   */
+  not_yet_reviewed: {
+    heading: string;
+    description: string;
+    compounds: Array<{ compound_id: string; compound: string }>;
+  };
   total_estimated_annual_waste: { low: number; high: number };
+  /** §4e coverage statement, or null when the score covers every compound entered. */
+  coverage_note: string | null;
 }
 
 function meta(c: CompoundContext): EvidenceMeta {
@@ -269,6 +321,8 @@ export function buildReport(
   result: StackScoreResult,
   startSection: StartSection,
   articleLinks: ArticleLinks,
+  notYetReviewed: ReadonlyArray<{ compoundId: string; canonicalName: string }> = [],
+  coverage: { scored: number; total: number } = { scored: 0, total: 0 },
 ): ReportResponse {
   const stop: ReportResponse['stop'] = [];
   const adjust: ReportResponse['adjust'] = [];
@@ -340,7 +394,16 @@ export function buildReport(
     start: [], // legacy field retained for the §6 contract; superseded by start_section.
     start_section: startSection, // from the firewalled affiliate-engine (see assessment-service).
     article_links: articleLinks, // from the firewalled article-engine (see assessment-service).
+    // §4e. No claim-guard call here, and that is correct rather than an omission: the guard
+    // (CLAIMS §4) requires an evidence tier and source ids on every claim object, and these
+    // rows make no claim about a compound — they state only that we have not reviewed it.
+    not_yet_reviewed: {
+      heading: NOT_YET_REVIEWED_HEADING,
+      description: NOT_YET_REVIEWED_DESCRIPTION,
+      compounds: notYetReviewed.map((u) => ({ compound_id: u.compoundId, compound: u.canonicalName })),
+    },
     total_estimated_annual_waste: { low: result.waste.annualLow, high: result.waste.annualHigh },
+    coverage_note: coverageSentenceFor(coverage),
   };
 }
 

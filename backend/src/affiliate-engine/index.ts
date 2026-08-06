@@ -56,10 +56,29 @@ export interface StartSection {
  *
  * - Tier 1: one group per recognized compound that has catalog products, in recognition order.
  *   Products are listed as given, no ranking (no price data; founder decision).
- * - Tier 2: always returned — a general "also available" list, not stack-dependent.
+ * - Tier 2: a general "also available" list, not stack-dependent, MINUS any item whose category
+ *   names a compound this user is holding as unreviewed — see below.
  * - Tier 3: a bundle is included only if the stack contains >=1 compound the bundle contains.
+ *
+ * `unreviewedNames` are the canonical names of compounds in THIS stack that are recognized but
+ * have no scoring parameter (CLAIMS_COMPLIANCE §4e). Tier 2 already carries entries for CaAKG,
+ * Quercetin and Spermidine, and all three became registry compounds in the 2026-08-05 batch —
+ * so without this filter a user entering Quercetin would read "not yet reviewed, not scored"
+ * and then be offered a Quercetin purchase link on the same page. §4e forbids exactly that: "An
+ * unreviewed compound must not carry a purchase link."
+ *
+ * Deliberately narrow. It suppresses only the collision — same compound, same report. Whether
+ * Tier 2 should link compounds the app has never assessed AT ALL is a real question, it
+ * predates this change, and it is logged rather than decided here.
+ *
+ * Names only. No score, dose, tier or dollar figure crosses this boundary, so the firewall
+ * (TECH_DOCS §4) is untouched: affiliate data still cannot reach scoring, and scoring output
+ * still cannot reach affiliate selection.
  */
-export function buildStartSection(recognized: RecognizedForStart[]): StartSection {
+export function buildStartSection(
+  recognized: RecognizedForStart[],
+  unreviewedNames: readonly string[] = [],
+): StartSection {
   const byId = new Map<string, RecognizedForStart>();
   for (const r of recognized) if (!byId.has(r.compoundId)) byId.set(r.compoundId, r);
 
@@ -80,7 +99,13 @@ export function buildStartSection(recognized: RecognizedForStart[]): StartSectio
     b.containsCompoundIds.some((id) => recognizedIds.has(id)),
   ).map((b) => ({ brand: b.brand, product: b.product, href: b.href, contains: b.containsDisplay }));
 
-  return { tier1, tier2: TIER2_ITEMS, tier3 };
+  // "CaAKG" vs "Ca-AKG" must compare equal, so fold case and drop everything that is not a
+  // letter or digit before comparing.
+  const fold = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const blocked = new Set(unreviewedNames.map(fold));
+  const tier2 = blocked.size === 0 ? TIER2_ITEMS : TIER2_ITEMS.filter((i) => !blocked.has(fold(i.category)));
+
+  return { tier1, tier2, tier3 };
 }
 
 export { EXCLUDED_HREFS } from './catalog.js';

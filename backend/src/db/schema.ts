@@ -65,11 +65,24 @@ export const extractionStatusEnum = pgEnum('extraction_status', [
 ]);
 
 // Category maps to existing site pillars (TECH_DOCS §1).
+// Internal taxonomy only — never rendered to users and never an input to any score. The six
+// values below the original four were added by migration 0004 for the batch-2 registry
+// expansion, where 19 of 36 compounds fit none of the original four and forcing them into
+// `longevity_compound` would have made that value meaningless.
+//
+// ORDER IS APPEND-ONLY. Postgres `ALTER TYPE ... ADD VALUE` cannot remove or reorder a value,
+// so a name written here is permanent.
 export const compoundCategoryEnum = pgEnum('compound_category', [
   'nad_precursor',
   'methylation',
   'longevity_compound',
   'delivery_modifier',
+  'micronutrient',
+  'fatty_acid',
+  'amino_acid',
+  'botanical_extract',
+  'structural_compound',
+  'hormone',
 ]);
 
 export const deliveryFormatEnum = pgEnum('delivery_format', [

@@ -29,6 +29,13 @@
       "when": 1785575119368,
       "tag": "0003_compound_default_unit",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785920719368,
+      "tag": "0004_compound_category_expansion",
+      "breakpoints": true
     }
   ]
 }

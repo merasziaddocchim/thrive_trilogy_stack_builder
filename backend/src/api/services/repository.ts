@@ -8,7 +8,7 @@
 // a live DB. The pure layers above them (scoring-engine, report-builder, assessment-service)
 // are fully unit-tested.
 import { and, eq, inArray } from 'drizzle-orm';
-import type { EvidenceProvider, ResolvedEvidence } from './assessment-service.js';
+import type { EvidenceProvider, ResolvedEvidence, UnreviewedCompound } from './assessment-service.js';
 import type { StackInteraction } from '../../scoring-engine/index.js';
 import type { CompoundRef } from '../../intake-parser/index.js';
 import { selectParameter } from '../../db/goals.js';
@@ -80,6 +80,42 @@ export const dbEvidenceProvider: EvidenceProvider = {
       });
     }
     return map;
+  },
+
+  /**
+   * CLAIMS_COMPLIANCE §4e — compounds that exist in `compounds` but have NO scoring parameter.
+   *
+   * This is the other half of `resolve()`. Up there, `if (p == null) continue;` drops a compound
+   * with no parameter from the evidence map; before this method existed nothing picked it back
+   * up, so the compound vanished from the entire pipeline while its spend was excluded from an
+   * SEI still presented as covering the stack. The two are exact complements: a compound the
+   * user entered appears in `resolve()`'s map or in this list, never both and never neither.
+   *
+   * Returns a name and an id, nothing more. §4e forbids a tier, a range or "a default or
+   * placeholder grade of any kind", and the shape is what makes that unrepresentable.
+   */
+  async unreviewed(compoundIds): Promise<UnreviewedCompound[]> {
+    if (compoundIds.length === 0) return [];
+
+    const db = await getDb();
+    const { scoringParameters, compounds } = await import('../../db/schema.js');
+
+    const params = await db
+      .select({ compoundId: scoringParameters.compoundId })
+      .from(scoringParameters)
+      .where(inArray(scoringParameters.compoundId, compoundIds));
+    const hasParameter = new Set(params.map((p) => p.compoundId));
+
+    const rows = await db
+      .select({ compoundId: compounds.compoundId, canonicalName: compounds.canonicalName })
+      .from(compounds)
+      .where(inArray(compounds.compoundId, compoundIds));
+
+    // A compound with NO row in `compounds` at all is not unreviewed — it is unknown, and the
+    // parser would not have produced an id for it. Only rows that exist and lack a parameter.
+    return rows
+      .filter((r) => !hasParameter.has(r.compoundId))
+      .map((r) => ({ compoundId: r.compoundId, canonicalName: r.canonicalName }));
   },
 
   async interactions(compoundIds): Promise<StackInteraction[]> {

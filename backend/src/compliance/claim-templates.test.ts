@@ -27,6 +27,11 @@ import {
   outcomeMismatchNote,
   noStudiedRangeNote,
 } from './claim-templates.js';
+import {
+  recognizedSummaryWithUnreviewed,
+  coverageSentence,
+  coverageSentenceFor,
+} from './claim-templates.js';
 import * as templates from './claim-templates.js';
 import { SEED_SCORING_PARAMETERS, SEED_SOURCES, SEED_COMPOUNDS } from '../db/seed-data.js';
 
@@ -73,6 +78,20 @@ const RENDERED: Array<{ name: string; text: string }> = [
       chosenGoalTag: 'training_and_recovery',
       selectedGoalTag: 'metabolic_health',
     }) as string,
+  },
+  {
+    name: 'recognizedSummaryWithUnreviewed',
+    text: recognizedSummaryWithUnreviewed({ total: 3, reviewed: 1 }),
+  },
+  {
+    name: 'coverageSentence',
+    text: coverageSentence({ scored: 1, total: 2 }),
+  },
+  {
+    // Rendered with scored < total, the only case that produces a sentence at all. The null
+    // branch is asserted separately (see the anti-vacuity test for the coverage note).
+    name: 'coverageSentenceFor',
+    text: coverageSentenceFor({ scored: 1, total: 2 }) ?? '',
   },
   {
     name: 'tierDisclosure',

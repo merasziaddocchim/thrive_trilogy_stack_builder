@@ -13,7 +13,26 @@ const CHIP: Record<EvidenceTier, string> = {
 };
 
 /** Compact chip — always visible on a compound row. */
-export function TierBadge({ tier, className = '' }: { tier: EvidenceTier; className?: string }) {
+/**
+ * CLAIMS_COMPLIANCE §4e badge for a recognized compound with no evidence review. Rendered where
+ * a tier badge would go, in the neutral surface style rather than any tier's colour: a tier
+ * colour would read as a grade, and §4e forbids giving these "a default or placeholder grade of
+ * any kind". Founder-approved wording, verbatim.
+ */
+export function NotYetReviewedBadge({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-pill border border-border bg-surface-subtle px-2.5 py-1 text-xs font-700 text-muted ${className}`}
+      title="Recognized, but not yet reviewed — this compound is not scored"
+    >
+      Not yet reviewed
+    </span>
+  );
+}
+
+export function TierBadge({ tier, className = '' }: { tier: EvidenceTier | null; className?: string }) {
+  // §4e: a null tier is not a tier. It must never fall through to a letter.
+  if (tier == null) return <NotYetReviewedBadge className={className} />;
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-700 ${CHIP[tier]} ${className}`}

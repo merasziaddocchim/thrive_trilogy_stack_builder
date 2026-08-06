@@ -9,6 +9,31 @@ import type { CompoundRef, MatchConfidence } from './types.js';
 export const HIGH_CONFIDENCE_THRESHOLD = 0.9;
 export const LOW_CONFIDENCE_THRESHOLD = 0.55;
 
+/**
+ * Inputs that name more than one real product and must never auto-accept, however well they
+ * score. A match here is demoted from `high` to `low`, which routes it to the Confirm screen's
+ * "not sure about this match" badge with the best guess still shown — the user confirms or
+ * corrects it. It is deliberately NOT demoted to `unmatched`: that reproduces the "Not
+ * recognized" dead end PR #30 was written to remove.
+ *
+ * WHY A LIST AND NOT AN ABSENT ALIAS. Leaving the string out of `aliases` does nothing —
+ * measured, not assumed. With `ALA` and `AKG` declared nowhere, the real matcher still returned
+ *   ALA -> Alpha-lipoic acid  0.950 high   (via the "R-ALA" alias)
+ *   AKG -> Ca-AKG             0.950 high   (via the canonical name itself)
+ * because fuzzy similarity reaches them anyway. Omission is inert; only an explicit rule works.
+ *
+ * Entries, and why each is here:
+ *   ala          — alpha-lipoic acid vs alpha-linolenic acid. Different molecules.
+ *   akg          — free alpha-ketoglutaric acid vs calcium alpha-ketoglutarate. Different
+ *                  products with different evidence; scoring free AKG against Ca-AKG's studied
+ *                  range would be a dosing error, not a labelling nicety.
+ *   betaine hcl  — a digestive acid, not TMG. Pre-existing: TMG has carried a `Betaine` alias
+ *                  since batch 1, so "betaine HCl" resolved to TMG at 0.950 high.
+ *
+ * Compared against the NORMALIZED input, so casing and punctuation do not matter.
+ */
+export const AMBIGUOUS_INPUTS: ReadonlySet<string> = new Set(['ala', 'akg', 'betaine hcl']);
+
 export interface MatchResult {
   compound: CompoundRef | null;
   confidence: MatchConfidence;
@@ -41,6 +66,13 @@ export function matchCompound(nameGuess: string, compounds: CompoundRef[]): Matc
         best = compound;
       }
     }
+  }
+
+  // An ambiguous input never auto-accepts. The guess survives so the Confirm screen can show
+  // it; only the confidence is capped. Applied before the thresholds so no ordering of them
+  // can route around it.
+  if (AMBIGUOUS_INPUTS.has(guess) && bestSim >= LOW_CONFIDENCE_THRESHOLD) {
+    return { compound: best, confidence: 'low', similarity: bestSim };
   }
 
   if (bestSim >= HIGH_CONFIDENCE_THRESHOLD) return { compound: best, confidence: 'high', similarity: bestSim };

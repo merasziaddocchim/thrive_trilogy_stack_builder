@@ -5,7 +5,7 @@
 // left-accent — the ONE place colored side-borders are allowed (structural wayfinding, prompt §7).
 // The "Start" section (affiliate products, Tier 1/2/3) is rendered separately by StartSection.
 import { useState } from 'react';
-import type { ArticleLink, ReportResponse } from '@/lib/types';
+import type { ArticleLink, EvidenceTier, ReportResponse } from '@/lib/types';
 import { SECTION_DESCRIPTIONS, SECTION_EMPTY_STATES } from '@/lib/constants';
 import { TierBadge, TierDisclosure } from '@/components/ui/EvidenceTier';
 
@@ -60,7 +60,10 @@ function ExpandableRow({
   amount: number | null;
   amountLabel: string;
   reason: string;
-  tier: React.ComponentProps<typeof TierBadge>['tier'];
+  // NOT derived from TierBadge's prop, which widened to `EvidenceTier | null` for §4e.
+  // A Stop/Adjust/Keep row always has a tier: §4e routes unreviewed compounds to none of
+  // these sections, so a null here would mean the routing rule had been broken upstream.
+  tier: EvidenceTier;
   rationale: string;
   lastReviewed: string;
   reviewer: string;

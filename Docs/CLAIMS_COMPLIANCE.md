@@ -312,6 +312,31 @@ must read as one.
 
 ---
 
+## 4e. Recognized but unreviewed compounds (originated 2026-08-05)
+
+The compound registry and the evidence database are separate. A compound may
+be recognized by name without its evidence having been reviewed. Recognition
+means only that the app can identify what the user typed. It carries no
+statement about the compound.
+
+A recognized compound with no scoring parameter has no Evidence Tier, no
+studied dose range and no direction of evidence. It must not be assigned a
+tier, must not be routed to Stop, Adjust or Keep, and must not be given a
+default or placeholder grade of any kind. Absence of review is not a finding,
+and must never be rendered as one.
+
+Such a compound is listed separately from the action sections, stating plainly
+that it has not been reviewed and is not scored.
+
+An unreviewed compound must not carry a purchase link. A link placed beside a
+compound the app has not assessed is a recommendation the evidence does not
+support.
+
+Where any compound the user entered is excluded from the Spend Efficiency
+Index, the report must state how many of the user's compounds the score
+covers. A composite presented without that statement asserts a scope it does
+not have.
+
 ## 5. DSHEA / FDA structure-function boundary
 
 Source: 21 U.S.C. § 343(r)(6); 21 CFR 101.93(f)–(g); FDA Small Entity Compliance Guide on Structure/Function Claims.
