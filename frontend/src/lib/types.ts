@@ -71,7 +71,13 @@ export interface AssessmentPayload {
 export interface RecognizedCompound {
   compound_id: string;
   canonical_name: string;
-  evidence_tier: EvidenceTier;
+  /**
+   * NULL for a recognized-but-unreviewed compound (CLAIMS_COMPLIANCE §4e): no scoring
+   * parameter, therefore no Evidence Tier. §4e forbids "a default or placeholder grade of any
+   * kind", so this is nullable rather than a letter with a fallback — the null is what makes
+   * every consumer confront it. The UI renders the "Not yet reviewed" badge instead of a tier.
+   */
+  evidence_tier: EvidenceTier | null;
   /** CLAIMS_COMPLIANCE §4c disclosure, or null when the outcome matched. */
   outcome_mismatch_note: string | null;
 }
@@ -88,6 +94,12 @@ export interface PreviewResponse {
   recognized_compounds: RecognizedCompound[];
   evidence_tier_summary: Record<EvidenceTier, number>;
   overlap_flags: OverlapFlag[];
+  /**
+   * §4e: how many of the user's compounds the Spend Efficiency Index covers. NULL when it
+   * covers all of them — §4e requires the statement only where a compound is EXCLUDED, so
+   * rendering it unconditionally would raise a doubt that does not exist.
+   */
+  coverage_note: string | null;
   /**
    * Present ONLY when sufficient_for_scoring is true. Never fabricate these in
    * State B — the UI must not imply a calculated financial number exists.
@@ -240,5 +252,21 @@ export interface ReportResponse {
   start_section: StartSectionData;
   /** Article cross-links — educational (anywhere), roundups (Start only), hubs (general). */
   article_links: ArticleLinks;
+  /**
+   * §4e — compounds the registry recognises and the evidence review has not reached. A plain
+   * list, NOT a fourth action section: Stop, Adjust and Keep each assert something about the
+   * evidence, and §4e is explicit that "absence of review is not a finding, and must never be
+   * rendered as one". Heading and description are founder-approved copy carried from the
+   * backend so the wording lives in one place.
+   */
+  not_yet_reviewed: NotYetReviewed;
   total_estimated_annual_waste: { low: number; high: number };
+  /** §4e coverage statement, or null when the score covers every compound entered. */
+  coverage_note: string | null;
+}
+
+export interface NotYetReviewed {
+  heading: string;
+  description: string;
+  compounds: Array<{ compound_id: string; compound: string }>;
 }

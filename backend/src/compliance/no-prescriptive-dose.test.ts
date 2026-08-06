@@ -79,6 +79,11 @@ const provider: EvidenceProvider = {
   async resolve(ids) {
     return new Map(ids.filter((id) => EVIDENCE[id]).map((id) => [id, EVIDENCE[id]]));
   },
+  // §4e: batch-1 fixtures are all reviewed, so nothing is unreviewed here. The dedicated
+  // unreviewed-compound cases build their own provider below.
+  async unreviewed() {
+    return [];
+  },
   async interactions() {
     return [];
   },

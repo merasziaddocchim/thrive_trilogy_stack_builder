@@ -114,9 +114,69 @@ export function redundancyFlag(params: {
   );
 }
 
+/**
+ * CLAIMS_COMPLIANCE §4e. Rendered instead of recognizedSummary() when the stack holds a
+ * compound the evidence review has not reached, because that sentence ends "and matched each
+ * to an evidence tier" — which stops being true the moment one of them has no tier. The old
+ * sentence also under-counted: unreviewed compounds were dropped before it ran, so a two
+ * compound stack reported "We recognized 1 compound".
+ *
+ * Founder-approved copy, inserted verbatim. Do not reword.
+ */
+export function recognizedSummaryWithUnreviewed(params: { total: number; reviewed: number }): string {
+  return `We recognized ${params.total} compounds in your stack. We have matched an evidence tier to ${params.reviewed} of them; the rest have not been reviewed yet.`;
+}
+
+/**
+ * §4e state 3: nothing in the stack has been reviewed. Needs its own sentence because the
+ * mixed-state one above says "the rest have not been reviewed yet", which implies some were —
+ * and before this existed, a wholly unreviewed stack rendered "0 are matched to an evidence
+ * tier; the rest have not been reviewed yet". Founder-approved copy, verbatim.
+ */
+export function recognizedSummaryNoneReviewed(n: number): string {
+  return `We recognized ${n} ${pluralCompounds(n)} in your stack, but none has been reviewed yet — so nothing here is scored.`;
+}
+
+/**
+ * §4e: "Where any compound the user entered is excluded from the Spend Efficiency Index, the
+ * report must state how many of the user's compounds the score covers." Rendered beneath the
+ * SEI and ONLY when something is excluded — see coverageSentenceFor().
+ *
+ * Founder-approved copy, inserted verbatim. Do not reword.
+ */
+export function coverageSentence(params: { scored: number; total: number }): string {
+  return `This score covers ${params.scored} of the ${params.total} compounds you entered.`;
+}
+
+/**
+ * The sentence, or null when the score covers everything the user entered. Null is the whole
+ * point: §4e requires the statement only where a compound is EXCLUDED, and rendering "covers 2
+ * of the 2" on a fully scored stack would raise a doubt that does not exist.
+ */
+export function coverageSentenceFor(params: { scored: number; total: number }): string | null {
+  if (params.total <= 0 || params.scored >= params.total) return null;
+  return coverageSentence(params);
+}
+
+/** Section heading for the §4e list. Founder-approved, verbatim. */
+export const NOT_YET_REVIEWED_HEADING = 'Not yet reviewed';
+
+/** Section description for the §4e list. Founder-approved, verbatim. */
+export const NOT_YET_REVIEWED_DESCRIPTION =
+  'We recognize these compounds, but our evidence review hasn\'t reached them yet — so they aren\'t scored.';
+
 /** Neutral recognized-count statement for a State-B preview (no fabricated numbers). */
-export function recognizedSummary(count: number): string {
-  return `We recognized ${count} ${count === 1 ? 'compound' : 'compounds'} in your stack and matched each to an evidence tier.`;
+/**
+ * "1 compound" / "2 compounds". A bare count in subject position reads wrong at one, and the
+ * original headline shipped that bug: a single-compound stack rendered "We recognized 1
+ * compounds in your stack". Kept to the one word these sentences need — this is not a
+ * general pluralization utility and should not grow into one.
+ */
+export function pluralCompounds(n: number): string {
+  return n === 1 ? 'compound' : 'compounds';
+}
+export function recognizedSummary(n: number): string {
+  return `We recognized ${n} ${pluralCompounds(n)} in your stack and matched each to an evidence tier.`;
 }
 
 /** Evidence-tier disclosure line, always appended where a tier is shown (CLAIMS §9). */

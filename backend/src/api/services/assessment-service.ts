@@ -70,9 +70,35 @@ export interface ResolvedEvidence {
   sourceShortName: string;
 }
 
+/**
+ * A compound the registry knows by name and the evidence review has not reached: a row in
+ * `compounds` with zero rows in `scoring_parameters` (CLAIMS_COMPLIANCE §4e).
+ *
+ * IT CARRIES A NAME AND NOTHING ELSE, ON PURPOSE. §4e forbids assigning such a compound a tier,
+ * a studied range, a direction of evidence, or "a default or placeholder grade of any kind", so
+ * this type cannot express one. That is the enforcement: it is not possible to route one of
+ * these into Stop/Adjust/Keep or into a tier count without first inventing a field that does
+ * not exist here, which is a visible change rather than a silent default.
+ */
+export interface UnreviewedCompound {
+  compoundId: string;
+  canonicalName: string;
+}
+
 export interface EvidenceProvider {
   /** Resolve evidence for each compound; missing compounds are simply absent from the map. */
   resolve(compoundIds: string[], goalTag: string | null): Promise<Map<string, ResolvedEvidence>>;
+  /**
+   * Compounds that exist in `compounds` but have no scoring parameter (§4e).
+   *
+   * Before 2026-08-05 there was no such method and no caller: `repository.ts` hit
+   * `if (p == null) continue;` and the compound left the pipeline entirely — absent from
+   * `recognized_compounds`, absent from every action section, and absent from the Preview's
+   * count, while its spend was quietly excluded from an SEI still presented as covering the
+   * stack. Proven against the real assembly path: a stack of NMN $40 + Creatine $20 reported
+   * "We recognized 1 compound", an SEI of 80 and no mention of creatine anywhere.
+   */
+  unreviewed(compoundIds: string[]): Promise<UnreviewedCompound[]>;
   /** Interactions among the given compounds (from interaction_records). */
   interactions(compoundIds: string[]): Promise<StackInteraction[]>;
 }
@@ -114,19 +140,48 @@ export async function assembleAssessment(
   // separate from whether we can SCORE the compound (which also needs a dose). Without this
   // split, a recognized-but-doseless compound (e.g. "TMG 500" with no unit) would vanish and
   // the Preview would wrongly say "couldn't recognize any compounds."
+  // §4e: compounds in the registry that the evidence review has not reached. Resolved
+  // alongside the evidence, not instead of it — a compound is in exactly one of the two sets.
+  const unreviewedList = await provider.unreviewed(compoundIds);
+  const unreviewedById = new Map(unreviewedList.map((u) => [u.compoundId, u]));
+
   const recognizedMap = new Map<string, RecognizedCompound>();
   for (const item of intake.stackItems) {
-    if (!item.compoundId) continue;
+    if (!item.compoundId || recognizedMap.has(item.compoundId)) continue;
     const ev = evidence.get(item.compoundId);
-    if (!ev || recognizedMap.has(item.compoundId)) continue;
+    if (ev) {
+      recognizedMap.set(item.compoundId, {
+        compound_id: item.compoundId,
+        canonical_name: ev.canonicalName,
+        evidence_tier: tierLetter(ev.evidenceTier),
+        outcome_mismatch_note: mismatchFor(ev),
+      });
+      continue;
+    }
+    // Recognized, unreviewed. It belongs in the Preview's recognized list — that is the whole
+    // point of §4e — but with no tier and no §4b note, because both are statements about
+    // evidence this compound has none of.
+    const un = unreviewedById.get(item.compoundId);
+    if (!un) continue;
     recognizedMap.set(item.compoundId, {
       compound_id: item.compoundId,
-      canonical_name: ev.canonicalName,
-      evidence_tier: tierLetter(ev.evidenceTier),
-      outcome_mismatch_note: mismatchFor(ev),
+      canonical_name: un.canonicalName,
+      evidence_tier: null,
+      outcome_mismatch_note: null,
     });
   }
   const recognized = [...recognizedMap.values()];
+
+  // Deduped, in first-seen order, for the report's "Not yet reviewed" list.
+  const notYetReviewed: UnreviewedCompound[] = [];
+  const seenUnreviewed = new Set<string>();
+  for (const item of intake.stackItems) {
+    if (!item.compoundId || seenUnreviewed.has(item.compoundId)) continue;
+    const un = unreviewedById.get(item.compoundId);
+    if (!un || evidence.has(item.compoundId)) continue;
+    seenUnreviewed.add(item.compoundId);
+    notYetReviewed.push(un);
+  }
 
   // Scorable items: a matched compound, an interpretable dose, and resolved evidence.
   const inputs: ScoredCompoundInput[] = [];
@@ -203,7 +258,12 @@ export async function assembleAssessment(
     canonicalName: c.input.canonicalName,
     evidenceTier: tierLetter(c.input.evidenceTier),
   }));
-  const startSection = buildStartSection(recognizedForStart);
+  // §4e: unreviewed compounds are passed ONLY so their Tier 2 entries can be suppressed. They
+  // are never added to `recognizedForStart`, so they can never acquire a Tier 1 group.
+  const startSection = buildStartSection(
+    recognizedForStart,
+    notYetReviewed.map((u) => u.canonicalName),
+  );
 
   // Article links: keyed off the same in-report compounds. Selection takes ONLY the compound
   // identity — no score, dose, tier, or dollar figure is passed in, so an article cannot
@@ -214,8 +274,18 @@ export async function assembleAssessment(
   }));
   const articleLinks = buildArticleLinks(recognizedForArticles);
 
+  // §4e coverage. `scored` counts DISTINCT compounds behind the SEI, not stack items, so two
+  // products of one compound do not inflate it. `total` is every compound we could name —
+  // reviewed and unreviewed alike. Anything excluded from the score (unreviewed, or recognized
+  // with no interpretable dose) makes scored < total and triggers the coverage sentence.
+  const scoredCompoundIds = new Set(contexts.map((c) => c.input.compoundId));
+  const coverage = { scored: scoredCompoundIds.size, total: recognized.length };
+
   return {
-    preview: buildPreview(recognized, contexts, result, overlaps, { sufficientForScoring }),
-    report: buildReport(contexts, result, startSection, articleLinks),
+    preview: buildPreview(recognized, contexts, result, overlaps, {
+      sufficientForScoring,
+      coverage,
+    }),
+    report: buildReport(contexts, result, startSection, articleLinks, notYetReviewed, coverage),
   };
 }

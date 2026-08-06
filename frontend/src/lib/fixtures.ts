@@ -127,6 +127,9 @@ export const FIXTURE_EXTRACTION: ExtractedItem[] = [
 export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
   sufficient_for_scoring: true,
   recognized_compounds: [
+    // §4e: recognized, no scoring parameter, therefore NO tier. Kept in the fixture so the
+    // sample Preview exercises the null-tier badge rather than only the happy path.
+    { compound_id: 'cmp_creatine', canonical_name: 'Creatine', evidence_tier: null, outcome_mismatch_note: null },
     { compound_id: 'cmp_nmn', canonical_name: 'NMN (Nicotinamide Mononucleotide)', evidence_tier: 'B', outcome_mismatch_note: null },
     { compound_id: 'cmp_nr', canonical_name: 'NR (Nicotinamide Riboside)', evidence_tier: 'B', outcome_mismatch_note: null },
     { compound_id: 'cmp_resveratrol', canonical_name: 'Resveratrol', evidence_tier: 'C', outcome_mismatch_note: null },
@@ -163,6 +166,8 @@ export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
       source_short_name: 'Meta-analysis, 27 RCTs',
     },
   ],
+  // §4e: one recognized compound (Creatine) is excluded from the score, so the sentence renders.
+  coverage_note: 'This score covers 4 of the 5 compounds you entered.',
 };
 
 // ---- PREVIEW — STATE B: insufficient data for full scoring (prompt §5) ------
@@ -183,6 +188,9 @@ export const FIXTURE_PREVIEW_STATE_B: PreviewResponse = {
   headline_finding:
     'We recognized 4 compounds in your stack and matched each to an evidence tier.',
   dose_comparisons: [],
+  // No SEI in State B, so there is no score to qualify — §4e's sentence would have nothing to
+  // describe. Null, not a sentence about a number that was never rendered.
+  coverage_note: null,
 };
 
 // ---- FULL STACK REPORT (post email-capture) ---------------------------------
@@ -402,5 +410,14 @@ export const FIXTURE_REPORT: ReportResponse = {
       cmp_tmg: { title: 'TMG vs Methylfolate: Molecular Side-by-Side Matrix', href: `${BLOG}/tmg-vs-methylfolate/` },
     },
   },
+  // §4e: a plain list, no tier, no cost, no purchase link. Present in the fixture so the
+  // sample report renders the block rather than leaving it untested by every visual pass.
+  not_yet_reviewed: {
+    heading: 'Not yet reviewed',
+    description:
+      "We recognize these compounds, but our evidence review hasn't reached them yet — so they aren't scored.",
+    compounds: [{ compound_id: 'cmp_creatine', compound: 'Creatine' }],
+  },
   total_estimated_annual_waste: { low: 340, high: 520 },
+  coverage_note: 'This score covers 4 of the 5 compounds you entered.',
 };
