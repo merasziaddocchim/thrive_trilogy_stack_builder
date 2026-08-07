@@ -131,13 +131,16 @@ export default function ReportPage({ params }: { params: { id: string } }) {
       ) : (
         <>
           <div className="mt-6">
-            <SpendEfficiencyIndex score={report.composite_score} waste={report.total_estimated_annual_waste} />
-            {/* §4e: how many of the user's compounds this score covers. Backend-supplied and
-                null whenever it covers all of them, so it never appears on a fully scored
-                stack — the conditional is the rule, not a styling choice. */}
-            {report.coverage_note && (
-              <p className="mt-2 text-sm text-muted">{report.coverage_note}</p>
-            )}
+            {/* Both sentences are backend-rendered claim copy (§4e coverage, §4f
+                interpretation), passed through as finished strings. The coverage line now sits
+                INSIDE this component so it can be placed between the boxes and the ceilings
+                footnote rather than after both. */}
+            <SpendEfficiencyIndex
+              score={report.composite_score}
+              waste={report.total_estimated_annual_waste}
+              interpretation={report.interpretation_note}
+              coverage={report.coverage_note}
+            />
           </div>
           <StopKeepStart report={report} />
           {/* Roundup articles render INSIDE the Start section only (CLAIMS §6 extension);

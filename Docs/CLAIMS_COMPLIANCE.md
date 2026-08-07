@@ -337,6 +337,28 @@ Index, the report must state how many of the user's compounds the score
 covers. A composite presented without that statement asserts a scope it does
 not have.
 
+## 4f. Score interpretation (originated 2026-08-06)
+
+The sentence rendered beside the Spend Efficiency Index is a claim about why
+the score is what it is. It must name the constraint that actually bound the
+score, and it must not attribute the score to dosing where dosing did not bind
+it.
+
+A composite score does not identify its own cause. The same value can arise
+from a well-dosed compound with limited evidence or a badly-dosed compound
+with strong evidence, and these call for opposite responses from the reader.
+An interpretation selected on the score alone therefore asserts something the
+score does not establish.
+
+Two facts about the scored items determine the sentence. Dosing is a binding
+constraint where any scored item's dosing accuracy is lower than its evidence
+ceiling. Evidence is a binding constraint where any scored item's evidence
+ceiling is below its maximum. Both may hold, and neither may hold.
+
+The interpretation sentence is claim copy and is held with all other claim
+copy, subject to the same guard. It must not be authored in a rendering
+component.
+
 ## 5. DSHEA / FDA structure-function boundary
 
 Source: 21 U.S.C. § 343(r)(6); 21 CFR 101.93(f)–(g); FDA Small Entity Compliance Guide on Structure/Function Claims.

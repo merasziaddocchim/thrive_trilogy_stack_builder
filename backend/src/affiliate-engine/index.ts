@@ -39,6 +39,18 @@ export interface StartBundle {
   product: string;
   href: string;
   contains: string;
+  /**
+   * Display names of contents this app has not evidence-reviewed (CLAIMS_COMPLIANCE §4e).
+   *
+   * DATA, NOT COPY. This module states at the top that it emits no user-facing claim text, and
+   * that contract is why per-link disclosure lives elsewhere; turning these names into a
+   * sentence here would break it. report-builder renders them through the §4e template, with
+   * every other claim sentence, under the claim guard.
+   *
+   * STATIC — a property of the bundle, not of the reader. A bundle contains what it contains,
+   * so this does not depend on the stack and nothing is threaded in from the report.
+   */
+  unreviewed_names: string[];
 }
 
 export interface StartSection {
@@ -97,7 +109,13 @@ export function buildStartSection(
   const recognizedIds = new Set(byId.keys());
   const tier3: StartBundle[] = TIER3_BUNDLES.filter((b) =>
     b.containsCompoundIds.some((id) => recognizedIds.has(id)),
-  ).map((b) => ({ brand: b.brand, product: b.product, href: b.href, contains: b.containsDisplay }));
+  ).map((b) => ({
+    brand: b.brand,
+    product: b.product,
+    href: b.href,
+    contains: b.containsDisplay,
+    unreviewed_names: b.containsUnreviewedNames,
+  }));
 
   // "CaAKG" vs "Ca-AKG" must compare equal, so fold case and drop everything that is not a
   // letter or digit before comparing.

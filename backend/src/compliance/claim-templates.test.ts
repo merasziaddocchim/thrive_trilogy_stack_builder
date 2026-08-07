@@ -28,6 +28,8 @@ import {
   noStudiedRangeNote,
 } from './claim-templates.js';
 import {
+  scoreInterpretation,
+  bundleUnreviewedNote,
   recognizedSummaryWithUnreviewed,
   recognizedSummaryNoneReviewed,
   pluralCompounds,
@@ -94,6 +96,16 @@ const RENDERED: Array<{ name: string; text: string }> = [
     // exports. Rendering it here keeps the guard honest rather than adding a name exemption.
     name: 'pluralCompounds',
     text: pluralCompounds(2),
+  },
+  {
+    // Rendered in the both-bind state; the other three are covered in score-interpretation.test.ts.
+    name: 'scoreInterpretation',
+    text: scoreInterpretation({ dosingCosts: true, evidenceCaps: true }),
+  },
+  {
+    // Rendered with a non-empty list, the only case that produces a sentence.
+    name: 'bundleUnreviewedNote',
+    text: bundleUnreviewedNote(['Quercetin']) ?? '',
   },
   {
     name: 'coverageSentence',

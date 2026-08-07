@@ -171,6 +171,15 @@ export function StartSection({
                   {b.brand} — {b.product}
                 </a>
                 <span className="text-muted"> · Contains: {b.contains}</span>
+                {/* CLAIMS_COMPLIANCE §4e: a bundle containing something we have not reviewed
+                    says so, beside the contents. Backend-rendered copy, and STATIC — a property
+                    of the bundle, not of the stack, so it is not conditional on what the user
+                    entered. Without it the live 2026-08-06 report offered a paid link to a
+                    bundle containing Quercetin while Quercetin sat under "Not yet reviewed" on
+                    the same page. */}
+                {b.unreviewed_note && (
+                  <p className="mt-0.5 text-xs text-muted">{b.unreviewed_note}</p>
+                )}
                 <AffiliateDisclosure />
               </li>
             ))}

@@ -4,20 +4,28 @@
 // Presentational only; data comes from the report fixture via the page.
 import { TERMS, EVIDENCE_TIER_CEILINGS } from '@/lib/constants';
 
-// A short, non-clinical read of where the score sits. Deliberately avoids any
-// benefit/verdict language (CLAIMS_COMPLIANCE §0) — it describes the number, not the body.
-function band(score: number): string {
-  if (score >= 80) return 'Most of your spend aligns with the studied ranges and evidence.';
-  if (score >= 55) return 'A meaningful share of your spend sits outside the studied ranges.';
-  return 'A large share of your spend sits outside the studied ranges or evidence.';
-}
-
 export function SpendEfficiencyIndex({
   score,
   waste,
+  interpretation,
+  coverage,
 }: {
   score: number;
   waste: { low: number; high: number };
+  /**
+   * CLAIMS_COMPLIANCE §4f — why the score is what it is, rendered by the backend and passed
+   * through as a finished string.
+   *
+   * THIS COMPONENT USED TO CHOOSE THE SENTENCE ITSELF, from three score bands, and that is how
+   * it came to state something false: on a stack whose only scored compound was inside its
+   * studied range with $0 of waste, the 55-79 band claimed "A meaningful share of your spend
+   * sits outside the studied ranges" — contradicting the ceilings footnote directly below it.
+   * §4f: the sentence is claim copy, must name the constraint that actually bound the score,
+   * and "must not be authored in a rendering component".
+   */
+  interpretation: string | null;
+  /** §4e coverage statement, or null when the score covers everything entered. */
+  coverage: string | null;
 }) {
   return (
     <section className="grid gap-4 sm:grid-cols-5">
@@ -35,7 +43,7 @@ export function SpendEfficiencyIndex({
         <div className="mt-4 h-2 w-full overflow-hidden rounded-pill bg-surface-subtle">
           <div className="h-full rounded-pill bg-accent" style={{ width: `${score}%` }} />
         </div>
-        <p className="mt-3 text-sm text-body">{band(score)}</p>
+        {interpretation && <p className="mt-3 text-sm text-body">{interpretation}</p>}
       </div>
 
       {/* Estimated Annual Waste — always a range. */}
@@ -51,6 +59,11 @@ export function SpendEfficiencyIndex({
           false-precision figure.
         </p>
       </div>
+
+      {/* §4e coverage — directly beneath the two boxes it qualifies, and ABOVE the ceilings
+          footnote. It previously sat below the footnote, which put an unrelated explanatory
+          note between the figures and the statement of what they cover. */}
+      {coverage && <p className="text-sm text-muted sm:col-span-5">{coverage}</p>}
 
       {/* Evidence-tier ceilings note — the four ceiling values live in ONE constant. */}
       <p className="text-xs text-muted sm:col-span-5">
