@@ -138,14 +138,64 @@ export function recognizedSummaryNoneReviewed(n: number): string {
 }
 
 /**
- * §4e: "Where any compound the user entered is excluded from the Spend Efficiency Index, the
- * report must state how many of the user's compounds the score covers." Rendered beneath the
- * SEI and ONLY when something is excluded — see coverageSentenceFor().
+ * CLAIMS_COMPLIANCE §4f — the sentence beside the Spend Efficiency Index.
+ *
+ * KEYED ON THE BINDING CONSTRAINT, NOT ON THE SCORE. Until 2026-08-06 three sentences were
+ * selected by score band inside the React component, and the middle band said "A meaningful
+ * share of your spend sits outside the studied ranges." On the live 2026-08-06 stack that was
+ * simply false: the one scored compound was NMN at 250 mg against a 250-500 mg range —
+ * dosing accuracy 100, inside the range, $0 of waste — and the score was 60 only because a
+ * Tier C ceiling capped it. The score-ceilings footnote directly beneath said so, so the
+ * screen contradicted itself and the sentence was the wrong half.
+ *
+ * §4f: "A composite score does not identify its own cause." min(dosingAccuracy,
+ * evidenceCeiling) is lossy — 60 can be a well-dosed Tier C item or a badly-dosed Tier A one,
+ * and those call for opposite responses. So the two constraints are tested independently.
+ *
+ * Founder-approved copy, inserted verbatim. Do not reword.
+ */
+export interface ScoreConstraints {
+  /** Any scored item where dosingAccuracy < evidenceCeiling — min() picked dosing. */
+  dosingCosts: boolean;
+  /** Any scored item whose evidenceCeiling is below the maximum — the tier is under A. */
+  evidenceCaps: boolean;
+}
+
+export function scoreInterpretation(c: ScoreConstraints): string {
+  if (c.dosingCosts && c.evidenceCaps) {
+    return `Some of your doses sit outside the range used in human research, and the evidence behind some compounds limits how high this score can go.`;
+  }
+  if (c.dosingCosts) {
+    return `Some of your doses sit outside the range used in human research, which is what limits this score.`;
+  }
+  if (c.evidenceCaps) {
+    return `Every dose you entered sits inside the range used in human research. What limits this score is the strength of the evidence behind these compounds, not your dosing.`;
+  }
+  return `Every dose you entered sits inside the range used in human research, and every compound is at Evidence Tier A.`;
+}
+
+/**
+ * §4e coverage statement, widened by §4f-era review: the waste estimate is computed over the
+ * same scored items as the score, so the sentence now names both. It previously named only
+ * the score while sitting directly beneath the waste figure it also qualified.
  *
  * Founder-approved copy, inserted verbatim. Do not reword.
  */
 export function coverageSentence(params: { scored: number; total: number }): string {
-  return `This score covers ${params.scored} of the ${params.total} compounds you entered.`;
+  return `This score and the waste estimate cover ${params.scored} of the ${params.total} compounds you entered.`;
+}
+
+/**
+ * §4e: a bundle that contains a compound we have not reviewed says so, beside the contents.
+ * STATIC — a property of the bundle, not of the reader. It does not depend on what is in any
+ * given stack, so it renders whenever the bundle renders.
+ *
+ * Founder-approved copy, inserted verbatim. Do not reword.
+ */
+export function bundleUnreviewedNote(names: readonly string[]): string | null {
+  if (names.length === 0) return null;
+  const params = { names: names.join(', ') };
+  return `Not evidence-reviewed: ${params.names}`;
 }
 
 /**

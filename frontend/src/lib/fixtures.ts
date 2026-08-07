@@ -167,7 +167,11 @@ export const FIXTURE_PREVIEW_STATE_A: PreviewResponse = {
     },
   ],
   // §4e: one recognized compound (Creatine) is excluded from the score, so the sentence renders.
-  coverage_note: 'This score covers 4 of the 5 compounds you entered.',
+  coverage_note: 'This score and the waste estimate cover 4 of the 5 compounds you entered.',
+  // §4f: this sample stack has doses outside their ranges AND sub-A tiers, so both constraints
+  // bind and the both-bind sentence is the correct one for it.
+  interpretation_note:
+    'Some of your doses sit outside the range used in human research, and the evidence behind some compounds limits how high this score can go.',
 };
 
 // ---- PREVIEW — STATE B: insufficient data for full scoring (prompt §5) ------
@@ -191,6 +195,8 @@ export const FIXTURE_PREVIEW_STATE_B: PreviewResponse = {
   // No SEI in State B, so there is no score to qualify — §4e's sentence would have nothing to
   // describe. Null, not a sentence about a number that was never rendered.
   coverage_note: null,
+  // State B has no score, so there is nothing to interpret.
+  interpretation_note: null,
 };
 
 // ---- FULL STACK REPORT (post email-capture) ---------------------------------
@@ -319,8 +325,12 @@ export const FIXTURE_REPORT: ReportResponse = {
       { brand: 'Jinfiniti', product: 'NAD Membership Program (15% recurring)', href: `${BLOG}/go/jinfiniti-nad-memebrship`, category: 'Membership/discount program' },
     ],
     tier3: [
-      { brand: 'NMNBio', product: 'Longevity Starter Pack', href: `${BLOG}/go/nmnbio-long-starterpack`, contains: 'NMN, TMG, and Quercetin' },
-      { brand: 'NMNBio', product: 'Morning Bundle', href: `${BLOG}/go/nmnbio-morning`, contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)' },
+      // §4e: the Starter Pack contains Quercetin, which is recognized and unreviewed, so the
+      // disclosure renders. The Morning Bundle's third item is a proprietary blend rather than
+      // a registry compound — its display string already says so, and the app cannot state what
+      // a proprietary blend contains — so it discloses nothing and must render nothing.
+      { brand: 'NMNBio', product: 'Longevity Starter Pack', href: `${BLOG}/go/nmnbio-long-starterpack`, contains: 'NMN, TMG, and Quercetin', unreviewed_names: ['Quercetin'], unreviewed_note: 'Not evidence-reviewed: Quercetin' },
+      { brand: 'NMNBio', product: 'Morning Bundle', href: `${BLOG}/go/nmnbio-morning`, contains: 'NMN, TMG, and NAD+ Brain (a proprietary blend)', unreviewed_names: [], unreviewed_note: null },
     ],
   },
   // Article cross-links — mirrors what the firewalled article-engine returns for this sample
@@ -419,5 +429,7 @@ export const FIXTURE_REPORT: ReportResponse = {
     compounds: [{ compound_id: 'cmp_creatine', compound: 'Creatine' }],
   },
   total_estimated_annual_waste: { low: 340, high: 520 },
-  coverage_note: 'This score covers 4 of the 5 compounds you entered.',
+  coverage_note: 'This score and the waste estimate cover 4 of the 5 compounds you entered.',
+  interpretation_note:
+    'Some of your doses sit outside the range used in human research, and the evidence behind some compounds limits how high this score can go.',
 };

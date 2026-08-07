@@ -2,10 +2,15 @@
 // BATCH-2 COMPOUND REGISTRY — CLAIMS_COMPLIANCE §4e. 2026-08-05.
 //
 // Inserts 36 recognition-only compounds. WHY A SCRIPT AND NOT THE SEED: `npm run db:seed`
-// inserts with ON CONFLICT DO NOTHING and never UPDATEs, so adding rows to seed-data.ts fixes
-// a fresh database and does nothing to an existing one. Without this script the deployed
-// registry keeps the batch-1 five, and a user typing "creatine" is still told it is not
-// recognized — the exact failure this batch exists to remove.
+// inserts with ON CONFLICT DO NOTHING and never UPDATEs, so adding rows to seed-data.ts fixed
+// a fresh database and would have done nothing to the existing one. Without this script the
+// deployed registry would have kept the batch-1 five, and a user typing "creatine" would still
+// have been told it is not recognized — the failure this batch existed to remove.
+//
+// RUN AGAINST PRODUCTION 2026-08-06 by the founder: batch-2 compounds 0 -> 36, all 36 rows
+// inserted, "No scoring parameter was created. Every compound above is recognized and
+// unreviewed (§4e)." The live registry is 41 compounds. Idempotent, so a re-run is a harmless
+// no-op reporting 0 written — but there is no reason to re-run it.
 //
 // *** THIS SCRIPT MOVES NO SCORE. ***
 // It writes rows to `compounds` and NOTHING ELSE. It creates no scoring_parameters row, no
@@ -31,7 +36,7 @@
 // statement about a compound whose evidence nobody has reviewed yet.
 //
 // Idempotent: ON CONFLICT DO NOTHING on the primary key, so a second run inserts nothing and
-// reports 0 written. Requires DATABASE_URL. Run once, after db:migrate:
+// reports 0 written. Requires DATABASE_URL. Original run instruction, for the record:
 //   npm run db:migrate && npm run db:add-compounds
 // =============================================================================
 import { inArray, sql } from 'drizzle-orm';

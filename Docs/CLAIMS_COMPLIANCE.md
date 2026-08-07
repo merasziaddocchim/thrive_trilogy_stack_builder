@@ -333,9 +333,37 @@ compound the app has not assessed is a recommendation the evidence does not
 support.
 
 Where any compound the user entered is excluded from the Spend Efficiency
-Index, the report must state how many of the user's compounds the score
-covers. A composite presented without that statement asserts a scope it does
-not have.
+Index, every surface that presents that score must state how many of the
+user's compounds it covers. A composite presented without that statement
+asserts a scope it does not have. Naming one surface is not sufficient: this
+paragraph originally named the report alone, and the Preview rendered the same
+unqualified score for as long as it did.
+
+## 4f. Score interpretation (originated 2026-08-06)
+
+The sentence rendered beside the Spend Efficiency Index is a claim about why
+the score is what it is. It must name the constraint that actually bound the
+score, and it must not attribute the score to dosing where dosing did not bind
+it.
+
+A composite score does not identify its own cause. The same value can arise
+from a well-dosed compound with limited evidence or a badly-dosed compound
+with strong evidence, and these call for opposite responses from the reader.
+An interpretation selected on the score alone therefore asserts something the
+score does not establish.
+
+Two facts about the scored items determine the sentence. Dosing is a binding
+constraint where any scored item's dosing accuracy is lower than its evidence
+ceiling. Evidence is a binding constraint where any scored item's evidence
+ceiling is below its maximum. Both may hold, and neither may hold.
+
+The interpretation sentence is claim copy and is held with all other claim
+copy, subject to the same guard. It must not be authored in a rendering
+component.
+
+The interpretation sentence accompanies the Spend Efficiency Index on every
+surface that presents it. A score shown without it leaves the reader to supply
+their own explanation for a number that does not explain itself.
 
 ## 5. DSHEA / FDA structure-function boundary
 

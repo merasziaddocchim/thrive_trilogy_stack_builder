@@ -32,6 +32,20 @@ export interface CatalogBundle extends CatalogProduct {
   containsDisplay: string;
   /** Reviewed compound_ids the bundle contains — drives the "show only if in stack" gate. */
   containsCompoundIds: string[];
+  /**
+   * Display names of bundle contents this app has NOT evidence-reviewed (CLAIMS_COMPLIANCE §4e).
+   *
+   * SEPARATE FIELD, AND DELIBERATELY NOT DERIVED FROM `containsCompoundIds`. That array holds
+   * only reviewed compounds — the comment on the Longevity Starter Pack says so outright — so
+   * the ids of the very contents needing disclosure are exactly the ones missing from it. A
+   * check driven off it would find nothing to disclose.
+   *
+   * NAMES, NOT IDS, ON PURPOSE. The disclosure is a static statement about the bundle: it
+   * contains what it contains regardless of which compounds happen to be in the registry, or in
+   * any given user's stack, on any given day. Deriving it from the registry would make the
+   * sentence appear and disappear as the registry grows.
+   */
+  containsUnreviewedNames: string[];
 }
 
 const C = SEED_COMPOUND_IDS;
@@ -95,6 +109,7 @@ export const TIER3_BUNDLES: CatalogBundle[] = [
     containsDisplay: 'NMN, TMG, and Quercetin',
     // Quercetin is not an evidence-reviewed compound in our DB, so only NMN + TMG gate visibility.
     containsCompoundIds: [C.nmn, C.tmg],
+    containsUnreviewedNames: ['Quercetin'],
   },
   {
     brand: 'NMNBio',
@@ -102,6 +117,11 @@ export const TIER3_BUNDLES: CatalogBundle[] = [
     href: blogUrl('/go/nmnbio-morning'),
     containsDisplay: 'NMN, TMG, and NAD+ Brain (a proprietary blend)',
     containsCompoundIds: [C.nmn, C.tmg],
+    // Empty by founder decision, not by oversight. "NAD+ Brain" is a proprietary blend, not a
+    // registry compound, and the display string already says so — which is the honest
+    // disclosure, because the app cannot state what a proprietary blend contains. Do not parse
+    // the string and do not enumerate its ingredients.
+    containsUnreviewedNames: [],
   },
 ];
 

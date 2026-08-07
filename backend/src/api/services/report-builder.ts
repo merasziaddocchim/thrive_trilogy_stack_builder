@@ -17,6 +17,9 @@ import {
   recognizedSummaryWithUnreviewed,
   recognizedSummaryNoneReviewed,
   coverageSentenceFor,
+  scoreInterpretation,
+  bundleUnreviewedNote,
+  type ScoreConstraints,
   NOT_YET_REVIEWED_HEADING,
   NOT_YET_REVIEWED_DESCRIPTION,
   doseComparison,
@@ -28,17 +31,22 @@ import {
   type TierLetter,
 } from '../../compliance/claim-templates.js';
 import { routeFinding, type FindingSection } from '../../compliance/finding-routing.js';
+import { EVIDENCE_CEILINGS } from '../../scoring-engine/constants.js';
 import type { ScoredCompoundInput, CompoundSubScore, StackScoreResult } from '../../scoring-engine/index.js';
 import type { EvidenceDirection } from '../../db/schema.js';
 // Type-only import — the Start section is COMPUTED by the affiliate-engine in assessment-service
 // and passed in; report-builder only places it into the response shape (no affiliate logic here).
-import type { StartSection } from '../../affiliate-engine/index.js';
+import type { StartSection, StartBundle } from '../../affiliate-engine/index.js';
 // Same arrangement for article links: COMPUTED by the firewalled article-engine in
 // assessment-service and passed in. report-builder only places them — it attaches the
 // per-compound educational "Learn more" link to Stop/Keep rows (safe anywhere, no disclosure
 // needed, CLAIMS §6) and carries the rest through. Roundups are never touched here: they belong
 // to the Start section only, which is exactly the placement rule this file must not break.
 import type { ArticleLinks, Article } from '../../article-engine/index.js';
+
+// The best ceiling any tier can have. Read from the locked constants (TECH_DOCS §2) rather than
+// written as 100, so a future ceiling change cannot silently make "evidence caps this" false.
+const MAX_EVIDENCE_CEILING = Math.max(...Object.values(EVIDENCE_CEILINGS));
 
 export interface CompoundContext {
   input: ScoredCompoundInput;
@@ -61,6 +69,20 @@ export interface CompoundContext {
    * from the enum value `null_no_effect`, which means a study looked and found nothing.
    */
   directionOfEvidence: EvidenceDirection | null;
+}
+
+/**
+ * The Start section as SERVED: the engine's shape plus the rendered §4e bundle disclosure.
+ * Declared explicitly rather than relying on a spread — an object spread is not excess-property
+ * checked, so `unreviewed_note` would have been present at runtime and absent from the type,
+ * and the frontend could not have read it.
+ */
+export interface ReportStartBundle extends StartBundle {
+  /** §4e sentence, or null when every content is reviewed. */
+  unreviewed_note: string | null;
+}
+export interface ReportStartSection extends Omit<StartSection, 'tier3'> {
+  tier3: ReportStartBundle[];
 }
 
 export interface OverlapGroup {
@@ -99,6 +121,14 @@ export interface PreviewResponse {
   overlap_flags: Array<{ shared_ingredient: string; product_count: number; approx_monthly_cost: number | null }>;
   spend_efficiency_index: number | null;
   /**
+   * CLAIMS_COMPLIANCE §4f: why the score is what it is, keyed on the constraint that actually
+   * bound it. NULL when there is no score to explain. Emitted as a finished sentence, never as
+   * the raw dosingAccuracy/evidenceCeiling numbers — §4f puts this under the claim guard with
+   * every other user-facing sentence, and a component choosing between sentences is how the
+   * withdrawn score-band version escaped review.
+   */
+  interpretation_note: string | null;
+  /**
    * CLAIMS_COMPLIANCE §4e: how many of the user's compounds the Spend Efficiency Index covers.
    * NULL when it covers all of them — §4e requires the statement only where a compound is
    * EXCLUDED, and stating "covers 2 of the 2" would raise a doubt that does not exist.
@@ -133,6 +163,25 @@ function tierSummary(recognized: RecognizedCompound[]): Record<TierLetter, numbe
 
 function isTierAB(t: TierLetter): boolean {
   return t === 'A' || t === 'B';
+}
+
+/**
+ * CLAIMS_COMPLIANCE §4f — which constraint actually bound the score.
+ *
+ * Derived HERE, from the sub-scores, and never inferred from the composite: min() is lossy, so
+ * a composite of 60 cannot tell a well-dosed Tier C item from a badly-dosed Tier A one. The two
+ * facts are independent and both are read straight off `CompoundSubScore`, which has carried
+ * `dosingAccuracy` and `evidenceCeiling` since the engine was written — they were computed and
+ * then discarded at this boundary, which is why the old sentence had nothing true to key on.
+ *
+ * Only SCORED items count. An unreviewed compound has no dosing accuracy and no ceiling (§4e),
+ * and is excluded from the score it would otherwise be describing.
+ */
+function scoreConstraints(contexts: CompoundContext[]): ScoreConstraints {
+  return {
+    dosingCosts: contexts.some((c) => c.sub.dosingAccuracy < c.sub.evidenceCeiling),
+    evidenceCaps: contexts.some((c) => c.sub.evidenceCeiling < MAX_EVIDENCE_CEILING),
+  };
 }
 
 export function buildPreview(
@@ -206,6 +255,7 @@ export function buildPreview(
       approx_monthly_cost: o.approxMonthlyCost,
     })),
     spend_efficiency_index: sufficient ? result.compositeScore : null,
+    interpretation_note: sufficient ? scoreInterpretation(scoreConstraints(contexts)) : null,
     // §4e. Null whenever the score already covers everything, so the sentence never appears on
     // a fully scored stack. Also null when there is no score at all — a coverage claim about a
     // number that was not rendered would be meaningless.
@@ -249,8 +299,11 @@ export interface ReportResponse {
   keep: Array<EvidenceMeta & LearnMore & { compound: string; note: string; monthly_cost: number }>;
   /** Legacy per-compound "start" suggestions (unused; superseded by start_section). */
   start: Array<EvidenceMeta & { compound: string; reason: string; affiliate_link?: null }>;
-  /** Affiliate "Start" section — Tier 1/2/3 products (firewalled affiliate-engine output). */
-  start_section: StartSection;
+  /**
+   * Affiliate "Start" section — Tier 1/2/3 products (firewalled affiliate-engine output), with
+   * each bundle's §4e disclosure sentence rendered onto it here.
+   */
+  start_section: ReportStartSection;
   /** Article cross-links (firewalled article-engine output). Roundups are Start-only. */
   article_links: ArticleLinks;
   /**
@@ -269,6 +322,8 @@ export interface ReportResponse {
     compounds: Array<{ compound_id: string; compound: string }>;
   };
   total_estimated_annual_waste: { low: number; high: number };
+  /** §4f interpretation of the composite, keyed on the binding constraint. */
+  interpretation_note: string | null;
   /** §4e coverage statement, or null when the score covers every compound entered. */
   coverage_note: string | null;
 }
@@ -404,7 +459,16 @@ export function buildReport(
     adjust,
     keep,
     start: [], // legacy field retained for the §6 contract; superseded by start_section.
-    start_section: startSection, // from the firewalled affiliate-engine (see assessment-service).
+    // From the firewalled affiliate-engine (see assessment-service). Its bundles carry the
+    // unreviewed CONTENT NAMES as data; the §4e sentence is rendered here, where all claim copy
+    // is rendered, rather than in the engine — which states that it emits no user-facing text.
+    start_section: {
+      ...startSection,
+      tier3: startSection.tier3.map((b) => ({
+        ...b,
+        unreviewed_note: bundleUnreviewedNote(b.unreviewed_names),
+      })),
+    },
     article_links: articleLinks, // from the firewalled article-engine (see assessment-service).
     // §4e. No claim-guard call here, and that is correct rather than an omission: the guard
     // (CLAIMS §4) requires an evidence tier and source ids on every claim object, and these
@@ -415,6 +479,7 @@ export function buildReport(
       compounds: notYetReviewed.map((u) => ({ compound_id: u.compoundId, compound: u.canonicalName })),
     },
     total_estimated_annual_waste: { low: result.waste.annualLow, high: result.waste.annualHigh },
+    interpretation_note: contexts.length > 0 ? scoreInterpretation(scoreConstraints(contexts)) : null,
     coverage_note: coverageSentenceFor(coverage),
   };
 }

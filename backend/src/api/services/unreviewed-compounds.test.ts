@@ -137,8 +137,11 @@ test('§4e: the SEI and waste exclude the unreviewed compound entirely', async (
 // ---- the coverage sentence, and when it must NOT render ----------------------------------
 test('§4e: the coverage sentence renders when a compound is excluded', async () => {
   const { preview, report } = await assembleAssessment(mixedStack, provider);
-  assert.equal(preview.coverage_note, 'This score covers 1 of the 2 compounds you entered.');
-  assert.equal(report.coverage_note, 'This score covers 1 of the 2 compounds you entered.');
+  // Wording widened by §4f-era review: the waste estimate is computed over the same scored
+  // items, so the sentence now names both rather than the score alone.
+  const expected = 'This score and the waste estimate cover 1 of the 2 compounds you entered.';
+  assert.equal(preview.coverage_note, expected);
+  assert.equal(report.coverage_note, expected);
 });
 
 test('ANTI-VACUITY: the coverage sentence does NOT render when nothing is excluded', async () => {

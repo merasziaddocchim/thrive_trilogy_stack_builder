@@ -105,6 +105,11 @@ export interface PreviewResponse {
    * State B — the UI must not imply a calculated financial number exists.
    */
   spend_efficiency_index: number | null;
+  /**
+   * §4f: why the score is what it is, keyed on the constraint that actually bound it. Rendered
+   * by the backend under the claim guard — a component must not choose between the sentences.
+   */
+  interpretation_note: string | null;
   estimated_annual_waste: { low: number; high: number } | null;
   /** Built from a CLAIMS_COMPLIANCE §9 template — never freehand text. */
   headline_finding: string;
@@ -232,6 +237,10 @@ export interface StartTier2Item extends StartProduct {
 // Tier 3: a bundle relevant to the stack; not evidence-scored, contents noted for relevance.
 export interface StartBundle extends StartProduct {
   contains: string;
+  /** §4e: names of bundle contents this app has not evidence-reviewed. */
+  unreviewed_names: string[];
+  /** §4e disclosure sentence, or null when every content is reviewed. */
+  unreviewed_note: string | null;
 }
 export interface StartSectionData {
   tier1: StartTier1Group[];
@@ -261,6 +270,8 @@ export interface ReportResponse {
    */
   not_yet_reviewed: NotYetReviewed;
   total_estimated_annual_waste: { low: number; high: number };
+  /** §4f interpretation of the composite, keyed on the binding constraint. */
+  interpretation_note: string | null;
   /** §4e coverage statement, or null when the score covers every compound entered. */
   coverage_note: string | null;
 }
