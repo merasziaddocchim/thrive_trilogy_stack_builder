@@ -145,6 +145,21 @@ export function PreviewStep({
               <p className="text-xs text-muted">a range, not a single figure</p>
             </div>
           </div>
+          {/* CLAIMS_COMPLIANCE §4f and §4e. Both sentences are backend-rendered claim copy,
+              carried on PreviewResponse and rendered in the same order as the report:
+              interpretation beside the score, coverage beneath both figures.
+
+              WHY THIS SURFACE. §4e originally said "the report must state how many of the
+              user's compounds the score covers", and the Preview shows the same composite —
+              so the rule named one surface and this one walked past it, exactly as §5b named
+              Google Analytics and a different vendor walked past that. Both paragraphs now
+              say "every surface that presents that score". */}
+          {data.interpretation_note && (
+            <p className="mt-3 text-sm text-body">{data.interpretation_note}</p>
+          )}
+          {data.coverage_note && (
+            <p className="mt-2 text-sm text-muted">{data.coverage_note}</p>
+          )}
         </Card>
       )}
 

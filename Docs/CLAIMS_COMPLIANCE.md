@@ -333,9 +333,11 @@ compound the app has not assessed is a recommendation the evidence does not
 support.
 
 Where any compound the user entered is excluded from the Spend Efficiency
-Index, the report must state how many of the user's compounds the score
-covers. A composite presented without that statement asserts a scope it does
-not have.
+Index, every surface that presents that score must state how many of the
+user's compounds it covers. A composite presented without that statement
+asserts a scope it does not have. Naming one surface is not sufficient: this
+paragraph originally named the report alone, and the Preview rendered the same
+unqualified score for as long as it did.
 
 ## 4f. Score interpretation (originated 2026-08-06)
 
@@ -358,6 +360,10 @@ ceiling is below its maximum. Both may hold, and neither may hold.
 The interpretation sentence is claim copy and is held with all other claim
 copy, subject to the same guard. It must not be authored in a rendering
 component.
+
+The interpretation sentence accompanies the Spend Efficiency Index on every
+surface that presents it. A score shown without it leaves the reader to supply
+their own explanation for a number that does not explain itself.
 
 ## 5. DSHEA / FDA structure-function boundary
 
